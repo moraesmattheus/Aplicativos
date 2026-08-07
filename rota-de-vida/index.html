@@ -119,6 +119,54 @@
   .milestone-meta{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted); margin-top:6px; display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
   .status-select{ background:var(--ink); border:1px solid var(--line); color:var(--foam); border-radius:6px; padding:3px 6px; font-family:'IBM Plex Mono',monospace; font-size:11px; }
 
+  /* ===== Veredito (hero) ===== */
+  .verdict{ border-radius:16px; padding:20px; margin-bottom:16px; position:relative; overflow:hidden;
+    background:linear-gradient(135deg, var(--panel-2), var(--panel)); border:1px solid var(--line); }
+  .verdict .vtop{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; }
+  .verdict .vlabel{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+  .chip{ font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; padding:5px 11px; border-radius:20px; letter-spacing:.03em; white-space:nowrap; }
+  .chip.green{ background:rgba(79,180,119,.18); color:var(--green); }
+  .chip.amber{ background:rgba(242,169,59,.2); color:var(--amber); }
+  .chip.coral{ background:rgba(232,86,63,.2); color:var(--coral); }
+  .verdict .vroute{ font-family:'Roboto Slab',serif; font-weight:800; font-size:22px; line-height:1.15; margin:0 0 4px; }
+  .verdict .vroute em{ color:var(--amber); font-style:normal; }
+  .verdict .vwhen{ font-size:14px; color:var(--foam); }
+  .verdict .vwhen b{ font-family:'IBM Plex Mono',monospace; color:var(--amber); }
+  .verdict .vsub{ font-size:12.5px; color:var(--muted); margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); }
+
+  /* ===== Dashboard: anel de progresso ===== */
+  .goal{ background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px; margin-bottom:16px;
+    display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+  .ring-svg{ width:132px; height:132px; flex:0 0 auto; }
+  .ring-num{ font-family:'Roboto Slab',serif; font-weight:800; font-size:30px; fill:var(--foam); }
+  .ring-lbl{ font-family:'IBM Plex Mono',monospace; font-size:9px; fill:var(--muted); letter-spacing:.08em; text-transform:uppercase; }
+  .goal .ginfo{ flex:1 1 180px; }
+  .goal .gtitle{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--amber); margin-bottom:10px; }
+  .goal .grow{ display:flex; justify-content:space-between; gap:10px; font-size:14px; padding:5px 0; border-bottom:1px dashed var(--line); }
+  .goal .grow:last-child{ border-bottom:none; }
+  .goal .grow b{ font-family:'IBM Plex Mono',monospace; }
+  .goal .grow .miss{ color:var(--coral); }
+
+  .section-label{ font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:4px 0 12px; }
+
+  /* ===== Barra de progresso das rotas ===== */
+  .pbar{ height:10px; border-radius:6px; background:rgba(13,27,36,.5); position:relative; overflow:hidden; margin:12px 0 6px; }
+  .pbar .fill{ position:absolute; left:0; top:0; bottom:0; border-radius:6px; background:linear-gradient(90deg, var(--amber), #ffcf7a); }
+  .pbar-legend{ display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#6b5f45; }
+  .stages{ display:flex; gap:8px; margin:10px 0 0; }
+  .stage{ flex:1; background:#e5dcc6; border-radius:8px; padding:8px 10px; }
+  .stage .sk{ font-family:'IBM Plex Mono',monospace; font-size:10px; color:#6b5f45; text-transform:uppercase; letter-spacing:.04em; }
+  .stage .sv{ font-family:'Roboto Slab',serif; font-weight:700; font-size:14px; color:var(--ink); margin-top:2px; }
+
+  /* ===== Inputs recolhidos ===== */
+  details.settings{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:0 18px; margin-bottom:16px; }
+  details.settings summary{ list-style:none; cursor:pointer; padding:15px 0; display:flex; justify-content:space-between; align-items:center;
+    font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--foam); }
+  details.settings summary::-webkit-details-marker{ display:none; }
+  details.settings .chev{ transition:transform .2s; color:var(--muted); }
+  details.settings[open] .chev{ transform:rotate(180deg); }
+  details.settings[open] summary{ border-bottom:1px solid var(--line); }
+
   nav.tabbar{
     position:fixed; bottom:0; left:0; right:0; z-index:20;
     background:rgba(13,27,36,.92); backdrop-filter: blur(10px);
@@ -164,9 +212,23 @@
 
   <!-- ABA 1: FINANCEIRA -->
   <section class="tab-view active" id="tab-financeira">
-    <div class="panel">
-      <h2>Coordenadas de partida</h2>
-      <div class="inputs-grid">
+    <!-- Veredito: a resposta em uma olhada -->
+    <div id="verdict"></div>
+
+    <!-- Dashboard: quão perto do apartamento próprio -->
+    <div id="goalDash"></div>
+
+    <!-- KPIs rápidos -->
+    <div class="kpi" id="finKpi"></div>
+
+    <!-- Comparação das duas rotas -->
+    <h3 class="section-label">Comparar as duas rotas</h3>
+    <div class="routes" id="routes"></div>
+
+    <!-- Inputs recolhidos -->
+    <details class="settings" id="settings">
+      <summary><span>⚙️ Ajustar números</span><span class="chev">▾</span></summary>
+      <div class="inputs-grid" style="margin-top:14px;">
         <div class="field"><label for="reserva">Reserva atual (R$)</label><input type="number" id="reserva" step="500"></div>
         <div class="field"><label for="aporte">Aporte mensal (R$)</label><input type="number" id="aporte" step="100"></div>
         <div class="field"><label for="valorApto">Valor alvo do apto (R$)</label><input type="number" id="valorApto" step="5000"></div>
@@ -174,9 +236,8 @@
         <div class="field"><label for="rendaAirbnb">Renda líq. Airbnb/mês (R$)</label><input type="number" id="rendaAirbnb" step="100"></div>
         <div class="field"><label for="entradaPct">Entrada exigida (%)</label><input type="number" id="entradaPct" step="1"></div>
       </div>
-    </div>
-    <div class="save-status" id="saveStatus"></div>
-    <div class="routes" id="routes"></div>
+      <div class="save-status" id="saveStatus"></div>
+    </details>
   </section>
 
   <!-- ABA 2: DIÁRIO -->
@@ -340,6 +401,25 @@ function ymLabel(ym){
 }
 function currentYM(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function dateFromMonths(m){ if(!isFinite(m)) return null; const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()+Math.max(0,m)); return d; }
+function dateLabel(m){ const d=dateFromMonths(m); if(!d) return '—'; let s=d.toLocaleDateString('pt-BR',{month:'long',year:'numeric'}); return s.charAt(0).toUpperCase()+s.slice(1); }
+function statusMeta(pct){
+  if(pct>=1)    return ['green','🎉 Meta batida'];
+  if(pct>=0.9)  return ['green','Reta final'];
+  if(pct>=0.6)  return ['amber','Perto'];
+  if(pct>=0.25) return ['amber','A caminho'];
+  return ['coral','Começando'];
+}
+function ringSVG(pct){
+  const r=52, C=2*Math.PI*r, off=C*(1-Math.min(pct,1));
+  return `<svg class="ring-svg" viewBox="0 0 140 140">
+    <circle cx="70" cy="70" r="${r}" fill="none" stroke="rgba(244,241,232,0.1)" stroke-width="14"/>
+    <circle cx="70" cy="70" r="${r}" fill="none" stroke="#F2A93B" stroke-width="14" stroke-linecap="round"
+      stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 70 70)"/>
+    <text class="ring-num" x="70" y="72" text-anchor="middle">${Math.round(pct*100)}%</text>
+    <text class="ring-lbl" x="70" y="90" text-anchor="middle">da entrada</text>
+  </svg>`;
+}
 
 /* ---------------- ABA 1: Financeira ---------------- */
 const inputIds = ['reserva','aporte','valorApto','valorAirbnb','rendaAirbnb','entradaPct'];
@@ -367,47 +447,85 @@ function calcular(){
   return { ...i, entradaApto, entradaAirbnb, mesesA, progressoA, mesesAteAirbnb, mesesAptoDepois, mesesB, progressoB };
 }
 
-function renderRoutes(){
+function renderFinanceira(){
   const c = calcular();
   const winner = c.mesesA <= c.mesesB ? 'A' : 'B';
+  const falta = Math.max(c.entradaApto - c.reserva, 0);
+  const [chipCls, chipTxt] = statusMeta(c.progressoA);
+
+  // ---- Veredito ----
+  const recNome = winner==='A' ? 'Direto ao apto próprio' : 'Airbnb primeiro, depois o apto';
+  const recMeses = winner==='A' ? c.mesesA : c.mesesB;
+  const outroMeses = winner==='A' ? c.mesesB : c.mesesA;
+  const diff = (isFinite(outroMeses)&&isFinite(recMeses)) ? Math.abs(outroMeses-recMeses) : null;
+  let vsub;
+  if(!isFinite(recMeses)){
+    vsub = 'Defina um aporte mensal maior que zero em “Ajustar números” para calcular a data.';
+  } else if(winner==='B'){
+    vsub = `A Rota B fica ${diff} ${diff===1?'mês':'meses'} na frente <b>no papel</b> — mas só se a renda do Airbnb (${fmt(c.rendaAirbnb)}/mês) existir de fato. Enquanto não estiver alugado, a Rota A é o caminho garantido.`;
+  } else {
+    vsub = diff ? `Chega ${diff} ${diff===1?'mês':'meses'} antes da Rota B e não depende de nenhuma renda que ainda não existe.` : 'Caminho mais simples e sem depender de renda que ainda não existe.';
+  }
+  document.getElementById('verdict').innerHTML = `
+    <div class="verdict">
+      <div class="vtop">
+        <span class="vlabel">Rota recomendada</span>
+        <span class="chip ${chipCls}">${chipTxt}</span>
+      </div>
+      <p class="vroute">Rota ${winner} · <em>${recNome}</em></p>
+      <p class="vwhen">${ isFinite(recMeses) ? `Apto próprio até <b>${dateLabel(recMeses)}</b> · faltam <b>${monthsLabel(recMeses)}</b>` : 'Sem previsão — falta definir o aporte' }</p>
+      <p class="vsub">${vsub}</p>
+    </div>`;
+
+  // ---- Dashboard (anel) ----
+  document.getElementById('goalDash').innerHTML = `
+    <div class="goal">
+      ${ringSVG(c.progressoA)}
+      <div class="ginfo">
+        <div class="gtitle">🏠 Entrada do apartamento próprio</div>
+        <div class="grow"><span>Você já tem</span><b>${fmt(c.reserva)}</b></div>
+        <div class="grow"><span>Entrada necessária</span><b>${fmt(c.entradaApto)}</b></div>
+        <div class="grow"><span>Ainda falta</span><b class="miss">${fmt(falta)}</b></div>
+        <div class="grow"><span>No ritmo de hoje, chega em</span><b>${isFinite(c.mesesA)?dateLabel(c.mesesA):'—'}</b></div>
+      </div>
+    </div>`;
+
+  // ---- KPIs ----
+  document.getElementById('finKpi').innerHTML = `
+    <div class="box"><div class="n">${fmt(c.reserva)}</div><div class="l">Reserva atual</div></div>
+    <div class="box"><div class="n">${fmt(c.aporte)}</div><div class="l">Aporte por mês</div></div>
+    <div class="box"><div class="n">${monthsLabel(recMeses)}</div><div class="l">Até o apto (rota ${winner})</div></div>`;
+
+  // ---- Comparação das rotas ----
+  const barA = Math.round(c.progressoA*100);
+  const barB = Math.round(c.progressoB*100);
   document.getElementById('routes').innerHTML = `
     <div class="route-card ${winner==='A'?'winner':''}">
-      ${winner==='A'?'<span class="winner-badge">Mais rápida</span>':''}
+      ${winner==='A'?'<span class="winner-badge">Recomendada</span>':''}
       <p class="route-tag">Rota A</p>
       <h3 class="route-title">Direto ao apartamento próprio</h3>
-      <div class="chart-line">
-        <div class="track"></div>
-        <div class="buoy start" style="left:6%">R$</div>
-        <div class="buoy end" style="left:${Math.min(94, 6 + c.progressoA*88)}%">🏠</div>
-      </div>
       <div class="route-stats">
-        <div class="headline">${monthsLabel(c.mesesA)}<span>até a entrada</span></div>
-        <div class="row"><span>Entrada necessária</span><b>${fmt(c.entradaApto)}</b></div>
-        <div class="row"><span>Já coberto hoje</span><b>${Math.round(c.progressoA*100)}%</b></div>
-        <div class="row"><span>Aporte mensal</span><b>${fmt(c.aporte)}</b></div>
+        <div class="headline">${dateLabel(c.mesesA)}<span>${monthsLabel(c.mesesA)} até a entrada</span></div>
       </div>
-      <p class="note">Todo o aporte vai só para a entrada do apto. Mais simples e sem depender de renda que ainda não existe.</p>
+      <div class="pbar"><div class="fill" style="width:${Math.max(barA,3)}%"></div></div>
+      <div class="pbar-legend"><span>${fmt(c.reserva)}</span><span>${barA}%</span><span>${fmt(c.entradaApto)}</span></div>
+      <p class="note">Todo o aporte vai direto para a entrada do apto. Simples e sem depender de renda de terceiros.</p>
     </div>
 
     <div class="route-card ${winner==='B'?'winner':''}">
-      ${winner==='B'?'<span class="winner-badge">Mais rápida</span>':''}
+      ${winner==='B'?'<span class="winner-badge">Recomendada</span>':''}
       <p class="route-tag">Rota B</p>
       <h3 class="route-title">Airbnb primeiro, apto depois</h3>
-      <div class="chart-line">
-        <div class="track"></div>
-        <div class="buoy start" style="left:6%">R$</div>
-        <div class="buoy mid" style="left:${Math.min(60, 6 + c.progressoB*44)}%">🔑</div>
-        <div class="buoy end" style="left:94%">🏠</div>
-      </div>
       <div class="route-stats">
-        <div class="headline">${monthsLabel(c.mesesB)}<span>até o apto próprio</span></div>
-        <div class="row"><span>Etapa 1 · entrada Airbnb</span><b>${monthsLabel(c.mesesAteAirbnb)}</b></div>
-        <div class="row"><span>Etapa 2 · entrada apto (c/ renda)</span><b>${monthsLabel(c.mesesAptoDepois)}</b></div>
-        <div class="row"><span>Renda somada ao aporte</span><b>+${fmt(c.rendaAirbnb)}/mês</b></div>
+        <div class="headline">${dateLabel(c.mesesB)}<span>${monthsLabel(c.mesesB)} até o apto próprio</span></div>
+      </div>
+      <div class="stages">
+        <div class="stage"><div class="sk">1 · Entrada Airbnb</div><div class="sv">${monthsLabel(c.mesesAteAirbnb)}</div></div>
+        <div class="stage"><div class="sk">2 · Entrada apto</div><div class="sv">${monthsLabel(c.mesesAptoDepois)}</div></div>
       </div>
       <div class="risk">
         <span>⚠️</span>
-        <span><b>Ponto de risco</b>A Rota B só entrega esse prazo se a renda de ${fmt(c.rendaAirbnb)}/mês entrar de fato. Enquanto o Airbnb não estiver alugado essa renda não existe — vacância e sazonalidade em Floripa podem atrasar a etapa 2.</span>
+        <span><b>Ponto de risco</b>Esse prazo só vale se a renda de ${fmt(c.rendaAirbnb)}/mês entrar de fato. Enquanto o Airbnb não estiver alugado, essa renda não existe — vacância e sazonalidade em Floripa podem atrasar a etapa 2.</span>
       </div>
     </div>`;
 }
@@ -571,7 +689,7 @@ function renderMetas(){
 inputIds.forEach(id=>{
   document.getElementById(id).addEventListener('input', ()=>{
     state.inputs[id] = parseFloat(document.getElementById(id).value) || 0;
-    renderRoutes(); save();
+    renderFinanceira(); renderDiario(); save();
   });
 });
 
@@ -662,7 +780,7 @@ function switchTab(name){
 }
 document.querySelectorAll('#tabbar button').forEach(b=> b.onclick=()=> switchTab(b.dataset.tab));
 
-function renderAll(){ renderRoutes(); renderDiario(); renderMent(); renderAmbiente(); renderMetas(); }
+function renderAll(){ renderFinanceira(); renderDiario(); renderMent(); renderAmbiente(); renderMetas(); }
 
 /* ---------------- Instalação (PWA) ---------------- */
 let deferredPrompt;
