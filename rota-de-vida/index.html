@@ -167,17 +167,74 @@
   details.settings[open] .chev{ transform:rotate(180deg); }
   details.settings[open] summary{ border-bottom:1px solid var(--line); }
 
+  /* ===== Mapa mental ===== */
+  .map-toolbar{ display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+  .map-zoom{ display:flex; gap:6px; margin-left:auto; }
+  .map-zoom .btn{ min-width:36px; padding:7px 10px; }
+  .map-legend{ display:flex; gap:8px; flex-wrap:wrap; font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); }
+  .map-legend span{ display:inline-flex; align-items:center; gap:4px; }
+  .map-legend i{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+  .map-hint{ font-size:11.5px; color:var(--muted); margin-bottom:8px; }
+  .map-canvas{ position:relative; height:calc(100vh - 300px); min-height:360px; border:1px solid var(--line);
+    border-radius:14px; overflow:hidden; background:
+      radial-gradient(circle at 1px 1px, rgba(244,241,232,0.06) 1px, transparent 0) 0 0/22px 22px, var(--ink);
+    touch-action:none; user-select:none; -webkit-user-select:none; }
+  .map-viewport{ position:absolute; left:0; top:0; width:2400px; height:2400px; transform-origin:0 0; }
+  .map-links{ position:absolute; left:0; top:0; width:2400px; height:2400px; overflow:visible; pointer-events:none; }
+  .map-nodes{ position:absolute; left:0; top:0; }
+  .mnode{ position:absolute; transform:translate(-50%,-50%); max-width:160px; background:var(--panel-2);
+    border:1px solid var(--line); border-left:4px solid var(--amber); border-radius:10px; padding:9px 11px;
+    cursor:grab; box-shadow:0 4px 10px rgba(0,0,0,.25); }
+  .mnode.dragging{ cursor:grabbing; box-shadow:0 8px 20px rgba(0,0,0,.4); z-index:5; }
+  .mnode .mt{ font-family:'IBM Plex Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); display:flex; align-items:center; gap:4px; }
+  .mnode .mtitle{ font-size:13px; font-weight:600; margin-top:3px; line-height:1.25; word-break:break-word; }
+  .mnode .mnote{ font-size:11px; color:var(--muted); margin-top:4px; line-height:1.3; word-break:break-word; }
+  .mnode .mstatus{ font-family:'IBM Plex Mono',monospace; font-size:10px; margin-top:5px; }
+  .mnode.st-done{ opacity:.7; }
+  .mnode.st-done .mtitle{ text-decoration:line-through; }
+  .mnode.root{ border-left-width:4px; background:linear-gradient(135deg,#1c4a44,#163944); }
+
+  /* ===== Modais ===== */
+  .modal-overlay{ position:fixed; inset:0; z-index:40; background:rgba(6,14,20,.72); backdrop-filter:blur(3px);
+    display:none; align-items:flex-end; justify-content:center; padding:0; }
+  .modal-overlay.show{ display:flex; }
+  @media(min-width:560px){ .modal-overlay{ align-items:center; padding:20px; } }
+  .modal{ background:var(--panel); border:1px solid var(--line); border-radius:18px 18px 0 0; width:100%;
+    max-width:520px; max-height:88vh; overflow-y:auto; padding:20px 18px calc(20px + env(safe-area-inset-bottom)); }
+  @media(min-width:560px){ .modal{ border-radius:16px; } }
+  .modal h3{ font-family:'Roboto Slab',serif; font-size:18px; margin:0 0 14px; }
+  .modal-actions{ display:flex; align-items:center; gap:8px; margin-top:18px; }
+  .am-img{ width:100%; max-height:180px; object-fit:cover; border-radius:12px; }
+  .am-check{ display:flex; align-items:center; gap:8px; margin-top:14px; font-size:14px; cursor:pointer; }
+
+  /* ===== Alvos ===== */
+  .alvo-card{ background:var(--panel); border:1px solid var(--line); border-radius:14px; overflow:hidden; margin-bottom:14px; }
+  .alvo-card.principal{ box-shadow:0 0 0 2px var(--amber) inset; }
+  .alvo-card img{ width:100%; height:170px; object-fit:cover; background:var(--panel-2); display:block; }
+  .alvo-body{ padding:14px; }
+  .alvo-badge{ font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600; color:var(--ink); background:var(--amber);
+    padding:3px 9px; border-radius:20px; display:inline-block; margin-bottom:8px; }
+  .alvo-title{ font-family:'Roboto Slab',serif; font-weight:700; font-size:16px; }
+  .alvo-desc{ font-size:13px; color:var(--muted); margin-top:6px; max-height:60px; overflow:hidden; }
+  .alvo-meta{ display:flex; justify-content:space-between; align-items:center; margin-top:12px; gap:8px; flex-wrap:wrap; }
+  .alvo-price{ font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:15px; color:var(--amber); }
+  .alvo-actions{ display:flex; gap:6px; flex-wrap:wrap; }
+  .alvo-actions a, .alvo-actions button{ font-family:'IBM Plex Mono',monospace; font-size:12px; text-decoration:none;
+    border:1px solid var(--line); color:var(--foam); background:transparent; border-radius:8px; padding:6px 10px; cursor:pointer; }
+
   nav.tabbar{
     position:fixed; bottom:0; left:0; right:0; z-index:20;
-    background:rgba(13,27,36,.92); backdrop-filter: blur(10px);
+    background:rgba(13,27,36,.94); backdrop-filter: blur(10px);
     border-top:1px solid var(--line);
     display:flex; justify-content:space-around;
-    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+    padding: 6px 2px calc(6px + env(safe-area-inset-bottom));
+    overflow-x:auto; scrollbar-width:none;
   }
+  nav.tabbar::-webkit-scrollbar{ display:none; }
   nav.tabbar button{
     background:none; border:none; color:var(--muted); cursor:pointer;
-    display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 4px; flex:1;
-    font-family:'Work Sans',sans-serif; font-size:10px; letter-spacing:.02em;
+    display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 3px; flex:1 0 auto; min-width:46px;
+    font-family:'Work Sans',sans-serif; font-size:9.5px; letter-spacing:.01em; white-space:nowrap;
   }
   nav.tabbar button .ic{ font-size:19px; line-height:1; }
   nav.tabbar button.active{ color:var(--amber); }
@@ -335,15 +392,108 @@
       <p class="sub" style="margin-top:10px; font-size:12px;">Os dados ficam salvos só neste aparelho. Exporte de vez em quando para não perder e para copiar do seu celular para o da sua noiva.</p>
     </div>
   </section>
+
+  <!-- ABA: MAPA MENTAL -->
+  <section class="tab-view" id="tab-mapa">
+    <div class="map-toolbar">
+      <button class="btn sm" id="mapAdd">+ Nó</button>
+      <div class="map-legend" id="mapLegend"></div>
+      <div class="map-zoom">
+        <button class="btn ghost sm" id="mapZoomOut">−</button>
+        <button class="btn ghost sm" id="mapZoomIn">+</button>
+        <button class="btn ghost sm" id="mapFit" title="centralizar">⊙</button>
+      </div>
+    </div>
+    <div class="map-hint">Arraste os nós para organizar · toque num nó para editar · arraste o fundo para mover o mapa</div>
+    <div class="map-canvas" id="mapCanvas">
+      <div class="map-viewport" id="mapViewport">
+        <svg class="map-links" id="mapLinks"></svg>
+        <div class="map-nodes" id="mapNodes"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABA: ALVOS (apartamentos) -->
+  <section class="tab-view" id="tab-alvos">
+    <div class="panel">
+      <h2>Novo apartamento-alvo<span class="hint">Cole o link do anúncio — o app tenta puxar foto, título e descrição.</span></h2>
+      <div class="form-row">
+        <div class="field" style="flex:1 1 100%;"><label for="alvoUrl">Link do anúncio (QuintoAndar, ZAP, OLX, VivaReal...)</label><input type="url" id="alvoUrl" placeholder="https://..."></div>
+      </div>
+      <div class="form-row" style="margin-top:10px;">
+        <button class="btn" id="alvoBuscar">Buscar do link</button>
+        <button class="btn ghost sm" id="alvoManual">Adicionar manualmente</button>
+        <span class="save-status" id="alvoStatus" style="flex:1;text-align:left;margin:0;align-self:center;"></span>
+      </div>
+    </div>
+    <div id="alvoList"></div>
+  </section>
 </div>
 
 <nav class="tabbar" id="tabbar">
   <button data-tab="financeira" class="active"><span class="ic">🧭</span>Rota</button>
+  <button data-tab="mapa"><span class="ic">🗺️</span>Mapa</button>
+  <button data-tab="alvos"><span class="ic">🏢</span>Alvos</button>
   <button data-tab="diario"><span class="ic">📓</span>Diário</button>
   <button data-tab="mentalidade"><span class="ic">🧠</span>Mente</button>
   <button data-tab="ambiente"><span class="ic">🌱</span>Ambiente</button>
   <button data-tab="metas"><span class="ic">🚩</span>Metas</button>
 </nav>
+
+<!-- Modal de edição de nó do mapa -->
+<div class="modal-overlay" id="nodeModal">
+  <div class="modal">
+    <h3 id="nodeModalTitle">Editar nó</h3>
+    <div class="field"><label for="nTipo">Tipo</label>
+      <select id="nTipo"></select>
+    </div>
+    <div class="field" style="margin-top:10px;"><label for="nTitulo">Título</label>
+      <input type="text" id="nTitulo" placeholder="ex.: Rota B — Airbnb primeiro">
+    </div>
+    <div class="field" style="margin-top:10px;"><label for="nNota">Nota / detalhe (opcional)</label>
+      <textarea id="nNota" placeholder="projeção, objeção, o que estudar, contratempo..."></textarea>
+    </div>
+    <div class="field" id="nStatusWrap" style="margin-top:10px;"><label for="nStatus">Status</label>
+      <select id="nStatus">
+        <option value="">— sem status —</option>
+        <option value="pending">○ A fazer</option>
+        <option value="doing">◐ Fazendo</option>
+        <option value="done">✓ Feito</option>
+      </select>
+    </div>
+    <div class="field" style="margin-top:10px;"><label for="nParent">Ligar a (nó pai)</label>
+      <select id="nParent"></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost sm" id="nDelete">Excluir</button>
+      <span style="flex:1"></span>
+      <button class="btn ghost sm" id="nCancel">Cancelar</button>
+      <button class="btn sm" id="nSave">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de edição de alvo -->
+<div class="modal-overlay" id="alvoModal">
+  <div class="modal">
+    <h3>Apartamento-alvo</h3>
+    <img id="amImg" class="am-img" alt="" style="display:none">
+    <div class="field" style="margin-top:10px;"><label for="amTitulo">Título</label><input type="text" id="amTitulo" placeholder="ex.: 2 quartos, bairro X"></div>
+    <div class="field" style="margin-top:10px;"><label for="amDesc">Descrição (opcional)</label><textarea id="amDesc"></textarea></div>
+    <div class="form-row" style="margin-top:10px;">
+      <div class="field"><label for="amPreco">Valor do imóvel (R$)</label><input type="number" id="amPreco" step="5000" placeholder="0"></div>
+      <div class="field"><label for="amImgUrl">URL da foto (opcional)</label><input type="url" id="amImgUrl" placeholder="https://..."></div>
+    </div>
+    <div class="field" style="margin-top:10px;"><label for="amUrl">Link do anúncio</label><input type="url" id="amUrl" placeholder="https://..."></div>
+    <label class="am-check"><input type="checkbox" id="amAlvo"> Definir como <b>alvo principal</b></label>
+    <div class="modal-actions">
+      <button class="btn ghost sm" id="amDelete">Excluir</button>
+      <span style="flex:1"></span>
+      <button class="btn ghost sm" id="amCancel">Cancelar</button>
+      <button class="btn sm" id="amSave">Salvar</button>
+    </div>
+  </div>
+</div>
 
 <script>
 /* ---------------- Estado / persistência ---------------- */
@@ -352,7 +502,9 @@ const DEFAULTS = {
   inputs: { reserva:40000, aporte:3000, valorApto:350000, valorAirbnb:280000, rendaAirbnb:1500, entradaPct:20 },
   diario: [], mentalidade: [],
   ambiente: { registros:[], desejos:[] },
-  metas: []
+  metas: [],
+  mapa: { nodes: [], view: null },
+  alvos: []
 };
 let state = load();
 
@@ -367,7 +519,9 @@ function migrate(d){
     diario: d.diario||[],
     mentalidade: d.mentalidade||[],
     ambiente: { registros:(d.ambiente&&d.ambiente.registros)||[], desejos:(d.ambiente&&d.ambiente.desejos)||[] },
-    metas: d.metas||[]
+    metas: d.metas||[],
+    mapa: { nodes:(d.mapa&&d.mapa.nodes)||[], view:(d.mapa&&d.mapa.view)||null },
+    alvos: d.alvos||[]
   };
 }
 let saveTimer;
@@ -762,6 +916,8 @@ document.getElementById('importFile').onchange = (ev)=>{
 /* ---------------- Navegação por abas ---------------- */
 const META = {
   financeira: ['Carta de navegação · Mattheus & noiva','Rota de Vida','Duas rotas a partir do mesmo ponto. Ajuste os números com o que for real, o mapa recalcula sozinho.'],
+  mapa: ['Mapa mental','Mapa da estratégia','Caminhos, rotas alternativas, submetas, obstáculos, estudos e tarefas — tudo conectado.'],
+  alvos: ['Alvos','Apartamentos-alvo','Cole o link do anúncio; o app puxa foto e dados. Marque o alvo principal.'],
   diario: ['Diário de bordo','Diário de bordo','Registre quanto guardou a cada mês e veja a reserva evoluir.'],
   mentalidade: ['Mentalidade','Mentalidade','Registro de ação, não de cobrança. O que te aproximou da meta.'],
   ambiente: ['Ambiente','Ambiente','Como o ambiente modula decisão e energia. Expansão, não substituição.'],
@@ -777,10 +933,314 @@ function switchTab(name){
   document.getElementById('pageSub').textContent = m[2];
   window.scrollTo({top:0, behavior:'smooth'});
   try{ localStorage.setItem('rota-vida:tab', name); }catch(e){}
+  if(name==='mapa'){ requestAnimationFrame(()=>{ if(!state.mapa.view) fitMap(); else applyMapView(); drawMap(); }); }
 }
 document.querySelectorAll('#tabbar button').forEach(b=> b.onclick=()=> switchTab(b.dataset.tab));
 
-function renderAll(){ renderFinanceira(); renderDiario(); renderMent(); renderAmbiente(); renderMetas(); }
+/* ================= MAPA MENTAL ================= */
+const NODE_TIPOS = {
+  objetivo:  ['🎯','Objetivo',      '#F2A93B'],
+  rota:      ['🧭','Rota/Caminho',  '#7FB2C8'],
+  submeta:   ['🪜','Submeta',       '#4FB477'],
+  obstaculo: ['⛰️','Obstáculo',     '#E8563F'],
+  objecao:   ['❓','Objeção',        '#C77DBB'],
+  estudo:    ['📚','Estudo',        '#9B8CFF'],
+  renda:     ['💸','Renda passiva', '#4FB477'],
+  tarefa:    ['✅','Tarefa',         '#F2A93B'],
+  ideia:     ['💡','Ideia',         '#EFE8D8']
+};
+const CANVAS_SIZE = 2400;
+let mapView = { x:0, y:0, k:1 };
+
+function seedMapIfEmpty(){
+  if(!state.mapa.nodes.length){
+    const cx = CANVAS_SIZE/2, cy = CANVAS_SIZE/2;
+    state.mapa.nodes = [
+      { id:'root', tipo:'objetivo', titulo:'Subir de padrão de vida', nota:'Sair do aluguel, apto próprio, renda extra, viajar mais.', status:'', x:cx, y:cy, parent:null },
+      { id:uid(), tipo:'rota', titulo:'Rota A — direto ao apto', nota:'', status:'doing', x:cx-260, y:cy-160, parent:'root' },
+      { id:uid(), tipo:'rota', titulo:'Rota B — Airbnb primeiro', nota:'Depende de renda de aluguel que ainda não existe.', status:'', x:cx+260, y:cy-160, parent:'root' },
+      { id:uid(), tipo:'submeta', titulo:'Fechar a entrada', nota:'', status:'doing', x:cx-260, y:cy+150, parent:'root' },
+      { id:uid(), tipo:'renda', titulo:'Rendas passivas', nota:'Airbnb, dividendos, produto digital...', status:'', x:cx+260, y:cy+150, parent:'root' },
+      { id:uid(), tipo:'estudo', titulo:'O que estudar', nota:'Financiamento, tipos de entrada, região.', status:'pending', x:cx, y:cy+280, parent:'root' }
+    ];
+    save();
+  }
+}
+
+function drawMap(){
+  const nodesEl = document.getElementById('mapNodes');
+  const linksEl = document.getElementById('mapLinks');
+  const nodes = state.mapa.nodes;
+  const byId = Object.fromEntries(nodes.map(n=>[n.id,n]));
+  // links
+  linksEl.innerHTML = nodes.filter(n=>n.parent && byId[n.parent]).map(n=>{
+    const p = byId[n.parent];
+    return `<line x1="${p.x}" y1="${p.y}" x2="${n.x}" y2="${n.y}" stroke="rgba(244,241,232,0.22)" stroke-width="2"/>`;
+  }).join('');
+  // nodes
+  nodesEl.innerHTML = nodes.map(n=>{
+    const t = NODE_TIPOS[n.tipo] || NODE_TIPOS.ideia;
+    const stTxt = n.status==='done' ? '✓ feito' : n.status==='doing' ? '◐ fazendo' : n.status==='pending' ? '○ a fazer' : '';
+    return `<div class="mnode ${n.id==='root'?'root':''} ${n.status==='done'?'st-done':''}" data-id="${n.id}"
+        style="left:${n.x}px; top:${n.y}px; border-left-color:${t[2]}">
+      <div class="mt">${t[0]} ${t[1]}</div>
+      <div class="mtitle">${escapeHtml(n.titulo||'(sem título)')}</div>
+      ${n.nota?`<div class="mnote">${escapeHtml(n.nota)}</div>`:''}
+      ${stTxt?`<div class="mstatus" style="color:${t[2]}">${stTxt}</div>`:''}
+    </div>`;
+  }).join('');
+  attachNodeDrag();
+  renderMapLegend();
+}
+
+function renderMapLegend(){
+  const used = [...new Set(state.mapa.nodes.map(n=>n.tipo))];
+  document.getElementById('mapLegend').innerHTML = used.map(k=>{
+    const t = NODE_TIPOS[k]; if(!t) return '';
+    return `<span><i style="background:${t[2]}"></i>${t[1]}</span>`;
+  }).join('');
+}
+
+function applyMapView(){
+  const vp = document.getElementById('mapViewport');
+  vp.style.transform = `translate(${mapView.x}px, ${mapView.y}px) scale(${mapView.k})`;
+}
+function saveMapView(){ state.mapa.view = {...mapView}; save(); }
+function fitMap(){
+  const canvas = document.getElementById('mapCanvas');
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  const ns = state.mapa.nodes;
+  const cx = ns.length ? ns.reduce((s,n)=>s+n.x,0)/ns.length : CANVAS_SIZE/2;
+  const cy = ns.length ? ns.reduce((s,n)=>s+n.y,0)/ns.length : CANVAS_SIZE/2;
+  mapView.k = 1;
+  mapView.x = w/2 - cx*mapView.k;
+  mapView.y = h/2 - cy*mapView.k;
+  applyMapView(); saveMapView();
+}
+if(state.mapa.view) mapView = {...state.mapa.view};
+
+// pan (arrastar fundo) + drag de nós
+let panning=false, panStart=null;
+(function initMapPan(){
+  const canvas = document.getElementById('mapCanvas');
+  canvas.addEventListener('pointerdown', (e)=>{
+    if(e.target.closest('.mnode')) return; // nó tem seu próprio handler
+    panning=true; panStart={ x:e.clientX-mapView.x, y:e.clientY-mapView.y };
+    canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointermove', (e)=>{
+    if(!panning) return;
+    mapView.x = e.clientX - panStart.x; mapView.y = e.clientY - panStart.y; applyMapView();
+  });
+  canvas.addEventListener('pointerup', ()=>{ if(panning){ panning=false; saveMapView(); } });
+  canvas.addEventListener('pointercancel', ()=>{ panning=false; });
+  // zoom por roda (desktop)
+  canvas.addEventListener('wheel', (e)=>{ e.preventDefault(); zoomBy(e.deltaY<0?1.1:0.9); }, {passive:false});
+})();
+
+function zoomBy(f){
+  const canvas = document.getElementById('mapCanvas');
+  const w=canvas.clientWidth, h=canvas.clientHeight;
+  const nk = Math.min(2, Math.max(0.4, mapView.k*f));
+  // zoom em torno do centro visível
+  const cxWorld = (w/2 - mapView.x)/mapView.k, cyWorld = (h/2 - mapView.y)/mapView.k;
+  mapView.k = nk;
+  mapView.x = w/2 - cxWorld*nk; mapView.y = h/2 - cyWorld*nk;
+  applyMapView(); saveMapView();
+}
+
+let dragNode=null, dragMoved=false, dragOffset=null;
+function attachNodeDrag(){
+  document.querySelectorAll('.mnode').forEach(el=>{
+    el.addEventListener('pointerdown', (e)=>{
+      e.stopPropagation();
+      const n = state.mapa.nodes.find(x=>x.id===el.dataset.id); if(!n) return;
+      dragNode=n; dragMoved=false; el.classList.add('dragging');
+      const startX=e.clientX, startY=e.clientY, ox=n.x, oy=n.y;
+      dragOffset={startX,startY,ox,oy};
+      el.setPointerCapture(e.pointerId);
+    });
+    el.addEventListener('pointermove', (e)=>{
+      if(!dragNode || dragNode.id!==el.dataset.id) return;
+      const dx=(e.clientX-dragOffset.startX)/mapView.k, dy=(e.clientY-dragOffset.startY)/mapView.k;
+      if(Math.abs(dx)>3||Math.abs(dy)>3) dragMoved=true;
+      dragNode.x=dragOffset.ox+dx; dragNode.y=dragOffset.oy+dy;
+      el.style.left=dragNode.x+'px'; el.style.top=dragNode.y+'px';
+      // redesenha só as linhas
+      drawLinksOnly();
+    });
+    el.addEventListener('pointerup', (e)=>{
+      if(!dragNode) return;
+      el.classList.remove('dragging');
+      if(dragMoved){ save(); } else { openNodeModal(dragNode.id); }
+      dragNode=null;
+    });
+  });
+}
+function drawLinksOnly(){
+  const nodes=state.mapa.nodes, byId=Object.fromEntries(nodes.map(n=>[n.id,n]));
+  document.getElementById('mapLinks').innerHTML = nodes.filter(n=>n.parent&&byId[n.parent]).map(n=>{
+    const p=byId[n.parent]; return `<line x1="${p.x}" y1="${p.y}" x2="${n.x}" y2="${n.y}" stroke="rgba(244,241,232,0.22)" stroke-width="2"/>`;
+  }).join('');
+}
+
+// ---- Modal de nó ----
+let editingNodeId=null;
+function fillNodeSelects(currentId){
+  const tipoSel=document.getElementById('nTipo');
+  tipoSel.innerHTML=Object.entries(NODE_TIPOS).map(([k,t])=>`<option value="${k}">${t[0]} ${t[1]}</option>`).join('');
+  const parentSel=document.getElementById('nParent');
+  const opts = state.mapa.nodes.filter(n=>n.id!==currentId).map(n=>`<option value="${n.id}">${escapeHtml(n.titulo||n.tipo)}</option>`).join('');
+  parentSel.innerHTML = `<option value="">— nenhum (nó central) —</option>` + opts;
+}
+function openNodeModal(id){
+  editingNodeId=id;
+  const n = id ? state.mapa.nodes.find(x=>x.id===id) : null;
+  fillNodeSelects(id);
+  document.getElementById('nodeModalTitle').textContent = n?'Editar nó':'Novo nó';
+  document.getElementById('nTipo').value = n?n.tipo:'tarefa';
+  document.getElementById('nTitulo').value = n?n.titulo:'';
+  document.getElementById('nNota').value = n?(n.nota||''):'';
+  document.getElementById('nStatus').value = n?(n.status||''):'';
+  document.getElementById('nParent').value = n?(n.parent||''):'root';
+  document.getElementById('nDelete').style.display = (n && n.id!=='root') ? '' : 'none';
+  document.getElementById('nodeModal').classList.add('show');
+}
+function closeNodeModal(){ document.getElementById('nodeModal').classList.remove('show'); editingNodeId=null; }
+document.getElementById('mapAdd').onclick = ()=> openNodeModal(null);
+document.getElementById('nCancel').onclick = closeNodeModal;
+document.getElementById('nodeModal').onclick = (e)=>{ if(e.target.id==='nodeModal') closeNodeModal(); };
+document.getElementById('nSave').onclick = ()=>{
+  const data = {
+    tipo: document.getElementById('nTipo').value,
+    titulo: document.getElementById('nTitulo').value.trim(),
+    nota: document.getElementById('nNota').value.trim(),
+    status: document.getElementById('nStatus').value,
+    parent: document.getElementById('nParent').value || null
+  };
+  if(!data.titulo){ document.getElementById('nTitulo').focus(); return; }
+  if(editingNodeId){
+    const n = state.mapa.nodes.find(x=>x.id===editingNodeId);
+    Object.assign(n, data);
+    if(n.id==='root') n.parent=null;
+  } else {
+    // posiciona perto do pai (ou centro)
+    const par = data.parent ? state.mapa.nodes.find(x=>x.id===data.parent) : null;
+    const bx = par?par.x:CANVAS_SIZE/2, by = par?par.y:CANVAS_SIZE/2;
+    const ang = Math.random()*Math.PI*2;
+    state.mapa.nodes.push({ id:uid(), ...data, x:bx+Math.cos(ang)*180, y:by+Math.sin(ang)*180 });
+  }
+  save(); drawMap(); closeNodeModal();
+};
+document.getElementById('nDelete').onclick = ()=>{
+  if(!editingNodeId || editingNodeId==='root') return;
+  if(!confirm('Excluir este nó? Os nós ligados a ele passam a ligar no centro.')) return;
+  state.mapa.nodes.forEach(n=>{ if(n.parent===editingNodeId) n.parent='root'; });
+  state.mapa.nodes = state.mapa.nodes.filter(n=>n.id!==editingNodeId);
+  save(); drawMap(); closeNodeModal();
+};
+document.getElementById('mapZoomIn').onclick = ()=> zoomBy(1.2);
+document.getElementById('mapZoomOut').onclick = ()=> zoomBy(0.83);
+document.getElementById('mapFit').onclick = fitMap;
+
+/* ================= ALVOS (apartamentos) ================= */
+function alvoStatus(t, err){
+  const el=document.getElementById('alvoStatus'); el.textContent=t;
+  el.style.color = err ? 'var(--coral)' : 'var(--muted)';
+}
+async function buscarLink(url){
+  // usa Microlink para extrair og:image/title/description sem backend
+  const api = 'https://api.microlink.io/?url=' + encodeURIComponent(url);
+  const res = await fetch(api);
+  if(!res.ok) throw new Error('http '+res.status);
+  const j = await res.json();
+  if(j.status!=='success') throw new Error('sem dados');
+  const d=j.data||{};
+  return { titulo:d.title||'', desc:d.description||'', img:(d.image&&d.image.url)||(d.logo&&d.logo.url)||'' };
+}
+document.getElementById('alvoBuscar').onclick = async ()=>{
+  const url = document.getElementById('alvoUrl').value.trim();
+  if(!url){ document.getElementById('alvoUrl').focus(); return; }
+  alvoStatus('buscando…');
+  try{
+    const info = await buscarLink(url);
+    alvoStatus('');
+    openAlvoModal(null, { url, ...info });
+  }catch(e){
+    alvoStatus('não consegui ler esse link — abra manualmente e preencha', true);
+    openAlvoModal(null, { url });
+  }
+};
+document.getElementById('alvoManual').onclick = ()=> openAlvoModal(null, { url: document.getElementById('alvoUrl').value.trim() });
+
+let editingAlvoId=null;
+function openAlvoModal(id, seed){
+  editingAlvoId=id;
+  const a = id ? state.alvos.find(x=>x.id===id) : (seed||{});
+  document.getElementById('amTitulo').value = a.titulo||'';
+  document.getElementById('amDesc').value = a.desc||'';
+  document.getElementById('amPreco').value = a.preco||'';
+  document.getElementById('amImgUrl').value = a.img||'';
+  document.getElementById('amUrl').value = a.url||'';
+  document.getElementById('amAlvo').checked = !!a.alvo;
+  const img=document.getElementById('amImg');
+  if(a.img){ img.src=a.img; img.style.display=''; } else { img.style.display='none'; }
+  document.getElementById('amDelete').style.display = id ? '' : 'none';
+  document.getElementById('alvoModal').classList.add('show');
+}
+function closeAlvoModal(){ document.getElementById('alvoModal').classList.remove('show'); editingAlvoId=null; }
+document.getElementById('amCancel').onclick = closeAlvoModal;
+document.getElementById('alvoModal').onclick = (e)=>{ if(e.target.id==='alvoModal') closeAlvoModal(); };
+document.getElementById('amImgUrl').addEventListener('input', ()=>{
+  const v=document.getElementById('amImgUrl').value.trim(); const img=document.getElementById('amImg');
+  if(v){ img.src=v; img.style.display=''; } else { img.style.display='none'; }
+});
+document.getElementById('amSave').onclick = ()=>{
+  const data = {
+    titulo: document.getElementById('amTitulo').value.trim() || 'Apartamento',
+    desc: document.getElementById('amDesc').value.trim(),
+    preco: parseFloat(document.getElementById('amPreco').value)||0,
+    img: document.getElementById('amImgUrl').value.trim(),
+    url: document.getElementById('amUrl').value.trim(),
+    alvo: document.getElementById('amAlvo').checked
+  };
+  if(data.alvo) state.alvos.forEach(a=>a.alvo=false);
+  if(editingAlvoId){ Object.assign(state.alvos.find(x=>x.id===editingAlvoId), data); }
+  else { state.alvos.push({ id:uid(), ...data }); }
+  // se marcado como alvo e tem preço, atualiza o valor alvo do apto na Rota
+  if(data.alvo && data.preco>0){ state.inputs.valorApto = data.preco; fillInputs(); renderFinanceira(); }
+  document.getElementById('alvoUrl').value='';
+  save(); renderAlvos(); closeAlvoModal();
+};
+document.getElementById('amDelete').onclick = ()=>{
+  if(!editingAlvoId) return;
+  if(!confirm('Excluir este alvo?')) return;
+  state.alvos = state.alvos.filter(a=>a.id!==editingAlvoId);
+  save(); renderAlvos(); closeAlvoModal();
+};
+function renderAlvos(){
+  const el=document.getElementById('alvoList');
+  if(!state.alvos.length){ el.innerHTML='<p class="empty">Nenhum apartamento ainda. Cole um link acima para começar.</p>'; return; }
+  el.innerHTML = state.alvos.map(a=>`
+    <div class="alvo-card ${a.alvo?'principal':''}">
+      ${a.img?`<img src="${escapeHtml(a.img)}" alt="" onerror="this.style.display='none'">`:''}
+      <div class="alvo-body">
+        ${a.alvo?'<span class="alvo-badge">★ Alvo principal</span>':''}
+        <div class="alvo-title">${escapeHtml(a.titulo)}</div>
+        ${a.desc?`<div class="alvo-desc">${escapeHtml(a.desc)}</div>`:''}
+        <div class="alvo-meta">
+          <span class="alvo-price">${a.preco?fmt(a.preco):'valor a definir'}</span>
+          <div class="alvo-actions">
+            ${a.url?`<a href="${escapeHtml(a.url)}" target="_blank" rel="noopener">abrir anúncio ↗</a>`:''}
+            <button data-edit-alvo="${a.id}">editar</button>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+  el.querySelectorAll('[data-edit-alvo]').forEach(b=> b.onclick=()=> openAlvoModal(b.dataset.editAlvo));
+}
+
+function renderAll(){ renderFinanceira(); renderDiario(); renderMent(); renderAmbiente(); renderMetas(); renderAlvos(); seedMapIfEmpty(); drawMap(); }
 
 /* ---------------- Instalação (PWA) ---------------- */
 let deferredPrompt;

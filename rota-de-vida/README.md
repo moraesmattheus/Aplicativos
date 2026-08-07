@@ -59,12 +59,23 @@ de navegador.
 
 ## Estrutura das abas
 
-1. **Rota** — comparação Rota A (direto ao apto) × Rota B (Airbnb primeiro),
-   com o ponto de risco da renda que ainda não existe destacado.
-2. **Diário** — registro mensal do quanto foi guardado + gráfico de evolução.
-3. **Mente** — registro de ação da semana, uso do tempo ocioso e gatilhos.
-4. **Ambiente** — ambientes/pessoas experimentados e lista do que buscar.
-5. **Metas** — linha do tempo dos marcos, com data alvo e status.
+1. **Rota** — veredito da rota recomendada + data-alvo, dashboard com anel de
+   progresso da entrada e comparação Rota A × Rota B (com o ponto de risco).
+2. **Mapa** — mapa mental interativo: nós arrastáveis e conectados, por tipo
+   (Rota, Submeta, Obstáculo, Objeção, Estudo, Renda passiva, Tarefa, Ideia).
+   Toque num nó para editar; arraste o fundo para mover; use +/− para zoom.
+3. **Alvos** — apartamentos que vocês querem. Cole o link do anúncio e o app
+   tenta puxar foto/título/descrição (via Microlink); marque o alvo principal
+   e o valor entra no cálculo da Rota. Se o site bloquear, preencha na mão.
+4. **Diário** — registro mensal do quanto foi guardado + gráfico de evolução.
+5. **Mente** — registro de ação da semana, uso do tempo ocioso e gatilhos.
+6. **Ambiente** — ambientes/pessoas experimentados e lista do que buscar.
+7. **Metas** — linha do tempo dos marcos, com data alvo e status.
+
+> Observação sobre "puxar do link": um app sem servidor não lê sites de
+> imóveis diretamente (bloqueio de CORS do navegador). O app usa o serviço
+> público **Microlink** para extrair a prévia. Alguns anúncios podem não
+> liberar a prévia — nesse caso o cadastro manual cobre.
 
 ## Arquivos
 
