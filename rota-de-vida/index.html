@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0D1B24">
+<title>Rota de Vida</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rota de Vida">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500;600&family=Work+Sans:wght@400;500;600&display=swap');
+
+  :root{
+    --ink: #0D1B24;
+    --panel: #12313B;
+    --panel-2: #163944;
+    --paper: #EFE8D8;
+    --paper-dim: #DCD3BC;
+    --amber: #F2A93B;
+    --coral: #E8563F;
+    --green: #4FB477;
+    --foam: #F4F1E8;
+    --line: rgba(244,241,232,0.14);
+    --muted: rgba(244,241,232,0.6);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    background: radial-gradient(ellipse at top, #12313B 0%, #0D1B24 55%) fixed;
+    color: var(--foam);
+    font-family: 'Work Sans', sans-serif;
+    padding: 0 0 92px;
+    min-height: 100vh;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .wrap{ max-width: 720px; margin: 0 auto; padding: max(20px, env(safe-area-inset-top)) 16px 16px; }
+
+  header{ margin-bottom: 18px; }
+  .eyebrow{
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--amber); margin: 0 0 6px;
+  }
+  h1{ font-family: 'Roboto Slab', serif; font-weight: 800; font-size: clamp(24px, 6vw, 34px); margin: 0; line-height: 1.05; }
+  .sub{ color: var(--muted); font-size: 14px; margin: 6px 0 0; max-width: 60ch; }
+
+  .panel{ background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 16px; }
+  .panel h2{ font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--amber); margin: 0 0 14px; }
+  .panel h2 .hint{ display:block; text-transform:none; letter-spacing:0; color:var(--muted); font-size:11px; margin-top:4px; font-family:'Work Sans',sans-serif;}
+
+  .inputs-grid{ display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+  .field label{ display:block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .field input, .field select, .field textarea{
+    width: 100%; background: var(--ink); border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px 12px; color: var(--foam); font-family: 'IBM Plex Mono', monospace; font-size: 15px;
+  }
+  .field textarea{ font-family:'Work Sans',sans-serif; resize:vertical; min-height:60px; }
+  .field input:focus, .field select:focus, .field textarea:focus{ outline: 2px solid var(--amber); outline-offset: 1px; }
+
+  .routes{ display:grid; grid-template-columns: 1fr; gap: 14px; }
+  @media(min-width:640px){ .routes{ grid-template-columns: 1fr 1fr; } }
+  .route-card{ background: var(--paper); color: var(--ink); border-radius: 14px; padding: 18px; position: relative; overflow: hidden; }
+  .route-card.winner{ box-shadow: 0 0 0 2px var(--amber) inset; }
+  .route-tag{ font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #6b5f45; margin-bottom: 4px; }
+  .winner-badge{ position:absolute; top:14px; right:14px; background:var(--amber); color:var(--ink); font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600; padding:3px 8px; border-radius:20px; text-transform:uppercase; letter-spacing:.05em;}
+  .route-title{ font-family: 'Roboto Slab', serif; font-weight: 700; font-size: 18px; margin: 0 0 14px; padding-right:70px; }
+  .chart-line{ position: relative; height: 60px; margin: 6px 0 14px; }
+  .chart-line .track{ position:absolute; top: 26px; left: 6px; right: 6px; height: 2px; background: repeating-linear-gradient(to right, var(--paper-dim) 0 6px, transparent 6px 12px); }
+  .buoy{ position:absolute; top: 14px; width: 26px; height: 26px; border-radius: 50%; background: var(--panel); color: var(--foam); font-family:'IBM Plex Mono', monospace; font-size: 12px; display:flex; align-items:center; justify-content:center; transform: translateX(-50%); border: 2px solid var(--paper); }
+  .buoy.start{ background: var(--ink); font-size:10px;}
+  .buoy.mid{ background: var(--coral); }
+  .buoy.end{ background: var(--amber); color: var(--ink); }
+  .route-stats{ display:flex; flex-direction:column; gap:8px; font-size: 14px; }
+  .route-stats .row{ display:flex; justify-content:space-between; gap:8px; }
+  .route-stats .row b{ font-family:'IBM Plex Mono', monospace; }
+  .route-stats .headline{ font-family:'Roboto Slab', serif; font-weight:800; font-size: 24px; margin: 2px 0 8px; line-height:1.1;}
+  .route-stats .headline span{ font-size: 13px; font-weight: 500; display:block; color:#6b5f45; }
+  .note{ font-size: 12.5px; color: #4a4231; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--paper-dim); }
+  .risk{ background:#fbe4de; border:1px solid var(--coral); color:#8a2f1f; border-radius:10px; padding:10px 12px; font-size:12.5px; margin-top:12px; display:flex; gap:8px; align-items:flex-start;}
+  .risk b{ display:block; margin-bottom:2px; }
+
+  .btn{ background: var(--amber); color: var(--ink); border:none; border-radius:8px; padding: 11px 16px; font-family:'IBM Plex Mono', monospace; font-weight:600; cursor:pointer; font-size:14px; }
+  .btn:hover{ background:#ffbf5a; }
+  .btn.ghost{ background:transparent; color:var(--foam); border:1px solid var(--line); }
+  .btn.ghost:hover{ background:var(--panel-2); }
+  .btn.sm{ padding:7px 12px; font-size:12px; }
+  .form-row{ display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; }
+  .form-row .field{ flex:1 1 130px; }
+
+  .entries{ display:flex; flex-direction:column; gap:8px; margin-top:14px; }
+  .entry{ background: var(--panel-2); border-radius:10px; padding: 12px 14px; }
+  .entry-head{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .entry-date{ font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--amber); }
+  .entry-val{ font-family:'IBM Plex Mono', monospace; font-size:14px; font-weight:600; }
+  .entry-body{ font-size:14px; margin-top:6px; color:var(--foam); white-space:pre-wrap; }
+  .entry-meta{ font-size:12px; color:var(--muted); margin-top:6px; }
+  .del{ background:none; border:none; color: var(--coral); cursor:pointer; font-size:18px; line-height:1; padding:0 4px; }
+  .tag{ display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; padding:2px 8px; border-radius:20px; letter-spacing:.04em; }
+  .tag.up{ background:rgba(79,180,119,.18); color:var(--green); }
+  .tag.down{ background:rgba(232,86,63,.18); color:var(--coral); }
+  .tag.neutral{ background:rgba(244,241,232,.12); color:var(--muted); }
+  .empty{ color: var(--muted); font-size: 13px; font-style: italic; padding:6px 0; }
+
+  .chart-wrap{ margin-top:14px; }
+  svg.chart{ width:100%; height:180px; display:block; }
+  .chart-legend{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted); margin-top:6px; display:flex; justify-content:space-between; }
+
+  .timeline{ position:relative; margin-top:8px; padding-left:26px; }
+  .timeline::before{ content:''; position:absolute; left:9px; top:6px; bottom:6px; width:2px; background:var(--line); }
+  .milestone{ position:relative; margin-bottom:14px; }
+  .milestone .dot{ position:absolute; left:-26px; top:2px; width:20px; height:20px; border-radius:50%; border:2px solid var(--panel); display:flex; align-items:center; justify-content:center; font-size:11px; }
+  .milestone.done .dot{ background:var(--green); color:var(--ink); }
+  .milestone.doing .dot{ background:var(--amber); color:var(--ink); }
+  .milestone.pending .dot{ background:var(--panel-2); color:var(--muted); }
+  .milestone-card{ background:var(--panel-2); border-radius:10px; padding:12px 14px; }
+  .milestone-title{ font-weight:600; font-size:15px; }
+  .milestone-meta{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted); margin-top:6px; display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+  .status-select{ background:var(--ink); border:1px solid var(--line); color:var(--foam); border-radius:6px; padding:3px 6px; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+
+  nav.tabbar{
+    position:fixed; bottom:0; left:0; right:0; z-index:20;
+    background:rgba(13,27,36,.92); backdrop-filter: blur(10px);
+    border-top:1px solid var(--line);
+    display:flex; justify-content:space-around;
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+  }
+  nav.tabbar button{
+    background:none; border:none; color:var(--muted); cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 4px; flex:1;
+    font-family:'Work Sans',sans-serif; font-size:10px; letter-spacing:.02em;
+  }
+  nav.tabbar button .ic{ font-size:19px; line-height:1; }
+  nav.tabbar button.active{ color:var(--amber); }
+
+  .tab-view{ display:none; }
+  .tab-view.active{ display:block; animation: fade .25s ease; }
+  @keyframes fade{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+
+  .save-status{ font-family:'IBM Plex Mono', monospace; font-size:11px; color: var(--muted); text-align:right; min-height:14px; margin-top:-6px; margin-bottom:8px; }
+  .data-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .install-banner{ background:var(--panel-2); border:1px solid var(--amber); border-radius:12px; padding:14px; margin-bottom:16px; display:none; align-items:center; gap:12px; }
+  .install-banner.show{ display:flex; }
+  .install-banner p{ margin:0; font-size:13px; flex:1; }
+  .kpi{ display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:12px; margin-bottom:16px; }
+  .kpi .box{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px; }
+  .kpi .box .n{ font-family:'Roboto Slab',serif; font-weight:800; font-size:22px; }
+  .kpi .box .l{ font-size:11px; color:var(--muted); margin-top:2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow" id="eyebrow">Carta de navegação · Mattheus &amp; noiva</p>
+    <h1 id="pageTitle">Rota de Vida</h1>
+    <p class="sub" id="pageSub">Duas rotas a partir do mesmo ponto. Ajuste os números com o que for real, o mapa recalcula sozinho.</p>
+  </header>
+
+  <div class="install-banner" id="installBanner">
+    <p>Instale o app na tela inicial para abrir como um aplicativo de verdade.</p>
+    <button class="btn sm" id="installBtn">Instalar</button>
+  </div>
+
+  <!-- ABA 1: FINANCEIRA -->
+  <section class="tab-view active" id="tab-financeira">
+    <div class="panel">
+      <h2>Coordenadas de partida</h2>
+      <div class="inputs-grid">
+        <div class="field"><label for="reserva">Reserva atual (R$)</label><input type="number" id="reserva" step="500"></div>
+        <div class="field"><label for="aporte">Aporte mensal (R$)</label><input type="number" id="aporte" step="100"></div>
+        <div class="field"><label for="valorApto">Valor alvo do apto (R$)</label><input type="number" id="valorApto" step="5000"></div>
+        <div class="field"><label for="valorAirbnb">Valor alvo do Airbnb (R$)</label><input type="number" id="valorAirbnb" step="5000"></div>
+        <div class="field"><label for="rendaAirbnb">Renda líq. Airbnb/mês (R$)</label><input type="number" id="rendaAirbnb" step="100"></div>
+        <div class="field"><label for="entradaPct">Entrada exigida (%)</label><input type="number" id="entradaPct" step="1"></div>
+      </div>
+    </div>
+    <div class="save-status" id="saveStatus"></div>
+    <div class="routes" id="routes"></div>
+  </section>
+
+  <!-- ABA 2: DIÁRIO -->
+  <section class="tab-view" id="tab-diario">
+    <div class="kpi" id="diarioKpi"></div>
+    <div class="panel">
+      <h2>Registrar mês<span class="hint">Quanto foi guardado neste mês.</span></h2>
+      <div class="form-row">
+        <div class="field" style="flex:1 1 120px;"><label for="dValor">Valor guardado (R$)</label><input type="number" id="dValor" step="100" placeholder="0"></div>
+        <div class="field" style="flex:1 1 130px;"><label for="dData">Mês/ano</label><input type="month" id="dData"></div>
+        <div class="field" style="flex:2 1 180px;"><label for="dNota">Nota (opcional)</label><input type="text" id="dNota" placeholder="ex.: 13º, corte de gastos..."></div>
+        <button class="btn" id="dAdd">Registrar</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Evolução da reserva</h2>
+      <div class="chart-wrap" id="chartWrap"></div>
+    </div>
+    <div class="panel">
+      <h2>Histórico</h2>
+      <div class="entries" id="diarioEntries"></div>
+    </div>
+  </section>
+
+  <!-- ABA 3: MENTALIDADE -->
+  <section class="tab-view" id="tab-mentalidade">
+    <div class="panel">
+      <h2>Registro rápido<span class="hint">Sem cobrança. É registro de ação, não terapia.</span></h2>
+      <div class="field" style="margin-bottom:10px;"><label for="mTexto">O que fiz que me aproximou da meta?</label><textarea id="mTexto" placeholder="Essa semana eu..."></textarea></div>
+      <div class="form-row">
+        <div class="field"><label for="mTempo">Tempo ocioso do trabalho foi para...</label><input type="text" id="mTempo" placeholder="pesquisa de financiamento / estudo / nada"></div>
+        <div class="field"><label for="mGatilho">Gatilho positivo (opcional)</label><input type="text" id="mGatilho" placeholder="ex.: viagem a Punta Cana"></div>
+        <button class="btn" id="mAdd">Salvar</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Linha do tempo</h2>
+      <div class="entries" id="mentEntries"></div>
+    </div>
+  </section>
+
+  <!-- ABA 4: AMBIENTE -->
+  <section class="tab-view" id="tab-ambiente">
+    <div class="panel">
+      <h2>Novo ambiente experimentado<span class="hint">Expansão, não substituição. Sem julgar as amizades atuais.</span></h2>
+      <div class="form-row">
+        <div class="field" style="flex:2 1 180px;"><label for="aNome">Evento / comunidade / pessoa / curso</label><input type="text" id="aNome" placeholder="ex.: meetup de investimentos"></div>
+        <div class="field"><label for="aTipo">Tipo</label>
+          <select id="aTipo"><option>Evento</option><option>Comunidade</option><option>Curso</option><option>Viagem</option><option>Pessoa</option><option>Outro</option></select>
+        </div>
+        <div class="field"><label for="aEfeito">Esse ambiente...</label>
+          <select id="aEfeito"><option value="up">Aproximou do objetivo</option><option value="neutral">Neutro</option><option value="down">Afastou do objetivo</option></select>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:10px;">
+        <div class="field" style="flex:1 1 100%;"><label for="aNota">Nota (opcional)</label><input type="text" id="aNota" placeholder="O que aprendi / senti aqui"></div>
+        <button class="btn" id="aAdd">Registrar</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Quero explorar<span class="hint">Meta de exploração — ambientes a buscar.</span></h2>
+      <div class="form-row">
+        <div class="field" style="flex:1 1 100%;"><label for="aDesejo">Ambiente / comunidade a buscar</label><input type="text" id="aDesejo" placeholder="ex.: grupo de casais empreendedores"></div>
+        <button class="btn" id="aDesejoAdd">Adicionar</button>
+      </div>
+      <div class="entries" id="desejoEntries"></div>
+    </div>
+    <div class="panel">
+      <h2>Ambientes experimentados</h2>
+      <div class="entries" id="ambEntries"></div>
+    </div>
+  </section>
+
+  <!-- ABA 5: METAS -->
+  <section class="tab-view" id="tab-metas">
+    <div class="panel">
+      <h2>Novo marco</h2>
+      <div class="form-row">
+        <div class="field" style="flex:2 1 180px;"><label for="gTitulo">Marco</label><input type="text" id="gTitulo" placeholder="ex.: entrada do apto alcançada"></div>
+        <div class="field"><label for="gData">Data alvo</label><input type="month" id="gData"></div>
+        <button class="btn" id="gAdd">Adicionar</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Linha do tempo</h2>
+      <div class="timeline" id="metasTimeline"></div>
+    </div>
+    <div class="panel">
+      <h2>Meus dados<span class="hint">Backup e transferência entre os dois celulares.</span></h2>
+      <div class="data-actions">
+        <button class="btn ghost sm" id="exportBtn">Exportar backup</button>
+        <button class="btn ghost sm" id="importBtn">Importar backup</button>
+        <input type="file" id="importFile" accept="application/json" style="display:none">
+      </div>
+      <p class="sub" style="margin-top:10px; font-size:12px;">Os dados ficam salvos só neste aparelho. Exporte de vez em quando para não perder e para copiar do seu celular para o da sua noiva.</p>
+    </div>
+  </section>
+</div>
+
+<nav class="tabbar" id="tabbar">
+  <button data-tab="financeira" class="active"><span class="ic">🧭</span>Rota</button>
+  <button data-tab="diario"><span class="ic">📓</span>Diário</button>
+  <button data-tab="mentalidade"><span class="ic">🧠</span>Mente</button>
+  <button data-tab="ambiente"><span class="ic">🌱</span>Ambiente</button>
+  <button data-tab="metas"><span class="ic">🚩</span>Metas</button>
+</nav>
+
+<script>
+/* ---------------- Estado / persistência ---------------- */
+const STORE_KEY = 'rota-vida:data';
+const DEFAULTS = {
+  inputs: { reserva:40000, aporte:3000, valorApto:350000, valorAirbnb:280000, rendaAirbnb:1500, entradaPct:20 },
+  diario: [], mentalidade: [],
+  ambiente: { registros:[], desejos:[] },
+  metas: []
+};
+let state = load();
+
+function load(){
+  try{ const raw = localStorage.getItem(STORE_KEY); if(raw) return migrate(JSON.parse(raw)); }catch(e){}
+  return structuredClone(DEFAULTS);
+}
+function migrate(d){
+  const base = structuredClone(DEFAULTS);
+  return {
+    inputs: Object.assign(base.inputs, d.inputs||{}),
+    diario: d.diario||[],
+    mentalidade: d.mentalidade||[],
+    ambiente: { registros:(d.ambiente&&d.ambiente.registros)||[], desejos:(d.ambiente&&d.ambiente.desejos)||[] },
+    metas: d.metas||[]
+  };
+}
+let saveTimer;
+function save(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); flashStatus('salvo'); }
+    catch(e){ flashStatus('erro ao salvar'); }
+  }, 250);
+}
+function flashStatus(t){
+  const el = document.getElementById('saveStatus'); if(!el) return;
+  el.textContent = t; clearTimeout(el._t); el._t = setTimeout(()=> el.textContent='', 1400);
+}
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+
+/* ---------------- Helpers ---------------- */
+function fmt(n){ return 'R$ ' + Math.round(n||0).toLocaleString('pt-BR'); }
+function monthsLabel(m){
+  if(!isFinite(m)) return 'sem aporte';
+  if(m <= 0) return 'já alcançado';
+  const anos = Math.floor(m/12), meses = m % 12, out = [];
+  if(anos>0) out.push(anos + (anos===1?' ano':' anos'));
+  if(meses>0 || anos===0) out.push(meses + (meses===1?' mês':' meses'));
+  return out.join(' e ');
+}
+function ymLabel(ym){
+  if(!ym) return '';
+  const [y,m] = ym.split('-').map(Number);
+  return new Date(y, (m||1)-1, 1).toLocaleDateString('pt-BR', {month:'short', year:'numeric'});
+}
+function currentYM(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---------------- ABA 1: Financeira ---------------- */
+const inputIds = ['reserva','aporte','valorApto','valorAirbnb','rendaAirbnb','entradaPct'];
+function fillInputs(){ inputIds.forEach(id => document.getElementById(id).value = state.inputs[id]); }
+
+function calcular(){
+  const i = state.inputs;
+  const entradaPct = (i.entradaPct||20)/100;
+  const entradaApto = i.valorApto * entradaPct;
+  const entradaAirbnb = i.valorAirbnb * entradaPct;
+
+  const faltaA = Math.max(entradaApto - i.reserva, 0);
+  const mesesA = i.aporte>0 ? Math.ceil(faltaA / i.aporte) : Infinity;
+  const progressoA = entradaApto>0 ? Math.min(i.reserva/entradaApto, 1) : 1;
+
+  const faltaAirbnb = Math.max(entradaAirbnb - i.reserva, 0);
+  const mesesAteAirbnb = i.aporte>0 ? Math.ceil(faltaAirbnb / i.aporte) : Infinity;
+  const reservaPosAirbnb = Math.max(i.reserva - entradaAirbnb, 0);
+  const aporteComRenda = i.aporte + i.rendaAirbnb;
+  const faltaAptoDepois = Math.max(entradaApto - reservaPosAirbnb, 0);
+  const mesesAptoDepois = aporteComRenda>0 ? Math.ceil(faltaAptoDepois / aporteComRenda) : Infinity;
+  const mesesB = mesesAteAirbnb + mesesAptoDepois;
+  const progressoB = entradaAirbnb>0 ? Math.min(i.reserva/entradaAirbnb, 1) : 1;
+
+  return { ...i, entradaApto, entradaAirbnb, mesesA, progressoA, mesesAteAirbnb, mesesAptoDepois, mesesB, progressoB };
+}
+
+function renderRoutes(){
+  const c = calcular();
+  const winner = c.mesesA <= c.mesesB ? 'A' : 'B';
+  document.getElementById('routes').innerHTML = `
+    <div class="route-card ${winner==='A'?'winner':''}">
+      ${winner==='A'?'<span class="winner-badge">Mais rápida</span>':''}
+      <p class="route-tag">Rota A</p>
+      <h3 class="route-title">Direto ao apartamento próprio</h3>
+      <div class="chart-line">
+        <div class="track"></div>
+        <div class="buoy start" style="left:6%">R$</div>
+        <div class="buoy end" style="left:${Math.min(94, 6 + c.progressoA*88)}%">🏠</div>
+      </div>
+      <div class="route-stats">
+        <div class="headline">${monthsLabel(c.mesesA)}<span>até a entrada</span></div>
+        <div class="row"><span>Entrada necessária</span><b>${fmt(c.entradaApto)}</b></div>
+        <div class="row"><span>Já coberto hoje</span><b>${Math.round(c.progressoA*100)}%</b></div>
+        <div class="row"><span>Aporte mensal</span><b>${fmt(c.aporte)}</b></div>
+      </div>
+      <p class="note">Todo o aporte vai só para a entrada do apto. Mais simples e sem depender de renda que ainda não existe.</p>
+    </div>
+
+    <div class="route-card ${winner==='B'?'winner':''}">
+      ${winner==='B'?'<span class="winner-badge">Mais rápida</span>':''}
+      <p class="route-tag">Rota B</p>
+      <h3 class="route-title">Airbnb primeiro, apto depois</h3>
+      <div class="chart-line">
+        <div class="track"></div>
+        <div class="buoy start" style="left:6%">R$</div>
+        <div class="buoy mid" style="left:${Math.min(60, 6 + c.progressoB*44)}%">🔑</div>
+        <div class="buoy end" style="left:94%">🏠</div>
+      </div>
+      <div class="route-stats">
+        <div class="headline">${monthsLabel(c.mesesB)}<span>até o apto próprio</span></div>
+        <div class="row"><span>Etapa 1 · entrada Airbnb</span><b>${monthsLabel(c.mesesAteAirbnb)}</b></div>
+        <div class="row"><span>Etapa 2 · entrada apto (c/ renda)</span><b>${monthsLabel(c.mesesAptoDepois)}</b></div>
+        <div class="row"><span>Renda somada ao aporte</span><b>+${fmt(c.rendaAirbnb)}/mês</b></div>
+      </div>
+      <div class="risk">
+        <span>⚠️</span>
+        <span><b>Ponto de risco</b>A Rota B só entrega esse prazo se a renda de ${fmt(c.rendaAirbnb)}/mês entrar de fato. Enquanto o Airbnb não estiver alugado essa renda não existe — vacância e sazonalidade em Floripa podem atrasar a etapa 2.</span>
+      </div>
+    </div>`;
+}
+
+/* ---------------- ABA 2: Diário ---------------- */
+function renderDiario(){
+  const list = [...state.diario].sort((a,b)=> (a.data<b.data?-1:1));
+  const totalGuardado = list.reduce((s,e)=> s + (Number(e.valor)||0), 0);
+  const reservaAtual = (Number(state.inputs.reserva)||0);
+  const c = calcular();
+  document.getElementById('diarioKpi').innerHTML = `
+    <div class="box"><div class="n">${fmt(reservaAtual)}</div><div class="l">Reserva atual (input)</div></div>
+    <div class="box"><div class="n">${fmt(totalGuardado)}</div><div class="l">Guardado registrado</div></div>
+    <div class="box"><div class="n">${Math.round(c.progressoA*100)}%</div><div class="l">Da entrada do apto</div></div>`;
+
+  const el = document.getElementById('diarioEntries');
+  if(!list.length){ el.innerHTML = '<p class="empty">Nenhum registro ainda. Adicione o valor guardado neste mês.</p>'; }
+  else{
+    el.innerHTML = list.slice().reverse().map(e => `
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-date">${ymLabel(e.data)}</span>
+          <span style="display:flex;align-items:center;gap:8px;">
+            <span class="entry-val">${fmt(e.valor)}</span>
+            <button class="del" data-del-diario="${e.id}" title="remover">×</button>
+          </span>
+        </div>
+        ${e.nota?`<div class="entry-meta">${escapeHtml(e.nota)}</div>`:''}
+      </div>`).join('');
+    el.querySelectorAll('[data-del-diario]').forEach(b=> b.onclick=()=>{
+      state.diario = state.diario.filter(x=>x.id!==b.dataset.delDiario); save(); renderDiario();
+    });
+  }
+  renderChart(list, reservaAtual);
+}
+
+function renderChart(list, reservaAtual){
+  const wrap = document.getElementById('chartWrap');
+  if(list.length < 1){ wrap.innerHTML = '<p class="empty">O gráfico aparece quando você registrar ao menos um mês.</p>'; return; }
+  const totalGuardado = list.reduce((s,e)=>s+(Number(e.valor)||0),0);
+  let running = reservaAtual - totalGuardado;
+  const points = list.map(e=>{ running += (Number(e.valor)||0); return { ym:e.data, v:running }; });
+  const W=600, H=180, pad=34;
+  const vals = points.map(p=>p.v);
+  const min = Math.min(...vals, reservaAtual), max = Math.max(...vals, reservaAtual);
+  const range = (max-min)||1;
+  const x = i => pad + (points.length===1?0.5:(i/(points.length-1))) * (W-pad*2);
+  const y = v => H-pad - ((v-min)/range) * (H-pad*2);
+  const line = points.map((p,i)=> (i===0?'M':'L') + x(i).toFixed(1) + ',' + y(p.v).toFixed(1)).join(' ');
+  const area = `M${x(0).toFixed(1)},${(H-pad).toFixed(1)} ` + points.map((p,i)=>'L'+x(i).toFixed(1)+','+y(p.v).toFixed(1)).join(' ') + ` L${x(points.length-1).toFixed(1)},${(H-pad).toFixed(1)} Z`;
+  const dots = points.map((p,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="3.5" fill="#F2A93B"/>`).join('');
+  wrap.innerHTML = `
+    <svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F2A93B" stop-opacity="0.28"/>
+        <stop offset="1" stop-color="#F2A93B" stop-opacity="0"/>
+      </linearGradient></defs>
+      <path d="${area}" fill="url(#g)"/>
+      <path d="${line}" fill="none" stroke="#F2A93B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      ${dots}
+    </svg>
+    <div class="chart-legend"><span>${ymLabel(points[0].ym)} · ${fmt(points[0].v)}</span><span>${ymLabel(points[points.length-1].ym)} · ${fmt(points[points.length-1].v)}</span></div>`;
+}
+
+/* ---------------- ABA 3: Mentalidade ---------------- */
+function renderMent(){
+  const el = document.getElementById('mentEntries');
+  const list = [...state.mentalidade].sort((a,b)=> b.ts-a.ts);
+  if(!list.length){ el.innerHTML='<p class="empty">Nenhum registro ainda.</p>'; return; }
+  el.innerHTML = list.map(e=>`
+    <div class="entry">
+      <div class="entry-head">
+        <span class="entry-date">${new Date(e.ts).toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'})}</span>
+        <button class="del" data-del-ment="${e.id}" title="remover">×</button>
+      </div>
+      ${e.texto?`<div class="entry-body">${escapeHtml(e.texto)}</div>`:''}
+      ${e.tempo?`<div class="entry-meta">⏱ Tempo ocioso: ${escapeHtml(e.tempo)}</div>`:''}
+      ${e.gatilho?`<div class="entry-meta">✨ Gatilho: ${escapeHtml(e.gatilho)}</div>`:''}
+    </div>`).join('');
+  el.querySelectorAll('[data-del-ment]').forEach(b=> b.onclick=()=>{
+    state.mentalidade = state.mentalidade.filter(x=>x.id!==b.dataset.delMent); save(); renderMent();
+  });
+}
+
+/* ---------------- ABA 4: Ambiente ---------------- */
+const efeitoTag = { up:['up','↑ aproximou'], neutral:['neutral','· neutro'], down:['down','↓ afastou'] };
+function renderAmbiente(){
+  const el = document.getElementById('ambEntries');
+  const list = [...state.ambiente.registros].sort((a,b)=> b.ts-a.ts);
+  if(!list.length){ el.innerHTML='<p class="empty">Nenhum ambiente registrado ainda.</p>'; }
+  else{
+    el.innerHTML = list.map(e=>{
+      const t = efeitoTag[e.efeito]||efeitoTag.neutral;
+      return `<div class="entry">
+        <div class="entry-head">
+          <span><span class="entry-date">${escapeHtml(e.tipo)}</span> · ${new Date(e.ts).toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}</span>
+          <button class="del" data-del-amb="${e.id}" title="remover">×</button>
+        </div>
+        <div class="entry-body" style="margin-top:4px;">${escapeHtml(e.nome)} <span class="tag ${t[0]}">${t[1]}</span></div>
+        ${e.nota?`<div class="entry-meta">${escapeHtml(e.nota)}</div>`:''}
+      </div>`;
+    }).join('');
+    el.querySelectorAll('[data-del-amb]').forEach(b=> b.onclick=()=>{
+      state.ambiente.registros = state.ambiente.registros.filter(x=>x.id!==b.dataset.delAmb); save(); renderAmbiente();
+    });
+  }
+  const dEl = document.getElementById('desejoEntries');
+  if(!state.ambiente.desejos.length){ dEl.innerHTML='<p class="empty">Adicione ambientes que querem buscar.</p>'; }
+  else{
+    dEl.innerHTML = state.ambiente.desejos.map(d=>`
+      <div class="entry" style="padding:10px 14px;">
+        <div class="entry-head">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;${d.feito?'text-decoration:line-through;opacity:.55;':''}">
+            <input type="checkbox" data-toggle-desejo="${d.id}" ${d.feito?'checked':''}> ${escapeHtml(d.texto)}
+          </label>
+          <button class="del" data-del-desejo="${d.id}" title="remover">×</button>
+        </div>
+      </div>`).join('');
+    dEl.querySelectorAll('[data-toggle-desejo]').forEach(c=> c.onchange=()=>{
+      const d = state.ambiente.desejos.find(x=>x.id===c.dataset.toggleDesejo); if(d){ d.feito=c.checked; save(); renderAmbiente(); }
+    });
+    dEl.querySelectorAll('[data-del-desejo]').forEach(b=> b.onclick=()=>{
+      state.ambiente.desejos = state.ambiente.desejos.filter(x=>x.id!==b.dataset.delDesejo); save(); renderAmbiente();
+    });
+  }
+}
+
+/* ---------------- ABA 5: Metas ---------------- */
+const STATUS = { pending:['pending','○','Pendente'], doing:['doing','◐','Em andamento'], done:['done','✓','Feito'] };
+function renderMetas(){
+  const el = document.getElementById('metasTimeline');
+  const list = [...state.metas].sort((a,b)=> (a.data||'9999')<(b.data||'9999')?-1:1);
+  if(!list.length){ el.innerHTML='<p class="empty">Adicione os marcos do plano: reserva, entrada, imóvel comprado, primeira viagem internacional, primeiro Airbnb alugado...</p>'; return; }
+  el.innerHTML = list.map(m=>{
+    const s = STATUS[m.status]||STATUS.pending;
+    return `<div class="milestone ${s[0]}">
+      <div class="dot">${s[1]}</div>
+      <div class="milestone-card">
+        <div class="entry-head">
+          <span class="milestone-title">${escapeHtml(m.titulo)}</span>
+          <button class="del" data-del-meta="${m.id}" title="remover">×</button>
+        </div>
+        <div class="milestone-meta">
+          <span>🎯 ${m.data?ymLabel(m.data):'sem data'}</span>
+          <select class="status-select" data-status-meta="${m.id}">
+            ${Object.keys(STATUS).map(k=>`<option value="${k}" ${m.status===k?'selected':''}>${STATUS[k][2]}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('[data-status-meta]').forEach(sel=> sel.onchange=()=>{
+    const m = state.metas.find(x=>x.id===sel.dataset.statusMeta); if(m){ m.status=sel.value; save(); renderMetas(); }
+  });
+  el.querySelectorAll('[data-del-meta]').forEach(b=> b.onclick=()=>{
+    state.metas = state.metas.filter(x=>x.id!==b.dataset.delMeta); save(); renderMetas();
+  });
+}
+
+/* ---------------- Eventos de formulário ---------------- */
+inputIds.forEach(id=>{
+  document.getElementById(id).addEventListener('input', ()=>{
+    state.inputs[id] = parseFloat(document.getElementById(id).value) || 0;
+    renderRoutes(); save();
+  });
+});
+
+document.getElementById('dAdd').onclick = ()=>{
+  const raw = document.getElementById('dValor').value;
+  if(raw==='') return;
+  const valor = parseFloat(raw); if(isNaN(valor)) return;
+  const data = document.getElementById('dData').value || currentYM();
+  state.diario.push({ id:uid(), data, valor, nota: document.getElementById('dNota').value.trim() });
+  document.getElementById('dValor').value=''; document.getElementById('dNota').value='';
+  save(); renderDiario();
+};
+document.getElementById('mAdd').onclick = ()=>{
+  const texto = document.getElementById('mTexto').value.trim();
+  const tempo = document.getElementById('mTempo').value.trim();
+  const gatilho = document.getElementById('mGatilho').value.trim();
+  if(!texto && !tempo && !gatilho) return;
+  state.mentalidade.push({ id:uid(), ts:Date.now(), texto, tempo, gatilho });
+  ['mTexto','mTempo','mGatilho'].forEach(i=>document.getElementById(i).value='');
+  save(); renderMent();
+};
+document.getElementById('aAdd').onclick = ()=>{
+  const nome = document.getElementById('aNome').value.trim();
+  if(!nome) return;
+  state.ambiente.registros.push({ id:uid(), ts:Date.now(), nome,
+    tipo: document.getElementById('aTipo').value,
+    efeito: document.getElementById('aEfeito').value,
+    nota: document.getElementById('aNota').value.trim() });
+  document.getElementById('aNome').value=''; document.getElementById('aNota').value='';
+  save(); renderAmbiente();
+};
+document.getElementById('aDesejoAdd').onclick = ()=>{
+  const texto = document.getElementById('aDesejo').value.trim();
+  if(!texto) return;
+  state.ambiente.desejos.push({ id:uid(), texto, feito:false });
+  document.getElementById('aDesejo').value=''; save(); renderAmbiente();
+};
+document.getElementById('gAdd').onclick = ()=>{
+  const titulo = document.getElementById('gTitulo').value.trim();
+  if(!titulo) return;
+  state.metas.push({ id:uid(), titulo, data: document.getElementById('gData').value, status:'pending' });
+  document.getElementById('gTitulo').value=''; document.getElementById('gData').value='';
+  save(); renderMetas();
+};
+
+/* ---------------- Export / Import ---------------- */
+document.getElementById('exportBtn').onclick = ()=>{
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'rota-de-vida-backup-' + currentYM() + '.json';
+  a.click(); URL.revokeObjectURL(a.href);
+};
+document.getElementById('importBtn').onclick = ()=> document.getElementById('importFile').click();
+document.getElementById('importFile').onchange = (ev)=>{
+  const file = ev.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const d = migrate(JSON.parse(reader.result));
+      if(confirm('Substituir os dados atuais deste aparelho pelo backup importado?')){
+        state = d; save(); fillInputs(); renderAll(); alert('Backup importado.');
+      }
+    }catch(e){ alert('Arquivo inválido.'); }
+    ev.target.value='';
+  };
+  reader.readAsText(file);
+};
+
+/* ---------------- Navegação por abas ---------------- */
+const META = {
+  financeira: ['Carta de navegação · Mattheus & noiva','Rota de Vida','Duas rotas a partir do mesmo ponto. Ajuste os números com o que for real, o mapa recalcula sozinho.'],
+  diario: ['Diário de bordo','Diário de bordo','Registre quanto guardou a cada mês e veja a reserva evoluir.'],
+  mentalidade: ['Mentalidade','Mentalidade','Registro de ação, não de cobrança. O que te aproximou da meta.'],
+  ambiente: ['Ambiente','Ambiente','Como o ambiente modula decisão e energia. Expansão, não substituição.'],
+  metas: ['Metas & Marcos','Metas & Marcos','A linha do tempo do plano, do primeiro real ao primeiro Airbnb alugado.']
+};
+function switchTab(name){
+  document.querySelectorAll('.tab-view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+  const m = META[name];
+  document.getElementById('eyebrow').textContent = m[0];
+  document.getElementById('pageTitle').textContent = m[1];
+  document.getElementById('pageSub').textContent = m[2];
+  window.scrollTo({top:0, behavior:'smooth'});
+  try{ localStorage.setItem('rota-vida:tab', name); }catch(e){}
+}
+document.querySelectorAll('#tabbar button').forEach(b=> b.onclick=()=> switchTab(b.dataset.tab));
+
+function renderAll(){ renderRoutes(); renderDiario(); renderMent(); renderAmbiente(); renderMetas(); }
+
+/* ---------------- Instalação (PWA) ---------------- */
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e)=>{
+  e.preventDefault(); deferredPrompt = e;
+  document.getElementById('installBanner').classList.add('show');
+});
+document.getElementById('installBtn').onclick = async ()=>{
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt(); await deferredPrompt.userChoice;
+  deferredPrompt = null; document.getElementById('installBanner').classList.remove('show');
+};
+window.addEventListener('appinstalled', ()=> document.getElementById('installBanner').classList.remove('show'));
+
+/* ---------------- Service worker (offline + auto-update) ---------------- */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./sw.js').then(reg=>{ reg.update(); }).catch(()=>{});
+    let refreshing=false;
+    navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+      if(refreshing) return; refreshing=true; window.location.reload();
+    });
+  });
+}
+
+/* ---------------- Init ---------------- */
+(function init(){
+  document.getElementById('dData').value = currentYM();
+  document.getElementById('gData').value = currentYM();
+  fillInputs();
+  renderAll();
+  try{ const t = localStorage.getItem('rota-vida:tab'); if(t && META[t]) switchTab(t); }catch(e){}
+})();
+</script>
+</body>
+</html>
