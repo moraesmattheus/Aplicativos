@@ -67,10 +67,17 @@ de navegador.
 3. **Alvos** — apartamentos que vocês querem. Cole o link do anúncio e o app
    tenta puxar foto/título/descrição (via Microlink); marque o alvo principal
    e o valor entra no cálculo da Rota. Se o site bloquear, preencha na mão.
-4. **Diário** — registro mensal do quanto foi guardado + gráfico de evolução.
-5. **Mente** — registro de ação da semana, uso do tempo ocioso e gatilhos.
-6. **Ambiente** — ambientes/pessoas experimentados e lista do que buscar.
-7. **Metas** — linha do tempo dos marcos, com data alvo e status.
+4. **Renda** — rendas passivas com dados ao vivo dos ativos que vocês
+   escolherem. Cripto via CoinGecko (sem cadastro); ações/FIIs da B3 via
+   brapi.dev (token grátis opcional). Mostra cotação, variação e dividend
+   yield. É **informação, não recomendação de investimento**.
+5. **Diário** — registro mensal do quanto foi guardado + gráfico de evolução.
+6. **Mente** — registro de ação da semana, uso do tempo ocioso e gatilhos.
+7. **Ambiente** — ambientes/pessoas experimentados e lista do que buscar.
+8. **Metas** — linha do tempo dos marcos + progresso e ações vindas do Mapa.
+
+No **Mapa**, cada nó tem um "＋" para criar um nó-filho ligado a ele ali mesmo,
+e um "🔍" que abre uma pesquisa na web sobre aquele tópico.
 
 > Observação sobre "puxar do link": um app sem servidor não lê sites de
 > imóveis diretamente (bloqueio de CORS do navegador). O app usa o serviço

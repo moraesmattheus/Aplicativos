@@ -439,12 +439,41 @@
     </div>
     <div id="alvoList"></div>
   </section>
+
+  <!-- ABA: RENDA PASSIVA -->
+  <section class="tab-view" id="tab-renda">
+    <div class="panel">
+      <h2>Acompanhar ativo<span class="hint">Dados ao vivo dos ativos que vocês escolherem. É informação, não recomendação.</span></h2>
+      <div class="form-row">
+        <div class="field" style="flex:1 1 120px;"><label for="rTipo">Tipo</label>
+          <select id="rTipo">
+            <option value="cripto">Cripto (sem cadastro)</option>
+            <option value="br">Ação / FII (B3)</option>
+          </select>
+        </div>
+        <div class="field" style="flex:2 1 160px;"><label for="rTicker">Código</label><input type="text" id="rTicker" placeholder="ex.: bitcoin · HGLG11 · ITUB4"></div>
+        <button class="btn" id="rAdd">Acompanhar</button>
+      </div>
+      <div class="form-row" style="margin-top:8px;">
+        <button class="btn ghost sm" id="rRefresh">↻ Atualizar cotações</button>
+        <span class="save-status" id="rStatus" style="flex:1;text-align:left;margin:0;align-self:center;"></span>
+      </div>
+    </div>
+    <div id="rList"></div>
+    <details class="settings">
+      <summary><span>⚙️ Token para ações/FIIs (opcional)</span><span class="chev">▾</span></summary>
+      <div class="field" style="margin-top:12px;"><label for="rToken">Token grátis do brapi.dev</label><input type="text" id="rToken" placeholder="cole aqui seu token"></div>
+      <p class="sub" style="font-size:12px;margin-top:8px;">Cripto funciona sem nada (via CoinGecko). Para ações e FIIs da B3 com dados ao vivo, crie um token grátis em <b>brapi.dev</b> e cole aqui — fica salvo só neste aparelho.</p>
+    </details>
+    <p class="map-hint" style="margin-top:12px;">⚠️ Valores informativos, podem atrasar alguns minutos. Isto <b>não é recomendação de investimento</b> — é só para vocês acompanharem.</p>
+  </section>
 </div>
 
 <nav class="tabbar" id="tabbar">
   <button data-tab="financeira" class="active"><span class="ic">🧭</span>Rota</button>
   <button data-tab="mapa"><span class="ic">🗺️</span>Mapa</button>
   <button data-tab="alvos"><span class="ic">🏢</span>Alvos</button>
+  <button data-tab="renda"><span class="ic">💰</span>Renda</button>
   <button data-tab="diario"><span class="ic">📓</span>Diário</button>
   <button data-tab="mentalidade"><span class="ic">🧠</span>Mente</button>
   <button data-tab="ambiente"><span class="ic">🌱</span>Ambiente</button>
@@ -515,7 +544,8 @@ const DEFAULTS = {
   ambiente: { registros:[], desejos:[] },
   metas: [],
   mapa: { nodes: [], view: null },
-  alvos: []
+  alvos: [],
+  renda: { token: '', itens: [] }
 };
 let state = load();
 
@@ -532,7 +562,8 @@ function migrate(d){
     ambiente: { registros:(d.ambiente&&d.ambiente.registros)||[], desejos:(d.ambiente&&d.ambiente.desejos)||[] },
     metas: d.metas||[],
     mapa: { nodes:(d.mapa&&d.mapa.nodes)||[], view:(d.mapa&&d.mapa.view)||null },
-    alvos: d.alvos||[]
+    alvos: d.alvos||[],
+    renda: { token:(d.renda&&d.renda.token)||'', itens:(d.renda&&d.renda.itens)||[] }
   };
 }
 let saveTimer;
@@ -543,6 +574,9 @@ function save(){
     catch(e){ flashStatus('erro ao salvar'); }
   }, 250);
 }
+function saveNow(){ clearTimeout(saveTimer); try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
+window.addEventListener('pagehide', saveNow);
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') saveNow(); });
 function flashStatus(t){
   const el = document.getElementById('saveStatus'); if(!el) return;
   el.textContent = t; clearTimeout(el._t); el._t = setTimeout(()=> el.textContent='', 1400);
@@ -1000,6 +1034,7 @@ const META = {
   financeira: ['Carta de navegação · Mattheus & noiva','Rota de Vida','Duas rotas a partir do mesmo ponto. Ajuste os números com o que for real, o mapa recalcula sozinho.'],
   mapa: ['Mapa mental','Mapa da estratégia','Caminhos, rotas alternativas, submetas, obstáculos, estudos e tarefas — tudo conectado.'],
   alvos: ['Alvos','Apartamentos-alvo','Cole o link do anúncio; o app puxa foto e dados. Marque o alvo principal.'],
+  renda: ['Rendas passivas','Rendas passivas','Acompanhe ativos ao vivo. Informação para decidir — não é recomendação.'],
   diario: ['Diário de bordo','Diário de bordo','Registre quanto guardou a cada mês e veja a reserva evoluir.'],
   mentalidade: ['Mentalidade','Mentalidade','Registro de ação, não de cobrança. O que te aproximou da meta.'],
   ambiente: ['Ambiente','Ambiente','Como o ambiente modula decisão e energia. Expansão, não substituição.'],
@@ -1016,6 +1051,7 @@ function switchTab(name){
   window.scrollTo({top:0, behavior:'smooth'});
   try{ localStorage.setItem('rota-vida:tab', name); }catch(e){}
   if(name==='mapa'){ requestAnimationFrame(()=>{ if(!state.mapa.view) fitMap(); else applyMapView(); drawMap(); }); }
+  if(name==='renda'){ refreshRenda(); }
 }
 document.querySelectorAll('#tabbar button').forEach(b=> b.onclick=()=> switchTab(b.dataset.tab));
 
@@ -1353,7 +1389,111 @@ function renderAlvos(){
   el.querySelectorAll('[data-edit-alvo]').forEach(b=> b.onclick=()=> openAlvoModal(b.dataset.editAlvo));
 }
 
-function renderAll(){ seedMapIfEmpty(); renderFinanceira(); renderDiario(); renderMent(); renderAmbiente(); renderMetas(); renderAlvos(); drawMap(); }
+/* ================= RENDA PASSIVA (dados ao vivo) ================= */
+let rendaCache = {}; // id -> {preco, extra, ok}
+function rStatus(t, err){ const el=document.getElementById('rStatus'); if(!el)return; el.textContent=t; el.style.color=err?'var(--coral)':'var(--muted)'; }
+
+document.getElementById('rToken').addEventListener('input', ()=>{ state.renda.token = document.getElementById('rToken').value.trim(); save(); });
+document.getElementById('rAdd').onclick = ()=>{
+  const tipo = document.getElementById('rTipo').value;
+  const ticker = document.getElementById('rTicker').value.trim();
+  if(!ticker) return;
+  const norm = tipo==='cripto' ? ticker.toLowerCase() : ticker.toUpperCase();
+  if(state.renda.itens.some(i=>i.tipo===tipo && i.ticker===norm)){ document.getElementById('rTicker').value=''; return; }
+  state.renda.itens.push({ id:uid(), tipo, ticker:norm });
+  document.getElementById('rTicker').value='';
+  save(); renderRenda(); refreshRenda();
+};
+document.getElementById('rRefresh').onclick = ()=> refreshRenda(true);
+
+async function fetchCripto(ids){
+  const url = 'https://api.coingecko.com/api/v3/simple/price?ids='+encodeURIComponent(ids.join(','))+'&vs_currencies=brl&include_24hr_change=true';
+  const res = await fetch(url); if(!res.ok) throw new Error('cg '+res.status);
+  return res.json();
+}
+async function fetchBR(tickers, token){
+  const url = 'https://brapi.dev/api/quote/'+encodeURIComponent(tickers.join(','))+'?fundamental=true'+(token?('&token='+encodeURIComponent(token)):'');
+  const res = await fetch(url); if(!res.ok) throw new Error('brapi '+res.status);
+  const j = await res.json(); return j.results||[];
+}
+let refreshing=false;
+async function refreshRenda(force){
+  const itens = state.renda.itens;
+  if(!itens.length){ renderRenda(); return; }
+  if(refreshing && !force) return;
+  refreshing=true; rStatus('atualizando…');
+  const cripto = itens.filter(i=>i.tipo==='cripto').map(i=>i.ticker);
+  const br = itens.filter(i=>i.tipo==='br').map(i=>i.ticker);
+  let anyErr=false;
+  try{
+    if(cripto.length){
+      const d = await fetchCripto(cripto);
+      cripto.forEach(id=>{ if(d[id]) rendaCache['cripto:'+id]={ preco:d[id].brl, extra:d[id].brl_24h_change, ok:true }; else rendaCache['cripto:'+id]={ ok:false }; });
+    }
+  }catch(e){ anyErr=true; cripto.forEach(id=> rendaCache['cripto:'+id]=rendaCache['cripto:'+id]||{ok:false}); }
+  try{
+    if(br.length){
+      const results = await fetchBR(br, state.renda.token);
+      const map = Object.fromEntries(results.map(r=>[r.symbol, r]));
+      br.forEach(sym=>{ const r=map[sym]; if(r) rendaCache['br:'+sym]={ preco:r.regularMarketPrice, extra:r.regularMarketChangePercent, dy:r.dividendYield, nome:r.longName||r.shortName, ok:true }; else rendaCache['br:'+sym]={ ok:false }; });
+    }
+  }catch(e){ anyErr=true; br.forEach(sym=> rendaCache['br:'+sym]=rendaCache['br:'+sym]||{ok:false, needToken:!state.renda.token}); }
+  refreshing=false;
+  rStatus(anyErr ? 'alguns ativos não atualizaram' : 'atualizado agora', anyErr);
+  renderRenda();
+}
+
+function pctTag(v){
+  if(v===undefined||v===null||isNaN(v)) return '';
+  const up = v>=0; return `<span class="tag ${up?'up':'down'}">${up?'▲':'▼'} ${Math.abs(v).toFixed(2)}%</span>`;
+}
+function renderRenda(){
+  const el = document.getElementById('rList');
+  const itens = state.renda.itens;
+  document.getElementById('rToken').value = state.renda.token || '';
+  if(!itens.length){ el.innerHTML='<p class="empty">Nenhum ativo ainda. Adicione uma cripto (ex.: bitcoin) ou uma ação/FII (ex.: HGLG11).</p>'; return; }
+  el.innerHTML = itens.map(i=>{
+    const c = rendaCache[i.tipo+':'+i.ticker] || {};
+    const label = i.tipo==='cripto' ? i.ticker.toUpperCase() : i.ticker;
+    const nome = c.nome ? `<div class="entry-meta" style="margin-top:2px">${escapeHtml(c.nome)}</div>` : '';
+    let val, extra='';
+    if(c.ok){
+      val = fmt(c.preco);
+      extra = pctTag(c.extra);
+      if(c.dy!==undefined && c.dy!==null && !isNaN(c.dy)) extra += ` <span class="tag" style="background:rgba(79,180,119,.18);color:var(--green)">DY ${(c.dy).toFixed(2)}%</span>`;
+    } else {
+      val = '<span style="color:var(--muted);font-size:14px">' + (c.needToken ? 'precisa de token' : (i.tipo==='br'?'sem dados / precisa de token':'—')) + '</span>';
+    }
+    const pesq = i.tipo==='cripto'
+      ? `https://www.coingecko.com/pt/moedas/${encodeURIComponent(i.ticker)}`
+      : `https://statusinvest.com.br/acoes/${encodeURIComponent(i.ticker.toLowerCase())}`;
+    return `<div class="alvo-card" style="margin-bottom:12px">
+      <div class="alvo-body">
+        <div class="alvo-meta" style="margin-top:0">
+          <div>
+            <div class="alvo-title" style="font-size:15px">${escapeHtml(label)} ${extra}</div>
+            ${nome}
+          </div>
+          <div style="text-align:right">
+            <div class="alvo-price">${val}</div>
+          </div>
+        </div>
+        <div class="alvo-meta">
+          <span class="entry-meta">${i.tipo==='cripto'?'Cripto · CoinGecko':'B3 · brapi'}</span>
+          <div class="alvo-actions">
+            <a href="${pesq}" target="_blank" rel="noopener">pesquisar ↗</a>
+            <button data-del-renda="${i.id}">remover</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('[data-del-renda]').forEach(b=> b.onclick=()=>{
+    state.renda.itens = state.renda.itens.filter(x=>x.id!==b.dataset.delRenda); save(); renderRenda();
+  });
+}
+
+function renderAll(){ seedMapIfEmpty(); renderFinanceira(); renderDiario(); renderMent(); renderAmbiente(); renderMetas(); renderAlvos(); renderRenda(); drawMap(); }
 
 /* ---------------- Instalação (PWA) ---------------- */
 let deferredPrompt;
