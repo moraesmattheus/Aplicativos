@@ -300,6 +300,7 @@
   <!-- ABA 2: DIÁRIO -->
   <section class="tab-view" id="tab-diario">
     <div class="kpi" id="diarioKpi"></div>
+    <div id="diarioDash"></div>
     <div class="panel">
       <h2>Registrar mês<span class="hint">Quanto foi guardado neste mês.</span></h2>
       <div class="form-row">
@@ -370,6 +371,7 @@
 
   <!-- ABA 5: METAS -->
   <section class="tab-view" id="tab-metas">
+    <div id="metasDash"></div>
     <div class="panel">
       <h2>Novo marco</h2>
       <div class="form-row">
@@ -381,6 +383,10 @@
     <div class="panel">
       <h2>Linha do tempo</h2>
       <div class="timeline" id="metasTimeline"></div>
+    </div>
+    <div class="panel">
+      <h2>Próximas ações do mapa<span class="hint">Tarefas e submetas do Mapa que ainda não estão feitas. Marque aqui e atualiza no mapa.</span></h2>
+      <div class="entries" id="metasAcoes"></div>
     </div>
     <div class="panel">
       <h2>Meus dados<span class="hint">Backup e transferência entre os dois celulares.</span></h2>
@@ -690,10 +696,35 @@ function renderDiario(){
   const totalGuardado = list.reduce((s,e)=> s + (Number(e.valor)||0), 0);
   const reservaAtual = (Number(state.inputs.reserva)||0);
   const c = calcular();
+  const nMeses = list.length;
+  const media = nMeses ? totalGuardado / nMeses : 0;
+  const maior = nMeses ? Math.max(...list.map(e=>Number(e.valor)||0)) : 0;
   document.getElementById('diarioKpi').innerHTML = `
-    <div class="box"><div class="n">${fmt(reservaAtual)}</div><div class="l">Reserva atual (input)</div></div>
-    <div class="box"><div class="n">${fmt(totalGuardado)}</div><div class="l">Guardado registrado</div></div>
+    <div class="box"><div class="n">${fmt(media)}</div><div class="l">Média guardada/mês</div></div>
+    <div class="box"><div class="n">${fmt(totalGuardado)}</div><div class="l">Total em ${nMeses} ${nMeses===1?'mês':'meses'}</div></div>
     <div class="box"><div class="n">${Math.round(c.progressoA*100)}%</div><div class="l">Da entrada do apto</div></div>`;
+
+  // Dashboard: ritmo real x planejado + projeção
+  const dashEl = document.getElementById('diarioDash');
+  if(!nMeses){
+    dashEl.innerHTML = '';
+  } else {
+    const falta = Math.max(c.entradaApto - reservaAtual, 0);
+    const mesesRealPace = media>0 ? Math.ceil(falta/media) : Infinity;
+    const vsPlano = media - (Number(state.inputs.aporte)||0);
+    const vsCls = vsPlano>=0 ? 'green' : 'coral';
+    const vsTxt = vsPlano>=0 ? `+${fmt(vsPlano)} acima do planejado` : `${fmt(vsPlano)} abaixo do planejado`;
+    dashEl.innerHTML = `
+      <div class="verdict" style="margin-bottom:16px;">
+        <div class="vtop">
+          <span class="vlabel">Ritmo real de poupança</span>
+          <span class="chip ${vsCls}">${vsTxt}</span>
+        </div>
+        <p class="vwhen">No seu ritmo real de <b>${fmt(media)}/mês</b>, a entrada do apto chega em
+          <b>${isFinite(mesesRealPace)?dateLabel(mesesRealPace):'—'}</b>${isFinite(mesesRealPace)?` · faltam <b>${monthsLabel(mesesRealPace)}</b>`:''}.</p>
+        <p class="vsub">Maior mês registrado: <b style="color:var(--amber)">${fmt(maior)}</b> · Planejado por mês: ${fmt(state.inputs.aporte)}. ${vsPlano>=0?'Vocês estão guardando acima do plano — dá pra puxar a data pra frente.':'O ritmo real está abaixo do plano; ajuste o aporte ou a meta pra ficar honesto.'}</p>
+      </div>`;
+  }
 
   const el = document.getElementById('diarioEntries');
   if(!list.length){ el.innerHTML = '<p class="empty">Nenhum registro ainda. Adicione o valor guardado neste mês.</p>'; }
@@ -812,31 +843,77 @@ const STATUS = { pending:['pending','○','Pendente'], doing:['doing','◐','Em 
 function renderMetas(){
   const el = document.getElementById('metasTimeline');
   const list = [...state.metas].sort((a,b)=> (a.data||'9999')<(b.data||'9999')?-1:1);
-  if(!list.length){ el.innerHTML='<p class="empty">Adicione os marcos do plano: reserva, entrada, imóvel comprado, primeira viagem internacional, primeiro Airbnb alugado...</p>'; return; }
-  el.innerHTML = list.map(m=>{
-    const s = STATUS[m.status]||STATUS.pending;
-    return `<div class="milestone ${s[0]}">
-      <div class="dot">${s[1]}</div>
-      <div class="milestone-card">
-        <div class="entry-head">
-          <span class="milestone-title">${escapeHtml(m.titulo)}</span>
-          <button class="del" data-del-meta="${m.id}" title="remover">×</button>
-        </div>
-        <div class="milestone-meta">
-          <span>🎯 ${m.data?ymLabel(m.data):'sem data'}</span>
-          <select class="status-select" data-status-meta="${m.id}">
-            ${Object.keys(STATUS).map(k=>`<option value="${k}" ${m.status===k?'selected':''}>${STATUS[k][2]}</option>`).join('')}
-          </select>
-        </div>
+
+  // ---- Dashboard das metas ----
+  const total = list.length;
+  const feitos = list.filter(m=>m.status==='done').length;
+  const pct = total ? Math.round(feitos/total*100) : 0;
+  const hojeYM = currentYM();
+  const proximo = list.find(m=>m.status!=='done' && (m.data||'9999')>=hojeYM) || list.find(m=>m.status!=='done');
+  document.getElementById('metasDash').innerHTML = total ? `
+    <div class="goal" style="margin-bottom:16px;">
+      ${ringSVG(total?feitos/total:0).replace('da entrada','concluído')}
+      <div class="ginfo">
+        <div class="gtitle">🚩 Progresso dos marcos</div>
+        <div class="grow"><span>Marcos concluídos</span><b>${feitos} de ${total}</b></div>
+        <div class="grow"><span>Próximo marco</span><b>${proximo?escapeHtml(proximo.titulo):'—'}</b></div>
+        <div class="grow"><span>Data alvo</span><b>${proximo&&proximo.data?ymLabel(proximo.data):'—'}</b></div>
       </div>
-    </div>`;
-  }).join('');
-  el.querySelectorAll('[data-status-meta]').forEach(sel=> sel.onchange=()=>{
-    const m = state.metas.find(x=>x.id===sel.dataset.statusMeta); if(m){ m.status=sel.value; save(); renderMetas(); }
-  });
-  el.querySelectorAll('[data-del-meta]').forEach(b=> b.onclick=()=>{
-    state.metas = state.metas.filter(x=>x.id!==b.dataset.delMeta); save(); renderMetas();
-  });
+    </div>` : '';
+
+  // ---- Linha do tempo ----
+  if(!list.length){ el.innerHTML='<p class="empty">Adicione os marcos do plano: reserva, entrada, imóvel comprado, primeira viagem internacional, primeiro Airbnb alugado...</p>'; }
+  else {
+    el.innerHTML = list.map(m=>{
+      const s = STATUS[m.status]||STATUS.pending;
+      return `<div class="milestone ${s[0]}">
+        <div class="dot">${s[1]}</div>
+        <div class="milestone-card">
+          <div class="entry-head">
+            <span class="milestone-title">${escapeHtml(m.titulo)}</span>
+            <button class="del" data-del-meta="${m.id}" title="remover">×</button>
+          </div>
+          <div class="milestone-meta">
+            <span>🎯 ${m.data?ymLabel(m.data):'sem data'}</span>
+            <select class="status-select" data-status-meta="${m.id}">
+              ${Object.keys(STATUS).map(k=>`<option value="${k}" ${m.status===k?'selected':''}>${STATUS[k][2]}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    el.querySelectorAll('[data-status-meta]').forEach(sel=> sel.onchange=()=>{
+      const m = state.metas.find(x=>x.id===sel.dataset.statusMeta); if(m){ m.status=sel.value; save(); renderMetas(); }
+    });
+    el.querySelectorAll('[data-del-meta]').forEach(b=> b.onclick=()=>{
+      state.metas = state.metas.filter(x=>x.id!==b.dataset.delMeta); save(); renderMetas();
+    });
+  }
+
+  // ---- Próximas ações vindas do Mapa (tarefas/submetas não feitas) ----
+  const aEl = document.getElementById('metasAcoes');
+  const ACAO_TIPOS = ['tarefa','submeta','estudo'];
+  const acoes = state.mapa.nodes.filter(n=>ACAO_TIPOS.includes(n.tipo) && n.status!=='done');
+  const totalAcoes = state.mapa.nodes.filter(n=>ACAO_TIPOS.includes(n.tipo)).length;
+  if(!acoes.length){
+    aEl.innerHTML = totalAcoes ? '<p class="empty">Tudo feito no mapa. 🎉</p>' : '<p class="empty">Crie tarefas ou submetas no Mapa para elas aparecerem aqui.</p>';
+  } else {
+    aEl.innerHTML = acoes.map(n=>{
+      const t = NODE_TIPOS[n.tipo];
+      return `<div class="entry" style="padding:10px 14px;">
+        <div class="entry-head">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;">
+            <input type="checkbox" data-done-node="${n.id}"> <span>${t[0]} ${escapeHtml(n.titulo)}</span>
+          </label>
+          <span class="tag ${n.status==='doing'?'amber-tag':''}" style="font-size:10px;color:var(--muted)">${n.status==='doing'?'◐ fazendo':'○ a fazer'}</span>
+        </div>
+      </div>`;
+    }).join('');
+    aEl.querySelectorAll('[data-done-node]').forEach(c=> c.onchange=()=>{
+      const n = state.mapa.nodes.find(x=>x.id===c.dataset.doneNode);
+      if(n){ n.status='done'; save(); drawMap(); renderMetas(); }
+    });
+  }
 }
 
 /* ---------------- Eventos de formulário ---------------- */
@@ -1130,14 +1207,14 @@ document.getElementById('nSave').onclick = ()=>{
     const ang = Math.random()*Math.PI*2;
     state.mapa.nodes.push({ id:uid(), ...data, x:bx+Math.cos(ang)*180, y:by+Math.sin(ang)*180 });
   }
-  save(); drawMap(); closeNodeModal();
+  save(); drawMap(); renderMetas(); closeNodeModal();
 };
 document.getElementById('nDelete').onclick = ()=>{
   if(!editingNodeId || editingNodeId==='root') return;
   if(!confirm('Excluir este nó? Os nós ligados a ele passam a ligar no centro.')) return;
   state.mapa.nodes.forEach(n=>{ if(n.parent===editingNodeId) n.parent='root'; });
   state.mapa.nodes = state.mapa.nodes.filter(n=>n.id!==editingNodeId);
-  save(); drawMap(); closeNodeModal();
+  save(); drawMap(); renderMetas(); closeNodeModal();
 };
 document.getElementById('mapZoomIn').onclick = ()=> zoomBy(1.2);
 document.getElementById('mapZoomOut').onclick = ()=> zoomBy(0.83);
@@ -1240,7 +1317,7 @@ function renderAlvos(){
   el.querySelectorAll('[data-edit-alvo]').forEach(b=> b.onclick=()=> openAlvoModal(b.dataset.editAlvo));
 }
 
-function renderAll(){ renderFinanceira(); renderDiario(); renderMent(); renderAmbiente(); renderMetas(); renderAlvos(); seedMapIfEmpty(); drawMap(); }
+function renderAll(){ seedMapIfEmpty(); renderFinanceira(); renderDiario(); renderMent(); renderAmbiente(); renderMetas(); renderAlvos(); drawMap(); }
 
 /* ---------------- Instalação (PWA) ---------------- */
 let deferredPrompt;
