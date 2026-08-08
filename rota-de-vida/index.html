@@ -219,6 +219,23 @@
   .acct-chip .dot{ position:absolute; right:-1px; bottom:-1px; width:12px; height:12px; border-radius:50%; border:2px solid var(--ink); }
   .acct-chip .dot.green{ background:var(--green); } .acct-chip .dot.grey{ background:var(--muted); }
   .dev-box{ background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:12px; margin-top:10px; }
+  /* ===== Custo de vida ===== */
+  .catrow{ margin-bottom:14px; }
+  .catrow .cathead{ display:flex; justify-content:space-between; align-items:baseline; font-size:13.5px; margin-bottom:5px; }
+  .catrow .cathead b{ font-family:'IBM Plex Mono',monospace; }
+  .catbar{ position:relative; height:12px; border-radius:6px; background:rgba(13,27,36,.5); overflow:hidden; }
+  .catbar .fill{ position:absolute; left:0; top:0; bottom:0; border-radius:6px; }
+  .catbar .fill.ok{ background:linear-gradient(90deg,var(--green),#7fd6a0); }
+  .catbar .fill.over{ background:linear-gradient(90deg,var(--coral),#ff8b76); }
+  .catmark{ position:absolute; top:-3px; bottom:-3px; width:2px; background:var(--foam); opacity:.6; }
+  .catrow .catmeta{ font-size:11px; color:var(--muted); margin-top:4px; display:flex; justify-content:space-between; }
+  .split{ display:flex; height:26px; border-radius:8px; overflow:hidden; margin:6px 0 4px; }
+  .split div{ display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#0D1B24; font-weight:600; }
+  .split .need{ background:#7FB2C8; } .split .want{ background:var(--amber); } .split .save{ background:var(--green); }
+  .split-legend{ display:flex; justify-content:space-between; font-size:11px; color:var(--muted); font-family:'IBM Plex Mono',monospace; }
+  .insight{ display:flex; gap:10px; align-items:flex-start; background:var(--panel-2); border:1px solid var(--line); border-left:4px solid var(--amber); border-radius:10px; padding:11px 13px; margin-bottom:10px; font-size:13px; }
+  .insight.good{ border-left-color:var(--green); } .insight.bad{ border-left-color:var(--coral); }
+  .insight .ic{ font-size:17px; line-height:1; }
 
   .mnode-tools{ display:flex; gap:6px; margin-top:8px; }
   .mnb{ width:26px; height:26px; border-radius:7px; border:1px solid var(--line); background:var(--ink); color:var(--foam);
@@ -427,6 +444,49 @@
     </div>
   </section>
 
+  <!-- ABA: CUSTO DE VIDA -->
+  <section class="tab-view" id="tab-custo">
+    <div id="custoDash"></div>
+    <div id="custoCategorias"></div>
+    <div id="custoInsights"></div>
+
+    <div class="panel">
+      <h2>Renda do casal<span class="hint">A renda de cada um e a renda somada.</span></h2>
+      <div class="form-row">
+        <div class="field" style="flex:2 1 150px;"><label for="rendaNome">Quem</label><input type="text" id="rendaNome" placeholder="ex.: Mattheus"></div>
+        <div class="field" style="flex:1 1 120px;"><label for="rendaValor">Renda líquida/mês (R$)</label><input type="number" id="rendaValor" step="100" placeholder="0"></div>
+        <button class="btn" id="rendaAdd">Adicionar</button>
+      </div>
+      <div class="entries" id="rendaList"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Despesas mensais<span class="hint">Aluguel, luz, água, alimentação, lazer, parcelas...</span></h2>
+      <div class="form-row">
+        <div class="field" style="flex:2 1 150px;"><label for="despNome">Descrição</label><input type="text" id="despNome" placeholder="ex.: Aluguel"></div>
+        <div class="field" style="flex:1 1 110px;"><label for="despValor">Valor/mês (R$)</label><input type="number" id="despValor" step="50" placeholder="0"></div>
+        <div class="field" style="flex:1 1 130px;"><label for="despCat">Categoria</label><select id="despCat"></select></div>
+        <div class="field" style="flex:1 1 110px;"><label for="despTipo">Tipo</label>
+          <select id="despTipo"><option value="fixa">Fixa</option><option value="variavel">Variável</option><option value="parcela">Parcela</option></select>
+        </div>
+        <button class="btn" id="despAdd">Adicionar</button>
+      </div>
+      <div class="entries" id="despesaList"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Cartão de crédito<span class="hint">Suba a planilha (CSV) da fatura — o app soma e categoriza sozinho.</span></h2>
+      <div class="data-actions">
+        <button class="btn" id="cartaoImport">Subir planilha (CSV)</button>
+        <input type="file" id="cartaoFile" accept=".csv,text/csv,text/plain" style="display:none">
+        <button class="btn ghost sm" id="cartaoClear">Limpar cartão</button>
+        <span class="save-status" id="cartaoStatus" style="flex:1;text-align:left;margin:0;align-self:center;"></span>
+      </div>
+      <div id="cartaoBox"></div>
+      <p class="map-hint" style="margin-top:10px;">Exporte o CSV da fatura no app do banco (Nubank, Itaú, etc.). Formatos comuns: data, descrição, valor. O que já estiver no cartão não precisa lançar de novo em "Despesas".</p>
+    </div>
+  </section>
+
   <!-- ABA: MAPA MENTAL -->
   <section class="tab-view" id="tab-mapa">
     <div class="map-toolbar">
@@ -490,6 +550,7 @@
 
 <nav class="tabbar" id="tabbar">
   <button data-tab="financeira" class="active"><span class="ic">🧭</span>Rota</button>
+  <button data-tab="custo"><span class="ic">💵</span>Custo</button>
   <button data-tab="mapa"><span class="ic">🗺️</span>Mapa</button>
   <button data-tab="alvos"><span class="ic">🏢</span>Alvos</button>
   <button data-tab="renda"><span class="ic">💰</span>Renda</button>
@@ -622,7 +683,8 @@ const DEFAULTS = {
   metas: [],
   mapa: { nodes: [], view: null },
   alvos: [],
-  renda: { token: '', itens: [] }
+  renda: { token: '', itens: [] },
+  custo: { rendas: [], despesas: [], cartao: { total:0, porCat:{}, top:[], count:0 } }
 };
 let state = load();
 
@@ -640,7 +702,12 @@ function migrate(d){
     metas: d.metas||[],
     mapa: { nodes:(d.mapa&&d.mapa.nodes)||[], view:(d.mapa&&d.mapa.view)||null },
     alvos: d.alvos||[],
-    renda: { token:(d.renda&&d.renda.token)||'', itens:(d.renda&&d.renda.itens)||[] }
+    renda: { token:(d.renda&&d.renda.token)||'', itens:(d.renda&&d.renda.itens)||[] },
+    custo: {
+      rendas:(d.custo&&d.custo.rendas)||[],
+      despesas:(d.custo&&d.custo.despesas)||[],
+      cartao:(d.custo&&d.custo.cartao)||{ total:0, porCat:{}, top:[], count:0 }
+    }
   };
 }
 let saveTimer;
@@ -1110,6 +1177,7 @@ document.getElementById('importFile').onchange = (ev)=>{
 /* ---------------- Navegação por abas ---------------- */
 const META = {
   financeira: ['Carta de navegação · Mattheus & noiva','Rota de Vida','Duas rotas a partir do mesmo ponto. Ajuste os números com o que for real, o mapa recalcula sozinho.'],
+  custo: ['Custo de vida','Custo de vida','Renda do casal, despesas por categoria, cartão e onde dá para economizar — a sobra vira seu aporte.'],
   mapa: ['Mapa mental','Mapa da estratégia','Caminhos, rotas alternativas, submetas, obstáculos, estudos e tarefas — tudo conectado.'],
   alvos: ['Alvos','Apartamentos-alvo','Cole o link do anúncio; o app puxa foto e dados. Marque o alvo principal.'],
   renda: ['Rendas passivas','Rendas passivas','Acompanhe ativos ao vivo. Informação para decidir — não é recomendação.'],
@@ -1864,7 +1932,231 @@ function renderConta(){
   const bj=document.getElementById('btnJoin'); if(bj) bj.onclick=()=> joinSpace(document.getElementById('joinCode').value);
 }
 
-function renderAll(){ seedMapIfEmpty(); renderFinanceira(); renderDiario(); renderMent(); renderAmbiente(); renderMetas(); renderAlvos(); renderRenda(); renderConta(); drawMap(); }
+/* ================= CUSTO DE VIDA ================= */
+const CAT = {
+  moradia:     { nome:'Moradia',            emoji:'🏠', ideal:0.30, grupo:'need' },
+  alimentacao: { nome:'Alimentação',        emoji:'🍽️', ideal:0.15, grupo:'need' },
+  contas:      { nome:'Contas (luz/água/net)', emoji:'💡', ideal:0.10, grupo:'need' },
+  transporte:  { nome:'Transporte',         emoji:'🚗', ideal:0.12, grupo:'need' },
+  saude:       { nome:'Saúde',              emoji:'💊', ideal:0.08, grupo:'need' },
+  lazer:       { nome:'Lazer/Diversão',     emoji:'🎉', ideal:0.10, grupo:'want' },
+  parcelas:    { nome:'Parcelas/Dívidas',   emoji:'💳', ideal:0.10, grupo:'need' },
+  outros:      { nome:'Outros',             emoji:'📦', ideal:0.05, grupo:'want' }
+};
+const CAT_KEYS = Object.keys(CAT);
+
+function calcCusto(){
+  const c = state.custo;
+  const rendaTotal = c.rendas.reduce((s,r)=> s+(Number(r.valor)||0), 0);
+  const porCat = {}; CAT_KEYS.forEach(k=> porCat[k]=0);
+  c.despesas.forEach(d=>{ const k = CAT[d.cat]?d.cat:'outros'; porCat[k]+=(Number(d.valor)||0); });
+  // soma o cartão nas categorias
+  const cc = c.cartao||{}; if(cc.porCat){ Object.entries(cc.porCat).forEach(([k,v])=>{ if(porCat[k]==null) porCat[k]=0; porCat[k]+=Number(v)||0; }); }
+  const despTotal = c.despesas.reduce((s,d)=> s+(Number(d.valor)||0), 0);
+  const cartaoTotal = Number(cc.total)||0;
+  const gastoTotal = despTotal + cartaoTotal;
+  const sobra = rendaTotal - gastoTotal;
+  const pctGasto = rendaTotal>0 ? gastoTotal/rendaTotal : 0;
+  let need=0, want=0;
+  CAT_KEYS.forEach(k=>{ if(CAT[k].grupo==='need') need+=porCat[k]; else want+=porCat[k]; });
+  return { rendaTotal, despTotal, cartaoTotal, gastoTotal, sobra, pctGasto, porCat, need, want };
+}
+
+function renderCusto(){
+  fillCatSelect();
+  const c = calcCusto();
+  const aporteAtual = Number(state.inputs.aporte)||0;
+
+  // ---- Dashboard hero ----
+  const sobraCls = c.sobra>=0 ? 'green' : 'coral';
+  document.getElementById('custoDash').innerHTML = `
+    <div class="verdict" style="margin-bottom:16px">
+      <div class="vtop"><span class="vlabel">Resumo do mês</span>
+        <span class="chip ${sobraCls}">${c.rendaTotal>0?Math.round(c.pctGasto*100)+'% da renda gasto':'defina a renda'}</span></div>
+      <p class="vroute" style="font-size:20px">Sobra: <em style="color:${c.sobra>=0?'var(--green)':'var(--coral)'}">${fmt(c.sobra)}</em><span style="font-size:13px;color:var(--muted)">/mês</span></p>
+      <p class="vwhen">Renda do casal <b>${fmt(c.rendaTotal)}</b> · gastos <b>${fmt(c.gastoTotal)}</b></p>
+      <p class="vsub">${ c.sobra>0
+        ? `Essa sobra é o combustível da meta. Hoje seu aporte na Rota é ${fmt(aporteAtual)}.`
+        : (c.rendaTotal>0 ? '⚠️ Vocês estão gastando tudo (ou mais) que ganham. Veja abaixo onde cortar.' : 'Adicione a renda e as despesas para ver o resumo.') }</p>
+      ${ c.sobra>0 ? `<button class="btn sm" id="usarSobra" style="margin-top:10px">Usar a sobra (${fmt(c.sobra)}) como aporte da meta</button>` : '' }
+    </div>
+    <div class="kpi">
+      <div class="box"><div class="n">${fmt(c.rendaTotal)}</div><div class="l">Renda do casal</div></div>
+      <div class="box"><div class="n">${fmt(c.gastoTotal)}</div><div class="l">Gasto total</div></div>
+      <div class="box"><div class="n" style="color:${c.sobra>=0?'var(--green)':'var(--coral)'}">${fmt(c.sobra)}</div><div class="l">Sobra p/ meta</div></div>
+    </div>`;
+  const us=document.getElementById('usarSobra');
+  if(us) us.onclick=()=>{ state.inputs.aporte=Math.max(0,Math.round(c.sobra)); fillInputs(); renderFinanceira(); renderCusto(); save(); flashStatus('aporte atualizado'); };
+
+  // ---- Regra 50/30/20 + categorias ----
+  let catsHtml='';
+  if(c.rendaTotal>0){
+    const needP=Math.round(c.need/c.rendaTotal*100), wantP=Math.round(c.want/c.rendaTotal*100), saveP=Math.max(0,100-needP-wantP);
+    catsHtml += `<div class="panel"><h2>Regra 50 / 30 / 20<span class="hint">Necessidades 50% · Desejos 30% · Poupança 20% (referência).</span></h2>
+      <div class="split">
+        <div class="need" style="width:${Math.max(needP,6)}%">${needP}%</div>
+        <div class="want" style="width:${Math.max(wantP,6)}%">${wantP}%</div>
+        <div class="save" style="width:${Math.max(saveP,6)}%">${saveP}%</div>
+      </div>
+      <div class="split-legend"><span>Necessidades ${fmt(c.need)}</span><span>Desejos ${fmt(c.want)}</span><span>Sobra ${fmt(Math.max(0,c.sobra))}</span></div>
+    </div>`;
+  }
+  // categorias com benchmark
+  const catRows = CAT_KEYS.filter(k=>c.porCat[k]>0).sort((a,b)=>c.porCat[b]-c.porCat[a]).map(k=>{
+    const val=c.porCat[k], ideal=CAT[k].ideal*c.rendaTotal;
+    const pct = c.rendaTotal>0 ? val/c.rendaTotal : 0;
+    const over = c.rendaTotal>0 && val>ideal;
+    const barW = Math.min(100, Math.round(pct*100));
+    const markW = c.rendaTotal>0 ? Math.min(100, Math.round(CAT[k].ideal*100)) : 0;
+    return `<div class="catrow">
+      <div class="cathead"><span>${CAT[k].emoji} ${CAT[k].nome}</span><b>${fmt(val)} · ${Math.round(pct*100)}%</b></div>
+      <div class="catbar"><div class="fill ${over?'over':'ok'}" style="width:${barW}%"></div>${c.rendaTotal>0?`<div class="catmark" style="left:${markW}%"></div>`:''}</div>
+      <div class="catmeta"><span>${over?'⚠️ acima da referência':'dentro da referência'}</span><span>ideal ≤ ${fmt(ideal)} (${Math.round(CAT[k].ideal*100)}%)</span></div>
+    </div>`;
+  }).join('');
+  document.getElementById('custoCategorias').innerHTML = catsHtml + (catRows?`<div class="panel"><h2>Para onde vai o dinheiro</h2>${catRows}</div>`:'');
+
+  // ---- Insights: onde economizar ----
+  const ins=[];
+  if(c.rendaTotal>0){
+    const over = CAT_KEYS.map(k=>({k, ex: c.porCat[k]-CAT[k].ideal*c.rendaTotal})).filter(o=>o.ex>0).sort((a,b)=>b.ex-a.ex);
+    over.slice(0,3).forEach(o=> ins.push(['bad','💡', `${CAT[o.k].nome}: cortando até a referência, sobram ~<b>${fmt(o.ex)}/mês</b> (${fmt(o.ex*12)}/ano).`]));
+    const taxa = c.sobra/c.rendaTotal;
+    if(c.sobra<0) ins.push(['bad','🚨','Gasto maior que a renda. Priorize cortar as 2 maiores categorias acima.']);
+    else if(taxa<0.2) ins.push(['','🎯',`Taxa de poupança em ${Math.round(taxa*100)}%. Meta saudável: 20% (≈ ${fmt(c.rendaTotal*0.2)}/mês).`]);
+    else ins.push(['good','✅',`Ótima taxa de poupança: ${Math.round(taxa*100)}% da renda. Dá para acelerar a meta.`]);
+    const parc=c.porCat.parcelas||0;
+    if(parc>c.rendaTotal*0.15) ins.push(['bad','⛓️',`Parcelas/dívidas em ${Math.round(parc/c.rendaTotal*100)}% da renda — acima de 15%. Quitar as mais caras libera aporte.`]);
+    const reserva=Number(state.inputs.reserva)||0, meses = c.gastoTotal>0 ? reserva/c.gastoTotal : 0;
+    if(c.gastoTotal>0) ins.push([meses>=3?'good':'','🛟',`Reserva de emergência cobre ${meses.toFixed(1)} meses de gasto. Ideal: 3 a 6 meses (${fmt(c.gastoTotal*3)}–${fmt(c.gastoTotal*6)}).`]);
+  }
+  document.getElementById('custoInsights').innerHTML = ins.length ? `<div class="panel"><h2>Onde economizar & insights</h2>${ins.map(i=>`<div class="insight ${i[0]}"><span class="ic">${i[1]}</span><span>${i[2]}</span></div>`).join('')}</div>` : '';
+
+  // ---- Listas ----
+  const rl=document.getElementById('rendaList');
+  rl.innerHTML = state.custo.rendas.length ? state.custo.rendas.map(r=>`
+    <div class="entry"><div class="entry-head"><span>${escapeHtml(r.nome||'—')}</span>
+      <span style="display:flex;align-items:center;gap:8px"><span class="entry-val">${fmt(r.valor)}</span><button class="del" data-del-renda2="${r.id}">×</button></span></div></div>`).join('')
+    : '<p class="empty">Adicione a renda de cada um.</p>';
+  rl.querySelectorAll('[data-del-renda2]').forEach(b=> b.onclick=()=>{ state.custo.rendas=state.custo.rendas.filter(x=>x.id!==b.dataset.delRenda2); save(); renderCusto(); });
+
+  const dl=document.getElementById('despesaList');
+  dl.innerHTML = state.custo.despesas.length ? [...state.custo.despesas].sort((a,b)=>(b.valor||0)-(a.valor||0)).map(d=>`
+    <div class="entry"><div class="entry-head">
+      <span>${CAT[d.cat]?CAT[d.cat].emoji:'📦'} ${escapeHtml(d.nome||'—')} <span class="tag neutral">${d.tipo||'fixa'}</span></span>
+      <span style="display:flex;align-items:center;gap:8px"><span class="entry-val">${fmt(d.valor)}</span><button class="del" data-del-desp="${d.id}">×</button></span></div></div>`).join('')
+    : '<p class="empty">Adicione as despesas mensais (aluguel, luz, água, mercado...).</p>';
+  dl.querySelectorAll('[data-del-desp]').forEach(b=> b.onclick=()=>{ state.custo.despesas=state.custo.despesas.filter(x=>x.id!==b.dataset.delDesp); save(); renderCusto(); });
+
+  renderCartaoBox();
+}
+function fillCatSelect(){
+  const sel=document.getElementById('despCat'); if(!sel) return;
+  const cur=sel.value;
+  sel.innerHTML=CAT_KEYS.map(k=>`<option value="${k}">${CAT[k].emoji} ${CAT[k].nome}</option>`).join('');
+  if(cur) sel.value=cur;
+}
+function renderCartaoBox(){
+  const box=document.getElementById('cartaoBox'); const cc=state.custo.cartao||{};
+  if(!cc.total){ box.innerHTML=''; return; }
+  const cats=Object.entries(cc.porCat||{}).sort((a,b)=>b[1]-a[1]);
+  box.innerHTML=`
+    <div class="kpi" style="margin-top:14px">
+      <div class="box"><div class="n">${fmt(cc.total)}</div><div class="l">Total da fatura</div></div>
+      <div class="box"><div class="n">${cc.count||0}</div><div class="l">Lançamentos</div></div>
+    </div>
+    <div style="margin-top:6px">${cats.map(([k,v])=>`<div class="catrow"><div class="cathead"><span>${CAT[k]?CAT[k].emoji+' '+CAT[k].nome:k}</span><b>${fmt(v)}</b></div><div class="catbar"><div class="fill ok" style="width:${Math.round(v/cc.total*100)}%"></div></div></div>`).join('')}</div>
+    ${cc.top&&cc.top.length?`<p class="sub" style="font-size:12px;margin-top:6px">Maiores gastos: ${cc.top.slice(0,5).map(t=>escapeHtml(t.desc)+' ('+fmt(t.valor)+')').join(' · ')}</p>`:''}`;
+}
+
+/* auto-categorização por palavra-chave */
+const CARD_KW = [
+  ['alimentacao', ['ifood','rappi','restaur','mercado','supermerc','padaria','lanch','burger','pizza',' food','acai','açai','hortifruti','carrefour','pao de acucar','assai','atacad','zaffari','angeloni','big']],
+  ['transporte', ['uber','99app','99 ','posto','gasolina','combust','estacion','metro','onibus','passagem','latam','gol ','azul','localiza','movida']],
+  ['lazer', ['netflix','spotify','cinema',' bar ','show','steam','playstation','xbox','hotel','airbnb','disney','hbo','max ','youtube','ingresso','viagem']],
+  ['contas', ['energia','celesc','enel','cpfl','cemig','copel','agua','sanepar','sabesp','casan','internet','vivo','claro',' tim','net ','telefon','gas ']],
+  ['moradia', ['aluguel','condomin','imobiliaria','iptu']],
+  ['saude', ['farmacia','drogaria','drogasil','pacheco','raia','hospital','clinica','laborat','unimed','amil','hapvida','plano de saude']],
+  ['parcelas', ['parcela','financ','emprestimo','emprést','consorcio']]
+];
+function catFromDesc(desc){
+  const s=(desc||'').toLowerCase();
+  for(const [cat,kws] of CARD_KW){ if(kws.some(k=>s.includes(k))) return cat; }
+  return 'outros';
+}
+function parseNum(v){
+  if(v==null) return NaN;
+  let s=String(v).replace(/r\$/i,'').replace(/\s/g,'').trim();
+  if(s.includes(',') && s.includes('.')) s=s.replace(/\./g,'').replace(',','.');
+  else if(s.includes(',')) s=s.replace(',','.');
+  return parseFloat(s);
+}
+function parseCartaoCSV(text){
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
+  if(!lines.length) return null;
+  const delim = (lines[0].match(/;/g)||[]).length > (lines[0].match(/,/g)||[]).length ? ';' : ',';
+  const split = (l)=> l.split(delim).map(x=>x.replace(/^"|"$/g,'').trim());
+  let start=0, di=-1, vi=-1, ni=-1;
+  const head=split(lines[0]).map(h=>h.toLowerCase());
+  const looksHeader = head.some(h=>/data|date|valor|amount|desc|title|lan|hist|estabel/.test(h));
+  if(looksHeader){
+    start=1;
+    di=head.findIndex(h=>/data|date/.test(h));
+    vi=head.findIndex(h=>/valor|amount|value/.test(h));
+    ni=head.findIndex(h=>/desc|title|lan|hist|estabel/.test(h));
+  }
+  const porCat={}, top=[]; let total=0, count=0;
+  for(let i=start;i<lines.length;i++){
+    const cols=split(lines[i]); if(!cols.length) continue;
+    let desc = ni>=0?cols[ni]: (cols.length>=2?cols[1]:'');
+    let valRaw = vi>=0?cols[vi]: cols[cols.length-1];
+    let val = parseNum(valRaw);
+    if(isNaN(val)){ // tenta achar a última coluna numérica
+      for(let j=cols.length-1;j>=0;j--){ const n=parseNum(cols[j]); if(!isNaN(n)){ val=n; if(ni<0&&j>0) desc=cols[j-1]; break; } }
+    }
+    if(isNaN(val)) continue;
+    if(val<=0) continue; // ignora pagamentos/estornos
+    const cat=catFromDesc(desc);
+    porCat[cat]=(porCat[cat]||0)+val; total+=val; count++;
+    top.push({desc:desc||'(sem descrição)', valor:val});
+  }
+  if(!count) return null;
+  top.sort((a,b)=>b.valor-a.valor);
+  return { total:Math.round(total*100)/100, porCat, top:top.slice(0,8), count };
+}
+
+/* eventos da aba custo */
+document.getElementById('rendaAdd').onclick=()=>{
+  const nome=document.getElementById('rendaNome').value.trim();
+  const valor=parseFloat(document.getElementById('rendaValor').value);
+  if(isNaN(valor)) return;
+  state.custo.rendas.push({ id:uid(), nome:nome||'Renda', valor });
+  document.getElementById('rendaNome').value=''; document.getElementById('rendaValor').value='';
+  save(); renderCusto();
+};
+document.getElementById('despAdd').onclick=()=>{
+  const nome=document.getElementById('despNome').value.trim();
+  const valor=parseFloat(document.getElementById('despValor').value);
+  if(isNaN(valor)) return;
+  state.custo.despesas.push({ id:uid(), nome:nome||'Despesa', valor, cat:document.getElementById('despCat').value, tipo:document.getElementById('despTipo').value });
+  document.getElementById('despNome').value=''; document.getElementById('despValor').value='';
+  save(); renderCusto();
+};
+document.getElementById('cartaoImport').onclick=()=> document.getElementById('cartaoFile').click();
+document.getElementById('cartaoFile').onchange=(ev)=>{
+  const file=ev.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const parsed=parseCartaoCSV(String(reader.result));
+    if(!parsed){ document.getElementById('cartaoStatus').textContent='não consegui ler esse CSV — confira o formato'; document.getElementById('cartaoStatus').style.color='var(--coral)'; }
+    else { state.custo.cartao=parsed; document.getElementById('cartaoStatus').textContent='fatura importada: '+fmt(parsed.total); document.getElementById('cartaoStatus').style.color='var(--green)'; save(); renderCusto(); }
+    ev.target.value='';
+  };
+  reader.readAsText(file, 'utf-8');
+};
+document.getElementById('cartaoClear').onclick=()=>{ state.custo.cartao={ total:0, porCat:{}, top:[], count:0 }; document.getElementById('cartaoStatus').textContent=''; save(); renderCusto(); };
+
+function renderAll(){ seedMapIfEmpty(); renderFinanceira(); renderCusto(); renderDiario(); renderMent(); renderAmbiente(); renderMetas(); renderAlvos(); renderRenda(); renderConta(); drawMap(); }
 
 /* ---------------- Instalação (PWA) ---------------- */
 let deferredPrompt;

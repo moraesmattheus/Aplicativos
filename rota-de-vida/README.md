@@ -125,7 +125,11 @@ Cada usuário começa no **próprio espaço**. Para o casal compartilhar:
 
 1. **Rota** — veredito da rota recomendada + data-alvo, dashboard com anel de
    progresso da entrada e comparação Rota A × Rota B (com o ponto de risco).
-2. **Mapa** — mapa mental interativo: nós arrastáveis e conectados, por tipo
+2. **Custo** — orçamento do casal: renda de cada um + renda somada, despesas
+   por categoria com **referências (regra 50/30/20)**, import da **planilha do
+   cartão (CSV)** com auto-categorização, **onde economizar** automático e a
+   **sobra vira o aporte** da Rota com um toque.
+3. **Mapa** — mapa mental interativo: nós arrastáveis e conectados, por tipo
    (Rota, Submeta, Obstáculo, Objeção, Estudo, Renda passiva, Tarefa, Ideia).
    Toque num nó para editar; arraste o fundo para mover; use +/− para zoom.
 3. **Alvos** — apartamentos que vocês querem. Cole o link do anúncio e o app
