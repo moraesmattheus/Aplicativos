@@ -135,6 +135,15 @@ Cada usuário começa no **próprio espaço**. Para o casal compartilhar:
 3. **Alvos** — apartamentos que vocês querem. Cole o link do anúncio e o app
    tenta puxar foto/título/descrição (via Microlink); marque o alvo principal
    e o valor entra no cálculo da Rota. Se o site bloquear, preencha na mão.
+   Em cada despesa dá para informar o **dia de vencimento** — aí ela aparece
+   em **"📅 Contas a vencer"** com status (vencida / vence hoje / em breve /
+   paga) e um botão "marcar paga" (zera todo mês). Alertas de conta também
+   aparecem no **Início**. Dá para **ativar avisos** no celular (notificação
+   quando abre o app com contas vencendo).
+   > Nota honesta: ler a notificação do **Samsung Pay** e lançar o gasto
+   > sozinho (com localização) **não é possível num app web** — isso exige um
+   > app Android nativo com permissão especial. O caminho aqui é o import do
+   > CSV da fatura + lançamento manual.
 4. **Renda** — rendas passivas com dados ao vivo dos ativos que vocês
    escolherem. Cripto via CoinGecko (sem cadastro); ações/FIIs da B3 via
    brapi.dev (token grátis opcional). Mostra cotação, variação e dividend

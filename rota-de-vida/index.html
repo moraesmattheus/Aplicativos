@@ -519,6 +519,7 @@
       <button class="btn ghost sm" id="custoHelp">❔ Como usar</button>
     </div>
     <div id="custoDash"></div>
+    <div id="custoContas"></div>
     <div id="custoCategorias"></div>
     <div id="custoInsights"></div>
 
@@ -541,6 +542,7 @@
         <div class="field" style="flex:1 1 110px;"><label for="despTipo">Tipo</label>
           <select id="despTipo"><option value="fixa">Fixa</option><option value="variavel">Variável</option><option value="parcela">Parcela</option></select>
         </div>
+        <div class="field" style="flex:1 1 90px;"><label for="despDia">Vence dia (opcional)</label><input type="number" id="despDia" min="1" max="31" placeholder="—"></div>
         <button class="btn" id="despAdd">Adicionar</button>
       </div>
       <div class="entries" id="despesaList"></div>
@@ -2215,7 +2217,82 @@ function renderCusto(){
     : '<p class="empty">Adicione as despesas mensais (aluguel, luz, água, mercado...).</p>';
   dl.querySelectorAll('[data-del-desp]').forEach(b=> b.onclick=()=>{ state.custo.despesas=state.custo.despesas.filter(x=>x.id!==b.dataset.delDesp); save(); renderCusto(); });
 
+  renderContas();
   renderCartaoBox();
+}
+
+/* ---- Contas a vencer + avisos ---- */
+function computeContas(){
+  const ym=currentYM(); const hoje=new Date();
+  const diasNoMes=new Date(hoje.getFullYear(), hoje.getMonth()+1, 0).getDate();
+  return (state.custo.despesas||[]).filter(d=>d.dia>0).map(d=>{
+    const pago = d.pagos && d.pagos[ym];
+    const dia = Math.min(d.dia, diasNoMes);
+    const diasAte = dia - hoje.getDate();
+    let status;
+    if(pago) status='paga';
+    else if(diasAte<0) status='vencida';
+    else if(diasAte===0) status='hoje';
+    else if(diasAte<=5) status='proxima';
+    else status='futura';
+    return { id:d.id, nome:d.nome, valor:d.valor, cat:d.cat, dia, diasAte, pago, status };
+  }).sort((a,b)=>{
+    const rank={vencida:0,hoje:1,proxima:2,futura:3,paga:4};
+    return rank[a.status]-rank[b.status] || a.diasAte-b.diasAte;
+  });
+}
+function renderContas(){
+  const el=document.getElementById('custoContas'); if(!el) return;
+  const list=computeContas();
+  if(!list.length){ el.innerHTML=''; return; }
+  const ym=currentYM();
+  const tagFor=(s)=>({
+    vencida:['rgba(232,86,63,.2)','var(--coral)','vencida'],
+    hoje:['rgba(232,86,63,.2)','var(--coral)','vence hoje'],
+    proxima:['rgba(242,169,59,.2)','var(--amber)','em breve'],
+    futura:['','',''],
+    paga:['rgba(79,180,119,.2)','var(--green)','paga ✓']
+  }[s]);
+  const notifBtn = (notifSupported() && Notification.permission!=='granted')
+    ? `<button class="btn ghost sm" id="notifBtn" style="margin-top:10px">🔔 Ativar avisos no celular</button>` : '';
+  el.innerHTML=`<div class="panel"><h2>📅 Contas a vencer<span class="hint">Marque como paga quando quitar — o status zera todo mês.</span></h2>
+    ${list.map(c=>{
+      const [bg,cor,txt]=tagFor(c.status);
+      const quando = c.status==='paga'?'paga este mês' : c.status==='vencida'?`venceu dia ${c.dia}` : c.status==='hoje'?'vence hoje' : `vence dia ${c.dia} · em ${c.diasAte} ${c.diasAte===1?'dia':'dias'}`;
+      return `<div class="entry"><div class="entry-head">
+        <span>${CAT[c.cat]?CAT[c.cat].emoji:'📌'} ${escapeHtml(c.nome)} ${txt?`<span class="tag" style="background:${bg};color:${cor}">${txt}</span>`:''}</span>
+        <span class="entry-val">${fmt(c.valor)}</span></div>
+        <div class="entry-meta" style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span>${quando}</span>
+          <button class="btn ghost sm" data-pay="${c.id}" style="padding:4px 10px;font-size:11px">${c.pago?'desmarcar':'marcar paga'}</button>
+        </div></div>`;
+    }).join('')}
+    ${notifBtn}
+  </div>`;
+  el.querySelectorAll('[data-pay]').forEach(b=> b.onclick=()=>{
+    const d=state.custo.despesas.find(x=>x.id===b.dataset.pay); if(!d) return;
+    if(!d.pagos) d.pagos={}; d.pagos[ym]=!d.pagos[ym]; save(); renderCusto(); renderInicio();
+  });
+  const nb=document.getElementById('notifBtn'); if(nb) nb.onclick=askNotif;
+}
+function notifSupported(){ return typeof Notification!=='undefined'; }
+async function askNotif(){
+  if(!notifSupported()){ alert('Este navegador não suporta avisos.'); return; }
+  try{ const p=await Notification.requestPermission(); if(p==='granted'){ renderCusto(); notifyDueBills(true); } }catch(e){}
+}
+function notifyDueBills(force){
+  if(!notifSupported() || Notification.permission!=='granted') return;
+  const due=computeContas().filter(c=>c.status==='vencida'||c.status==='hoje');
+  if(!due.length) return;
+  const key='rota-vida:notif:'+new Date().toISOString().slice(0,10);
+  try{ if(!force && localStorage.getItem(key)) return; localStorage.setItem(key,'1'); }catch(e){}
+  const nomes=due.map(c=>c.nome).slice(0,3).join(', ');
+  const body = due.length===1 ? `${nomes} vence hoje ou está vencida.` : `${due.length} contas vencendo: ${nomes}…`;
+  try{
+    if(navigator.serviceWorker && navigator.serviceWorker.ready){
+      navigator.serviceWorker.ready.then(r=> r.showNotification('Contas a pagar 📅', { body, icon:'./icons/icon-192.png', badge:'./icons/icon-192.png' })).catch(()=>{ try{ new Notification('Contas a pagar 📅',{body}); }catch(e){} });
+    } else { new Notification('Contas a pagar 📅',{body}); }
+  }catch(e){}
 }
 function fillCatSelect(){
   const sel=document.getElementById('despCat'); if(!sel) return;
@@ -2325,8 +2402,9 @@ document.getElementById('despAdd').onclick=()=>{
   const nome=document.getElementById('despNome').value.trim();
   const valor=parseFloat(document.getElementById('despValor').value);
   if(isNaN(valor)) return;
-  state.custo.despesas.push({ id:uid(), nome:nome||'Despesa', valor, cat:document.getElementById('despCat').value, tipo:document.getElementById('despTipo').value });
-  document.getElementById('despNome').value=''; document.getElementById('despValor').value='';
+  let dia=parseInt(document.getElementById('despDia').value); if(isNaN(dia)||dia<1||dia>31) dia=0;
+  state.custo.despesas.push({ id:uid(), nome:nome||'Despesa', valor, cat:document.getElementById('despCat').value, tipo:document.getElementById('despTipo').value, dia, pagos:{} });
+  document.getElementById('despNome').value=''; document.getElementById('despValor').value=''; document.getElementById('despDia').value='';
   save(); renderCusto();
 };
 document.getElementById('cartaoImport').onclick=()=> document.getElementById('cartaoFile').click();
@@ -2398,6 +2476,12 @@ function gerarInsights(){
   const c = calcular();               // meta
   const cv = calcCusto();             // custo
   const ins = [];
+  // 0) contas a vencer / vencidas (mais urgente)
+  const contas=computeContas();
+  const venc=contas.filter(x=>x.status==='vencida'), hj=contas.filter(x=>x.status==='hoje'), breve=contas.filter(x=>x.status==='proxima');
+  if(venc.length) ins.push({p:99,tone:'bad',ic:'⏰',txt: venc.length===1?`A conta <b>${escapeHtml(venc[0].nome)}</b> (${fmt(venc[0].valor)}) está <b>vencida</b>.`:`<b>${venc.length} contas</b> estão vencidas.`,go:'custo'});
+  if(hj.length) ins.push({p:97,tone:'bad',ic:'📅',txt:`Vence <b>hoje</b>: ${hj.map(x=>escapeHtml(x.nome)).join(', ')}.`,go:'custo'});
+  if(breve.length) ins.push({p:74,tone:'',ic:'📅',txt:`Vence em breve: ${breve.map(x=>escapeHtml(x.nome)+' (dia '+x.dia+')').join(', ')}.`,go:'custo'});
   // 1) gasto maior que renda (urgente)
   if(cv.rendaTotal>0 && cv.sobra<0){
     ins.push({p:100,tone:'bad',ic:'🚨',txt:`Vocês estão gastando <b>${fmt(-cv.sobra)}</b> a mais do que ganham por mês. Ver em Custo onde cortar.`,go:'custo'});
@@ -2520,6 +2604,7 @@ if('serviceWorker' in navigator){
   fillInputs();
   renderAll();
   switchTab('inicio'); // sempre abre na tela de boas-vindas
+  setTimeout(notifyDueBills, 1500); // avisa contas vencendo (se ja autorizado)
   // Login/nuvem: mostra o gate e tenta iniciar o Firebase (sessao fica salva entre aberturas)
   initGateUI();
   initAccountUI();
