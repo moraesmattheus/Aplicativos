@@ -446,6 +446,9 @@
 
   <!-- ABA: CUSTO DE VIDA -->
   <section class="tab-view" id="tab-custo">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+      <button class="btn ghost sm" id="custoHelp">❔ Como usar</button>
+    </div>
     <div id="custoDash"></div>
     <div id="custoCategorias"></div>
     <div id="custoInsights"></div>
@@ -581,6 +584,19 @@
   </div>
 </div>
 
+<!-- Tutorial da aba Custo -->
+<div class="modal-overlay" id="custoTut">
+  <div class="modal">
+    <h3>💵 Como usar o Custo de Vida</h3>
+    <p class="sub" style="font-size:13px;margin:0 0 14px">Em 3 passos simples vocês veem para onde vai o dinheiro e quanto sobra para a meta.</p>
+    <div class="insight"><span class="ic">1️⃣</span><span><b>Coloque a renda</b> de cada um (o quanto recebem por mês). O app soma os dois.</span></div>
+    <div class="insight"><span class="ic">2️⃣</span><span><b>Liste as despesas</b> — aluguel, luz, água, mercado, lazer, parcelas. Escolha a categoria de cada uma.</span></div>
+    <div class="insight"><span class="ic">3️⃣</span><span><b>Suba a planilha do cartão</b> (CSV do app do banco). O app soma e organiza sozinho.</span></div>
+    <p class="sub" style="font-size:12.5px;margin:12px 0 0">Aí em cima aparece a <b>sobra</b> e o gráfico. Um toque em <b>"Colocar a sobra na meta"</b> e ela vira o valor que vocês guardam rumo ao apartamento. 🎯</p>
+    <div class="modal-actions"><span style="flex:1"></span><button class="btn" id="custoTutClose">Começar</button></div>
+  </div>
+</div>
+
 <!-- Modal de Conta + Configurações -->
 <div class="modal-overlay" id="accountModal">
   <div class="modal">
@@ -684,7 +700,7 @@ const DEFAULTS = {
   mapa: { nodes: [], view: null },
   alvos: [],
   renda: { token: '', itens: [] },
-  custo: { rendas: [], despesas: [], cartao: { total:0, porCat:{}, top:[], count:0 } }
+  custo: { rendas: [], despesas: [], cartao: { itens:[], total:0, porCat:{}, top:[], count:0 } }
 };
 let state = load();
 
@@ -706,7 +722,7 @@ function migrate(d){
     custo: {
       rendas:(d.custo&&d.custo.rendas)||[],
       despesas:(d.custo&&d.custo.despesas)||[],
-      cartao:(d.custo&&d.custo.cartao)||{ total:0, porCat:{}, top:[], count:0 }
+      cartao: Object.assign({ itens:[], total:0, porCat:{}, top:[], count:0 }, (d.custo&&d.custo.cartao)||{})
     }
   };
 }
@@ -1198,6 +1214,7 @@ function switchTab(name){
   try{ localStorage.setItem('rota-vida:tab', name); }catch(e){}
   if(name==='mapa'){ requestAnimationFrame(()=>{ if(!state.mapa.view) fitMap(); else applyMapView(); drawMap(); }); }
   if(name==='renda'){ refreshRenda(); }
+  if(name==='custo'){ try{ if(!localStorage.getItem('rota-vida:tut-custo')) document.getElementById('custoTut').classList.add('show'); }catch(e){} }
 }
 document.querySelectorAll('#tabbar button').forEach(b=> b.onclick=()=> switchTab(b.dataset.tab));
 
@@ -1762,6 +1779,12 @@ function initAccountUI(){
     localStorage.setItem(FB_CONFIG_KEY, JSON.stringify(parsed));
     alert('Config salva. O app vai recarregar.'); location.reload();
   };
+  // Tutorial do Custo
+  const tut=document.getElementById('custoTut');
+  const closeTut=()=>{ tut.classList.remove('show'); try{ localStorage.setItem('rota-vida:tut-custo','1'); }catch(e){} };
+  document.getElementById('custoHelp').onclick=()=> tut.classList.add('show');
+  document.getElementById('custoTutClose').onclick=closeTut;
+  tut.onclick=(e)=>{ if(e.target.id==='custoTut') closeTut(); };
 }
 
 /* ---- Sincronização por espaço (multi-usuário + modo casal) ---- */
@@ -2110,13 +2133,30 @@ function renderCartaoBox(){
   const box=document.getElementById('cartaoBox'); const cc=state.custo.cartao||{};
   if(!cc.total){ box.innerHTML=''; return; }
   const cats=Object.entries(cc.porCat||{}).sort((a,b)=>b[1]-a[1]);
+  const itens=(cc.itens||[]).slice().sort((a,b)=>b.valor-a.valor);
+  const optaFor = (sel)=> CAT_KEYS.map(k=>`<option value="${k}" ${k===sel?'selected':''}>${CAT[k].emoji} ${CAT[k].nome}</option>`).join('');
+  const lista = itens.length ? itens.map(it=>`
+    <div class="entry" style="padding:9px 12px">
+      <div class="entry-head" style="gap:8px">
+        <span style="flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(it.desc)}</span>
+        <span class="entry-val" style="font-size:13px">${fmt(it.valor)}</span>
+      </div>
+      <select class="status-select" data-cat-item="${it.id}" style="width:100%;margin-top:6px">${optaFor(it.cat)}</select>
+    </div>`).join('') : '';
   box.innerHTML=`
     <div class="kpi" style="margin-top:14px">
       <div class="box"><div class="n">${fmt(cc.total)}</div><div class="l">Total da fatura</div></div>
       <div class="box"><div class="n">${cc.count||0}</div><div class="l">Lançamentos</div></div>
     </div>
     <div style="margin-top:6px">${cats.map(([k,v])=>`<div class="catrow"><div class="cathead"><span>${CAT[k]?CAT[k].emoji+' '+CAT[k].nome:k}</span><b>${fmt(v)}</b></div><div class="catbar"><div class="fill ok" style="width:${Math.round(v/cc.total*100)}%"></div></div></div>`).join('')}</div>
-    ${cc.top&&cc.top.length?`<p class="sub" style="font-size:12px;margin-top:6px">Maiores gastos: ${cc.top.slice(0,5).map(t=>escapeHtml(t.desc)+' ('+fmt(t.valor)+')').join(' · ')}</p>`:''}`;
+    ${lista?`<details class="settings" style="margin-top:10px"><summary><span>✏️ Ver / corrigir categorias (${itens.length})</span><span class="chev">▾</span></summary>
+      <p class="sub" style="font-size:12px;margin:10px 0">Se o app classificou algo errado, escolha a categoria certa — o gráfico se ajusta na hora.</p>
+      <div class="entries">${lista}</div>
+    </details>`:''}`;
+  box.querySelectorAll('[data-cat-item]').forEach(sel=> sel.onchange=()=>{
+    const it=(state.custo.cartao.itens||[]).find(x=>x.id===sel.dataset.catItem);
+    if(it){ it.cat=sel.value; state.custo.cartao=recalcCartao(state.custo.cartao.itens); save(); renderCusto(); }
+  });
 }
 
 /* auto-categorização por palavra-chave */
@@ -2155,7 +2195,7 @@ function parseCartaoCSV(text){
     vi=head.findIndex(h=>/valor|amount|value/.test(h));
     ni=head.findIndex(h=>/desc|title|lan|hist|estabel/.test(h));
   }
-  const porCat={}, top=[]; let total=0, count=0;
+  const itens=[];
   for(let i=start;i<lines.length;i++){
     const cols=split(lines[i]); if(!cols.length) continue;
     let desc = ni>=0?cols[ni]: (cols.length>=2?cols[1]:'');
@@ -2166,13 +2206,16 @@ function parseCartaoCSV(text){
     }
     if(isNaN(val)) continue;
     if(val<=0) continue; // ignora pagamentos/estornos
-    const cat=catFromDesc(desc);
-    porCat[cat]=(porCat[cat]||0)+val; total+=val; count++;
-    top.push({desc:desc||'(sem descrição)', valor:val});
+    itens.push({ id:uid(), desc:(desc||'(sem descrição)').slice(0,60), valor:Math.round(val*100)/100, cat:catFromDesc(desc) });
   }
-  if(!count) return null;
-  top.sort((a,b)=>b.valor-a.valor);
-  return { total:Math.round(total*100)/100, porCat, top:top.slice(0,8), count };
+  if(!itens.length) return null;
+  return recalcCartao(itens);
+}
+function recalcCartao(itens){
+  const porCat={}; let total=0;
+  itens.forEach(it=>{ const v=Number(it.valor)||0; total+=v; porCat[it.cat]=(porCat[it.cat]||0)+v; });
+  const top=[...itens].sort((a,b)=>b.valor-a.valor).slice(0,8).map(t=>({desc:t.desc,valor:t.valor}));
+  return { itens, total:Math.round(total*100)/100, porCat, top, count:itens.length };
 }
 
 /* eventos da aba custo */
