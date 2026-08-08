@@ -1500,8 +1500,18 @@ const FB_CONFIG_KEY = 'rota-vida:fbconfig';
 const FB_VER = '10.12.2';
 let fb = { app:null, auth:null, db:null, user:null, unsub:null, lastPushTs:0, m:null, loading:false };
 
+// Config do projeto Firebase do casal (chaves web sao publicas por design).
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCWAmxolYZUAH1yrbuYzSdCZbI5TK-hYiQ",
+  authDomain: "app-rota-de-vida.firebaseapp.com",
+  projectId: "app-rota-de-vida",
+  storageBucket: "app-rota-de-vida.firebasestorage.app",
+  messagingSenderId: "1072718623060",
+  appId: "1:1072718623060:web:2e795ec13560777e5758c1"
+};
 function getSavedFbConfig(){
-  try{ const raw=localStorage.getItem(FB_CONFIG_KEY); return raw?JSON.parse(raw):null; }catch(e){ return null; }
+  try{ const raw=localStorage.getItem(FB_CONFIG_KEY); if(raw) return JSON.parse(raw); }catch(e){}
+  return (FIREBASE_CONFIG && FIREBASE_CONFIG.apiKey) ? FIREBASE_CONFIG : null;
 }
 function parseFbConfig(text){
   // aceita JSON puro ou o trecho "const firebaseConfig = { ... };"
@@ -1617,14 +1627,13 @@ function renderConta(){
   }
   if(!fb.user){
     el.innerHTML = `
-      <h2>☁️ Conta e nuvem<span class="hint">Nuvem configurada. Entre para sincronizar os dois celulares.</span></h2>
+      <h2>☁️ Conta e nuvem<span class="hint">Entre com o Google para salvar na nuvem e sincronizar os dois celulares.</span></h2>
       <div class="data-actions">
         <button class="btn" id="btnSignIn">Entrar com Google</button>
-        <button class="btn ghost sm" id="btnResetCfg">Trocar configuração</button>
       </div>
+      <p class="sub" style="font-size:12px;margin-top:10px">Usem a <b>mesma conta Google</b> nos dois aparelhos para compartilhar os dados do casal.</p>
       <span class="save-status" id="cloudMsg" style="text-align:left;margin-top:8px;"></span>`;
     document.getElementById('btnSignIn').onclick = cloudSignIn;
-    document.getElementById('btnResetCfg').onclick = ()=>{ if(confirm('Remover a configuração da nuvem deste aparelho?')){ localStorage.removeItem(FB_CONFIG_KEY); location.reload(); } };
     return;
   }
   el.innerHTML = `

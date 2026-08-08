@@ -87,13 +87,15 @@ configurar, o app segue 100% local como antes.
    }
    ```
 
-6. Volte em **Project settings** (engrenagem) → seção **Your apps** → ícone
-   **`</>`** (Web) → registre um app. O Firebase mostra um trecho com
-   `const firebaseConfig = { ... }`. **Copie o objeto** `{ ... }`.
-7. No app, aba **Metas → ☁️ Conta e nuvem**, cole esse objeto e toque em
-   **Ativar nuvem**. Depois **Entrar com Google**.
-8. No **outro celular**, repita o passo 7 entrando com **a mesma conta Google**.
-   Pronto: os dois passam a compartilhar os mesmos dados, em tempo real.
+6. A configuração web do projeto (`firebaseConfig`) **já vem embutida no app**,
+   então não é preciso colar nada. No app, aba **Metas → ☁️ Conta e nuvem**,
+   toque em **Entrar com Google**.
+7. No **outro celular**, abra o app e toque em **Entrar com Google** com a
+   **mesma conta Google**. Pronto: os dois compartilham os mesmos dados, em
+   tempo real.
+
+> Se um dia trocar de projeto Firebase, dá para colar outra config manualmente
+> (a opção de colar aparece se a config embutida for removida do código).
 
 > Segurança: as chaves web do Firebase são públicas por design — quem protege os
 > dados são as **regras** acima (só o dono logado lê/escreve) + o login. Usem a
