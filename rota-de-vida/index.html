@@ -25,16 +25,34 @@
     --foam: #F4F1E8;
     --line: rgba(244,241,232,0.14);
     --muted: rgba(244,241,232,0.6);
+    --on: #0D1B24;          /* texto sobre amber/paper/verde — sempre escuro */
+    --bg1: #12313B;         /* gradiente do fundo (topo) */
+    --bg2: #0D1B24;         /* gradiente do fundo (base) */
+    --shadow: 0 6px 20px rgba(0,0,0,.25);
+  }
+  :root[data-theme="light"]{
+    --ink: #E7E1D2;         /* superfície recuada (inputs/canvas) */
+    --panel: #FFFFFF;
+    --panel-2: #F5F1E7;
+    --foam: #16272E;        /* texto principal (escuro) */
+    --line: rgba(13,27,36,0.12);
+    --muted: rgba(13,27,36,0.55);
+    --bg1: #FBF9F3;
+    --bg2: #ECE7DA;
+    --paper: #FFFFFF;
+    --paper-dim: #E7E1D2;
+    --shadow: 0 6px 18px rgba(13,27,36,.10);
   }
   *{box-sizing:border-box;}
   html,body{margin:0;}
   body{
-    background: radial-gradient(ellipse at top, #12313B 0%, #0D1B24 55%) fixed;
+    background: radial-gradient(ellipse at top, var(--bg1) 0%, var(--bg2) 55%) fixed;
     color: var(--foam);
     font-family: 'Work Sans', sans-serif;
-    padding: 0 0 92px;
+    padding: 0 0 100px;
     min-height: 100vh;
     -webkit-tap-highlight-color: transparent;
+    transition: background .3s ease, color .3s ease;
   }
   .wrap{ max-width: 720px; margin: 0 auto; padding: max(20px, env(safe-area-inset-top)) 16px 16px; }
 
@@ -46,7 +64,7 @@
   h1{ font-family: 'Roboto Slab', serif; font-weight: 800; font-size: clamp(24px, 6vw, 34px); margin: 0; line-height: 1.05; }
   .sub{ color: var(--muted); font-size: 14px; margin: 6px 0 0; max-width: 60ch; }
 
-  .panel{ background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 16px; }
+  .panel{ background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px; margin-bottom: 16px; box-shadow: var(--shadow); }
   .panel h2{ font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--amber); margin: 0 0 14px; }
   .panel h2 .hint{ display:block; text-transform:none; letter-spacing:0; color:var(--muted); font-size:11px; margin-top:4px; font-family:'Work Sans',sans-serif;}
 
@@ -61,17 +79,17 @@
 
   .routes{ display:grid; grid-template-columns: 1fr; gap: 14px; }
   @media(min-width:640px){ .routes{ grid-template-columns: 1fr 1fr; } }
-  .route-card{ background: var(--paper); color: var(--ink); border-radius: 14px; padding: 18px; position: relative; overflow: hidden; }
+  .route-card{ background: var(--paper); color: var(--on); border:1px solid var(--line); border-radius: 14px; padding: 18px; position: relative; overflow: hidden; box-shadow:var(--shadow); }
   .route-card.winner{ box-shadow: 0 0 0 2px var(--amber) inset; }
   .route-tag{ font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #6b5f45; margin-bottom: 4px; }
-  .winner-badge{ position:absolute; top:14px; right:14px; background:var(--amber); color:var(--ink); font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600; padding:3px 8px; border-radius:20px; text-transform:uppercase; letter-spacing:.05em;}
+  .winner-badge{ position:absolute; top:14px; right:14px; background:var(--amber); color:var(--on); font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600; padding:3px 8px; border-radius:20px; text-transform:uppercase; letter-spacing:.05em;}
   .route-title{ font-family: 'Roboto Slab', serif; font-weight: 700; font-size: 18px; margin: 0 0 14px; padding-right:70px; }
   .chart-line{ position: relative; height: 60px; margin: 6px 0 14px; }
   .chart-line .track{ position:absolute; top: 26px; left: 6px; right: 6px; height: 2px; background: repeating-linear-gradient(to right, var(--paper-dim) 0 6px, transparent 6px 12px); }
   .buoy{ position:absolute; top: 14px; width: 26px; height: 26px; border-radius: 50%; background: var(--panel); color: var(--foam); font-family:'IBM Plex Mono', monospace; font-size: 12px; display:flex; align-items:center; justify-content:center; transform: translateX(-50%); border: 2px solid var(--paper); }
   .buoy.start{ background: var(--ink); font-size:10px;}
   .buoy.mid{ background: var(--coral); }
-  .buoy.end{ background: var(--amber); color: var(--ink); }
+  .buoy.end{ background: var(--amber); color: var(--on); }
   .route-stats{ display:flex; flex-direction:column; gap:8px; font-size: 14px; }
   .route-stats .row{ display:flex; justify-content:space-between; gap:8px; }
   .route-stats .row b{ font-family:'IBM Plex Mono', monospace; }
@@ -81,7 +99,7 @@
   .risk{ background:#fbe4de; border:1px solid var(--coral); color:#8a2f1f; border-radius:10px; padding:10px 12px; font-size:12.5px; margin-top:12px; display:flex; gap:8px; align-items:flex-start;}
   .risk b{ display:block; margin-bottom:2px; }
 
-  .btn{ background: var(--amber); color: var(--ink); border:none; border-radius:8px; padding: 11px 16px; font-family:'IBM Plex Mono', monospace; font-weight:600; cursor:pointer; font-size:14px; }
+  .btn{ background: var(--amber); color: var(--on); border:none; border-radius:8px; padding: 11px 16px; font-family:'IBM Plex Mono', monospace; font-weight:600; cursor:pointer; font-size:14px; }
   .btn:hover{ background:#ffbf5a; }
   .btn.ghost{ background:transparent; color:var(--foam); border:1px solid var(--line); }
   .btn.ghost:hover{ background:var(--panel-2); }
@@ -111,8 +129,8 @@
   .timeline::before{ content:''; position:absolute; left:9px; top:6px; bottom:6px; width:2px; background:var(--line); }
   .milestone{ position:relative; margin-bottom:14px; }
   .milestone .dot{ position:absolute; left:-26px; top:2px; width:20px; height:20px; border-radius:50%; border:2px solid var(--panel); display:flex; align-items:center; justify-content:center; font-size:11px; }
-  .milestone.done .dot{ background:var(--green); color:var(--ink); }
-  .milestone.doing .dot{ background:var(--amber); color:var(--ink); }
+  .milestone.done .dot{ background:var(--green); color:var(--on); }
+  .milestone.doing .dot{ background:var(--amber); color:var(--on); }
   .milestone.pending .dot{ background:var(--panel-2); color:var(--muted); }
   .milestone-card{ background:var(--panel-2); border-radius:10px; padding:12px 14px; }
   .milestone-title{ font-weight:600; font-size:15px; }
@@ -156,7 +174,7 @@
   .stages{ display:flex; gap:8px; margin:10px 0 0; }
   .stage{ flex:1; background:#e5dcc6; border-radius:8px; padding:8px 10px; }
   .stage .sk{ font-family:'IBM Plex Mono',monospace; font-size:10px; color:#6b5f45; text-transform:uppercase; letter-spacing:.04em; }
-  .stage .sv{ font-family:'Roboto Slab',serif; font-weight:700; font-size:14px; color:var(--ink); margin-top:2px; }
+  .stage .sv{ font-family:'Roboto Slab',serif; font-weight:700; font-size:14px; color:var(--on); margin-top:2px; }
 
   /* ===== Inputs recolhidos ===== */
   details.settings{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:0 18px; margin-bottom:16px; }
@@ -194,7 +212,7 @@
   .mnode.st-done .mtitle{ text-decoration:line-through; }
   .mnode.root{ border-left-width:4px; background:linear-gradient(135deg,#1c4a44,#163944); }
   /* ===== Tela de login (gate) ===== */
-  .auth-gate{ position:fixed; inset:0; z-index:60; background:radial-gradient(ellipse at top,#12313B 0%,#0D1B24 60%);
+  .auth-gate{ position:fixed; inset:0; z-index:60; background:radial-gradient(ellipse at top,var(--bg1) 0%,var(--bg2) 60%);
     display:none; align-items:center; justify-content:center; padding:24px; }
   .auth-gate.show{ display:flex; }
   .auth-card{ width:100%; max-width:380px; background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:24px; }
@@ -206,7 +224,7 @@
   .auth-tabs{ display:flex; gap:8px; margin-bottom:16px; }
   .auth-tab{ flex:1; background:var(--ink); border:1px solid var(--line); color:var(--muted); border-radius:8px; padding:10px;
     font-family:'IBM Plex Mono',monospace; font-size:13px; cursor:pointer; }
-  .auth-tab.active{ background:var(--amber); color:var(--ink); border-color:var(--amber); font-weight:600; }
+  .auth-tab.active{ background:var(--amber); color:var(--on); border-color:var(--amber); font-weight:600; }
   .auth-or{ text-align:center; color:var(--muted); font-size:12px; margin:14px 0; position:relative; }
   .auth-msg{ min-height:18px; font-size:12.5px; margin-top:12px; text-align:center; color:var(--coral); }
   .auth-offline{ display:block; margin:16px auto 0; background:none; border:none; color:var(--muted); font-size:12px; text-decoration:underline; cursor:pointer; }
@@ -215,7 +233,7 @@
   .acct-chip{ flex:0 0 auto; width:42px; height:42px; border-radius:50%; border:1px solid var(--line);
     background:var(--panel-2); color:var(--foam); font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:15px;
     cursor:pointer; display:flex; align-items:center; justify-content:center; position:relative; }
-  .acct-chip.on{ background:var(--amber); color:var(--ink); border-color:var(--amber); }
+  .acct-chip.on{ background:var(--amber); color:var(--on); border-color:var(--amber); }
   .acct-chip .dot{ position:absolute; right:-1px; bottom:-1px; width:12px; height:12px; border-radius:50%; border:2px solid var(--ink); }
   .acct-chip .dot.green{ background:var(--green); } .acct-chip .dot.grey{ background:var(--muted); }
   .dev-box{ background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:12px; margin-top:10px; }
@@ -240,7 +258,7 @@
   .mnode-tools{ display:flex; gap:6px; margin-top:8px; }
   .mnb{ width:26px; height:26px; border-radius:7px; border:1px solid var(--line); background:var(--ink); color:var(--foam);
     font-size:13px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
-  .mnb.add{ background:var(--amber); color:var(--ink); border-color:var(--amber); font-weight:700; }
+  .mnb.add{ background:var(--amber); color:var(--on); border-color:var(--amber); font-weight:700; }
   .mnb:active{ transform:scale(.92); }
 
   /* ===== Modais ===== */
@@ -261,7 +279,7 @@
   .alvo-card.principal{ box-shadow:0 0 0 2px var(--amber) inset; }
   .alvo-card img{ width:100%; height:170px; object-fit:cover; background:var(--panel-2); display:block; }
   .alvo-body{ padding:14px; }
-  .alvo-badge{ font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600; color:var(--ink); background:var(--amber);
+  .alvo-badge{ font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600; color:var(--on); background:var(--amber);
     padding:3px 9px; border-radius:20px; display:inline-block; margin-bottom:8px; }
   .alvo-title{ font-family:'Roboto Slab',serif; font-weight:700; font-size:16px; }
   .alvo-desc{ font-size:13px; color:var(--muted); margin-top:6px; max-height:60px; overflow:hidden; }
@@ -273,20 +291,47 @@
 
   nav.tabbar{
     position:fixed; bottom:0; left:0; right:0; z-index:20;
-    background:rgba(13,27,36,.94); backdrop-filter: blur(10px);
+    background:color-mix(in srgb, var(--bg2) 88%, transparent); backdrop-filter: blur(12px);
     border-top:1px solid var(--line);
-    display:flex; justify-content:space-around;
-    padding: 6px 2px calc(6px + env(safe-area-inset-bottom));
-    overflow-x:auto; scrollbar-width:none;
+    display:flex; justify-content:space-around; align-items:flex-end;
+    padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+    max-width:720px; margin:0 auto;
   }
-  nav.tabbar::-webkit-scrollbar{ display:none; }
   nav.tabbar button{
     background:none; border:none; color:var(--muted); cursor:pointer;
-    display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 3px; flex:1 0 auto; min-width:46px;
-    font-family:'Work Sans',sans-serif; font-size:9.5px; letter-spacing:.01em; white-space:nowrap;
+    display:flex; flex-direction:column; align-items:center; gap:4px; padding:6px 3px; flex:1;
+    font-family:'Work Sans',sans-serif; font-size:10.5px; letter-spacing:.01em; white-space:nowrap;
   }
-  nav.tabbar button .ic{ font-size:19px; line-height:1; }
+  nav.tabbar button .ic{ font-size:20px; line-height:1; }
   nav.tabbar button.active{ color:var(--amber); }
+  nav.tabbar .menu-btn{ margin-top:-18px; }
+  .menu-fab{ width:52px; height:52px; border-radius:50%; background:linear-gradient(145deg,var(--amber),#ffbf5a);
+    color:var(--on); display:flex; align-items:center; justify-content:center; font-size:24px;
+    box-shadow:0 6px 16px rgba(242,169,59,.45); }
+  .menu-lbl{ margin-top:2px; }
+
+  /* Menu overlay (todas as opções) */
+  .menu-overlay{ position:fixed; inset:0; z-index:45; background:rgba(6,14,20,.6); backdrop-filter:blur(3px);
+    display:none; align-items:flex-end; justify-content:center; }
+  .menu-overlay.show{ display:flex; animation:fade .2s ease; }
+  .menu-sheet{ background:var(--panel); border:1px solid var(--line); border-radius:20px 20px 0 0; width:100%; max-width:720px;
+    padding:10px 18px calc(20px + env(safe-area-inset-bottom)); max-height:86vh; overflow-y:auto; box-shadow:0 -8px 30px rgba(0,0,0,.3); }
+  @media(min-width:560px){ .menu-overlay{ align-items:center; padding:20px; } .menu-sheet{ border-radius:20px; } }
+  .menu-grabber{ width:40px; height:4px; border-radius:2px; background:var(--line); margin:4px auto 12px; }
+  .menu-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;
+    font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+  .menu-x{ background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; }
+  .menu-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  @media(min-width:480px){ .menu-grid{ grid-template-columns:repeat(4,1fr); } }
+  .menu-tile{ background:var(--panel-2); border:1px solid var(--line); border-radius:14px; padding:14px 8px; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center; transition:transform .12s ease, border-color .12s; }
+  .menu-tile:active{ transform:scale(.95); }
+  .menu-tile.active{ border-color:var(--amber); }
+  .menu-tile .tico{ width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; }
+  .menu-tile .tlbl{ font-size:12px; color:var(--foam); font-weight:500; }
+  .menu-foot{ display:flex; gap:12px; margin-top:16px; }
+  .menu-foot-btn{ flex:1; background:var(--panel-2); border:1px solid var(--line); color:var(--foam); border-radius:12px;
+    padding:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Work Sans',sans-serif; font-size:14px; }
 
   .tab-view{ display:none; }
   .tab-view.active{ display:block; animation: fade .25s ease; }
@@ -554,14 +599,23 @@
 <nav class="tabbar" id="tabbar">
   <button data-tab="financeira" class="active"><span class="ic">🧭</span>Rota</button>
   <button data-tab="custo"><span class="ic">💵</span>Custo</button>
+  <button class="menu-btn" id="menuBtn"><span class="menu-fab">☰</span><span class="menu-lbl">Menu</span></button>
   <button data-tab="mapa"><span class="ic">🗺️</span>Mapa</button>
-  <button data-tab="alvos"><span class="ic">🏢</span>Alvos</button>
-  <button data-tab="renda"><span class="ic">💰</span>Renda</button>
-  <button data-tab="diario"><span class="ic">📓</span>Diário</button>
-  <button data-tab="mentalidade"><span class="ic">🧠</span>Mente</button>
-  <button data-tab="ambiente"><span class="ic">🌱</span>Ambiente</button>
   <button data-tab="metas"><span class="ic">🚩</span>Metas</button>
 </nav>
+
+<!-- Menu central (todas as opções) -->
+<div class="menu-overlay" id="menuOverlay">
+  <div class="menu-sheet">
+    <div class="menu-grabber"></div>
+    <div class="menu-head"><span>Tudo do app</span><button class="menu-x" id="menuClose">✕</button></div>
+    <div class="menu-grid" id="menuGrid"></div>
+    <div class="menu-foot">
+      <button class="menu-foot-btn" id="menuTheme"><span>🌗</span><span id="menuThemeLbl">Tema</span></button>
+      <button class="menu-foot-btn" id="menuConta"><span>👤</span><span>Conta</span></button>
+    </div>
+  </div>
+</div>
 
 <!-- Tela de login (gate) -->
 <div class="auth-gate show" id="authGate">
@@ -690,6 +744,8 @@
 </div>
 
 <script>
+/* aplica o tema salvo o quanto antes (evita piscar) */
+try{ if(localStorage.getItem('rota-vida:theme')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){}
 /* ---------------- Estado / persistência ---------------- */
 const STORE_KEY = 'rota-vida:data';
 const DEFAULTS = {
@@ -1978,8 +2034,8 @@ function donutSVG(segs){
   return `<svg viewBox="0 0 140 140" style="width:150px;height:150px;flex:0 0 auto">
     <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(244,241,232,0.08)" stroke-width="${sw}"/>
     ${arcs}
-    <text x="70" y="67" text-anchor="middle" style="font-family:'Roboto Slab',serif;font-weight:800;font-size:15px;fill:#F4F1E8">${fmt(total)}</text>
-    <text x="70" y="83" text-anchor="middle" style="font-family:'IBM Plex Mono',monospace;font-size:8px;fill:#9fb0b5">gasto/mês</text>
+    <text x="70" y="67" text-anchor="middle" style="font-family:'Roboto Slab',serif;font-weight:800;font-size:15px;fill:var(--foam)">${fmt(total)}</text>
+    <text x="70" y="83" text-anchor="middle" style="font-family:'IBM Plex Mono',monospace;font-size:8px;fill:var(--muted)">gasto/mês</text>
   </svg>`;
 }
 const CAT_KEYS = Object.keys(CAT);
@@ -2249,6 +2305,48 @@ document.getElementById('cartaoFile').onchange=(ev)=>{
 };
 document.getElementById('cartaoClear').onclick=()=>{ state.custo.cartao={ total:0, porCat:{}, top:[], count:0 }; document.getElementById('cartaoStatus').textContent=''; save(); renderCusto(); };
 
+/* ================= MENU CENTRAL + TEMA ================= */
+const SECTIONS = [
+  {tab:'financeira', emoji:'🧭', label:'Rota',     cor:'#7FB2C8'},
+  {tab:'custo',      emoji:'💵', label:'Custo',    cor:'#4FB477'},
+  {tab:'mapa',       emoji:'🗺️', label:'Mapa',     cor:'#9B8CFF'},
+  {tab:'alvos',      emoji:'🏢', label:'Alvos',    cor:'#F2A93B'},
+  {tab:'renda',      emoji:'💰', label:'Renda',    cor:'#E8A0C8'},
+  {tab:'diario',     emoji:'📓', label:'Diário',   cor:'#7FB2C8'},
+  {tab:'mentalidade',emoji:'🧠', label:'Mente',    cor:'#C77DBB'},
+  {tab:'ambiente',   emoji:'🌱', label:'Ambiente', cor:'#4FB477'},
+  {tab:'metas',      emoji:'🚩', label:'Metas',    cor:'#E8563F'}
+];
+function renderMenuGrid(){
+  const cur = (document.querySelector('.tab-view.active')||{}).id;
+  const curTab = cur ? cur.replace('tab-','') : '';
+  document.getElementById('menuGrid').innerHTML = SECTIONS.map(s=>`
+    <button class="menu-tile ${s.tab===curTab?'active':''}" data-go="${s.tab}">
+      <span class="tico" style="background:${s.cor}2b;color:${s.cor}">${s.emoji}</span>
+      <span class="tlbl">${s.label}</span>
+    </button>`).join('');
+  document.getElementById('menuGrid').querySelectorAll('[data-go]').forEach(b=> b.onclick=()=>{ switchTab(b.dataset.go); closeMenu(); });
+}
+function openMenu(){ renderMenuGrid(); updateThemeLbl(); document.getElementById('menuOverlay').classList.add('show'); }
+function closeMenu(){ document.getElementById('menuOverlay').classList.remove('show'); }
+function currentTheme(){ return document.documentElement.getAttribute('data-theme')==='light' ? 'light' : 'dark'; }
+function setTheme(t){
+  if(t==='light') document.documentElement.setAttribute('data-theme','light');
+  else document.documentElement.removeAttribute('data-theme');
+  try{ localStorage.setItem('rota-vida:theme', t); }catch(e){}
+  const meta=document.querySelector('meta[name="theme-color"]'); if(meta) meta.setAttribute('content', t==='light'?'#FBF9F3':'#0D1B24');
+  updateThemeLbl();
+}
+function toggleTheme(){ setTheme(currentTheme()==='light'?'dark':'light'); }
+function updateThemeLbl(){ const el=document.getElementById('menuThemeLbl'); if(el) el.textContent = currentTheme()==='light'?'Tema: Claro':'Tema: Escuro'; }
+function initMenuUI(){
+  document.getElementById('menuBtn').onclick=openMenu;
+  document.getElementById('menuClose').onclick=closeMenu;
+  document.getElementById('menuOverlay').onclick=(e)=>{ if(e.target.id==='menuOverlay') closeMenu(); };
+  document.getElementById('menuTheme').onclick=toggleTheme;
+  document.getElementById('menuConta').onclick=()=>{ closeMenu(); renderConta(); document.getElementById('accountModal').classList.add('show'); };
+}
+
 function renderAll(){ seedMapIfEmpty(); renderFinanceira(); renderCusto(); renderDiario(); renderMent(); renderAmbiente(); renderMetas(); renderAlvos(); renderRenda(); renderConta(); drawMap(); }
 
 /* ---------------- Instalação (PWA) ---------------- */
@@ -2285,6 +2383,7 @@ if('serviceWorker' in navigator){
   // Login/nuvem: mostra o gate e tenta iniciar o Firebase (sessao fica salva entre aberturas)
   initGateUI();
   initAccountUI();
+  initMenuUI();
   if(getSavedFbConfig()){
     cloudEnable().then(ok=>{ if(!ok){ revealAuthForm(); if(!fb.offline) showGate(true); } });
     // fallback extra: se em ~7s nao houver sessao nem formulario, revela mesmo assim

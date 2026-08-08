@@ -147,6 +147,13 @@ Cada usuário começa no **próprio espaço**. Para o casal compartilhar:
 No **Mapa**, cada nó tem um "＋" para criar um nó-filho ligado a ele ali mesmo,
 e um "🔍" que abre uma pesquisa na web sobre aquele tópico.
 
+## Navegação e tema
+
+- A barra de baixo tem 4 atalhos (Rota, Custo, Mapa, Metas) e um **botão central
+  ☰ Menu** que abre **todas as opções** num painel (grid).
+- No menu dá para trocar o **tema Claro/Escuro** (fica salvo no aparelho) e abrir
+  a **Conta**. O ícone de conta no canto superior também abre a conta rapidamente.
+
 > Observação sobre "puxar do link": um app sem servidor não lê sites de
 > imóveis diretamente (bloqueio de CORS do navegador). O app usa o serviço
 > público **Microlink** para extrair a prévia. Alguns anúncios podem não
