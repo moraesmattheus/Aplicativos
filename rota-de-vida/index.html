@@ -211,6 +211,14 @@
   .auth-msg{ min-height:18px; font-size:12.5px; margin-top:12px; text-align:center; color:var(--coral); }
   .auth-offline{ display:block; margin:16px auto 0; background:none; border:none; color:var(--muted); font-size:12px; text-decoration:underline; cursor:pointer; }
   hr.soft{ border:none; border-top:1px solid var(--line); margin:16px 0; }
+  .header-row{ display:flex; align-items:flex-start; gap:12px; }
+  .acct-chip{ flex:0 0 auto; width:42px; height:42px; border-radius:50%; border:1px solid var(--line);
+    background:var(--panel-2); color:var(--foam); font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:15px;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; position:relative; }
+  .acct-chip.on{ background:var(--amber); color:var(--ink); border-color:var(--amber); }
+  .acct-chip .dot{ position:absolute; right:-1px; bottom:-1px; width:12px; height:12px; border-radius:50%; border:2px solid var(--ink); }
+  .acct-chip .dot.green{ background:var(--green); } .acct-chip .dot.grey{ background:var(--muted); }
+  .dev-box{ background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:12px; margin-top:10px; }
 
   .mnode-tools{ display:flex; gap:6px; margin-top:8px; }
   .mnb{ width:26px; height:26px; border-radius:7px; border:1px solid var(--line); background:var(--ink); color:var(--foam);
@@ -281,8 +289,13 @@
 <body>
 <div class="wrap">
   <header>
-    <p class="eyebrow" id="eyebrow">Carta de navegação · Mattheus &amp; noiva</p>
-    <h1 id="pageTitle">Rota de Vida</h1>
+    <div class="header-row">
+      <div style="flex:1;min-width:0">
+        <p class="eyebrow" id="eyebrow">Carta de navegação · Mattheus &amp; noiva</p>
+        <h1 id="pageTitle">Rota de Vida</h1>
+      </div>
+      <button class="acct-chip" id="acctBtn" title="Conta e configurações"><span id="acctAvatar">·</span></button>
+    </div>
     <p class="sub" id="pageSub">Duas rotas a partir do mesmo ponto. Ajuste os números com o que for real, o mapa recalcula sozinho.</p>
   </header>
 
@@ -396,7 +409,6 @@
   <!-- ABA 5: METAS -->
   <section class="tab-view" id="tab-metas">
     <div id="metasDash"></div>
-    <div class="panel" id="contaPanel"></div>
     <div class="panel">
       <h2>Novo marco</h2>
       <div class="form-row">
@@ -412,15 +424,6 @@
     <div class="panel">
       <h2>Próximas ações do mapa<span class="hint">Tarefas e submetas do Mapa que ainda não estão feitas. Marque aqui e atualiza no mapa.</span></h2>
       <div class="entries" id="metasAcoes"></div>
-    </div>
-    <div class="panel">
-      <h2>Meus dados<span class="hint">Backup e transferência entre os dois celulares.</span></h2>
-      <div class="data-actions">
-        <button class="btn ghost sm" id="exportBtn">Exportar backup</button>
-        <button class="btn ghost sm" id="importBtn">Importar backup</button>
-        <input type="file" id="importFile" accept="application/json" style="display:none">
-      </div>
-      <p class="sub" style="margin-top:10px; font-size:12px;">Os dados ficam salvos só neste aparelho. Exporte de vez em quando para não perder e para copiar do seu celular para o da sua noiva.</p>
     </div>
   </section>
 
@@ -480,12 +483,8 @@
       </div>
     </div>
     <div id="rList"></div>
-    <details class="settings">
-      <summary><span>⚙️ Token para ações/FIIs (opcional)</span><span class="chev">▾</span></summary>
-      <div class="field" style="margin-top:12px;"><label for="rToken">Token grátis do brapi.dev</label><input type="text" id="rToken" placeholder="cole aqui seu token"></div>
-      <p class="sub" style="font-size:12px;margin-top:8px;">Cripto funciona sem nada (via CoinGecko). Para ações e FIIs da B3 com dados ao vivo, crie um token grátis em <b>brapi.dev</b> e cole aqui — fica salvo só neste aparelho.</p>
-    </details>
-    <p class="map-hint" style="margin-top:12px;">⚠️ Valores informativos, podem atrasar alguns minutos. Isto <b>não é recomendação de investimento</b> — é só para vocês acompanharem.</p>
+    <p class="map-hint" style="margin-top:12px;">Para ações/FIIs da B3, adicione um token grátis do brapi.dev em <b>Conta ⚙️ → Configurações (modo dev)</b>. Cripto funciona sem token.</p>
+    <p class="map-hint" style="margin-top:6px;">⚠️ Valores informativos, podem atrasar alguns minutos. Isto <b>não é recomendação de investimento</b> — é só para vocês acompanharem.</p>
   </section>
 </div>
 
@@ -517,6 +516,43 @@
       <button class="btn ghost" id="authGoogle" style="width:100%">Entrar com Google</button>
       <div class="auth-msg" id="authMsg"></div>
       <button class="auth-offline" id="authOffline">usar sem conta neste aparelho</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Conta + Configurações -->
+<div class="modal-overlay" id="accountModal">
+  <div class="modal">
+    <div id="accountBody"></div>
+    <hr class="soft">
+    <details class="settings" id="devSettings" style="margin:0;">
+      <summary><span>⚙️ Configurações (modo dev)</span><span class="chev">▾</span></summary>
+      <div style="padding:14px 0 4px">
+        <div class="dev-box">
+          <label style="font-size:12px;color:var(--muted)">Backup dos dados (deste espaço)</label>
+          <div class="data-actions" style="margin-top:8px">
+            <button class="btn ghost sm" id="exportBtn">Exportar backup</button>
+            <button class="btn ghost sm" id="importBtn">Importar backup</button>
+            <input type="file" id="importFile" accept="application/json" style="display:none">
+          </div>
+        </div>
+        <div class="dev-box">
+          <label for="rToken" style="font-size:12px;color:var(--muted)">Token brapi.dev (cotações de ações/FIIs)</label>
+          <input type="text" id="rToken" placeholder="cole seu token grátis (opcional)" style="margin-top:8px">
+          <p class="sub" style="font-size:11.5px;margin:6px 0 0">Fica salvo só neste aparelho. Cripto funciona sem token.</p>
+        </div>
+        <details class="settings" style="margin-top:10px">
+          <summary><span>Config do Firebase (avançado)</span><span class="chev">▾</span></summary>
+          <div class="field" style="margin-top:10px"><label for="fbConfigInput">Substituir a configuração do Firebase</label>
+            <textarea id="fbConfigInput" placeholder="cole outro firebaseConfig só se for trocar de projeto"></textarea>
+          </div>
+          <div class="form-row" style="margin-top:8px"><button class="btn ghost sm" id="fbSaveConfig">Salvar config</button></div>
+        </details>
+      </div>
+    </details>
+    <div class="modal-actions">
+      <span style="flex:1"></span>
+      <button class="btn sm" id="acctClose">Fechar</button>
     </div>
   </div>
 </div>
@@ -1646,6 +1682,19 @@ function initGateUI(){
   document.getElementById('authOffline').onclick = ()=>{ fb.offline=true; showGate(false); };
   document.getElementById('authPass').addEventListener('keydown', e=>{ if(e.key==='Enter') onAuthSubmit(); });
 }
+function initAccountUI(){
+  const modal=document.getElementById('accountModal');
+  document.getElementById('acctBtn').onclick=()=>{ renderConta(); modal.classList.add('show'); };
+  document.getElementById('acctClose').onclick=()=> modal.classList.remove('show');
+  modal.onclick=(e)=>{ if(e.target.id==='accountModal') modal.classList.remove('show'); };
+  const fbSave=document.getElementById('fbSaveConfig');
+  if(fbSave) fbSave.onclick=()=>{
+    const parsed=parseFbConfig(document.getElementById('fbConfigInput').value);
+    if(!parsed||!parsed.apiKey||!parsed.projectId){ alert('Config inválida: precisa ter apiKey e projectId.'); return; }
+    localStorage.setItem(FB_CONFIG_KEY, JSON.stringify(parsed));
+    alert('Config salva. O app vai recarregar.'); location.reload();
+  };
+}
 
 /* ---- Sincronização por espaço (multi-usuário + modo casal) ---- */
 async function onAuthChanged(){
@@ -1753,19 +1802,33 @@ async function leaveSpace(){
   }catch(e){}
 }
 
+function updateAcctChip(){
+  const btn=document.getElementById('acctBtn'); if(!btn) return;
+  if(fb.user){
+    const s=(fb.user.displayName||fb.user.email||'?').trim();
+    btn.classList.add('on');
+    btn.innerHTML = `<span id="acctAvatar">${escapeHtml(s.charAt(0).toUpperCase())}</span><span class="dot green"></span>`;
+  } else {
+    btn.classList.remove('on');
+    btn.innerHTML = `<span id="acctAvatar">·</span><span class="dot grey"></span>`;
+  }
+}
 function renderConta(){
-  const el = document.getElementById('contaPanel'); if(!el) return;
+  updateAcctChip();
+  const el = document.getElementById('accountBody'); if(!el) return;
   if(!fb.user){
     el.innerHTML = `
-      <h2>☁️ Conta e nuvem<span class="hint">Entre para salvar tudo na nuvem e sincronizar seus aparelhos.</span></h2>
-      <button class="btn" id="btnOpenGate">Entrar / criar conta</button>
+      <h3>Conta</h3>
+      <p class="sub" style="font-size:13px;margin:0 0 12px">Entre para salvar tudo na nuvem e sincronizar seus aparelhos (todas as abas, não só as Metas).</p>
+      <button class="btn" id="btnOpenGate" style="width:100%">Entrar / criar conta</button>
       <span class="save-status" id="cloudMsg" style="text-align:left;margin-top:8px;">${fb.offline?'usando offline neste aparelho':''}</span>`;
-    const b=document.getElementById('btnOpenGate'); if(b) b.onclick=()=>{ fb.offline=false; revealAuthForm(); showGate(true); };
+    const b=document.getElementById('btnOpenGate'); if(b) b.onclick=()=>{ fb.offline=false; revealAuthForm(); showGate(true); document.getElementById('accountModal').classList.remove('show'); };
     return;
   }
   const own = fb.spaceId === fb.user.uid;
   el.innerHTML = `
-    <h2>☁️ Conta e nuvem<span class="hint">Tudo é salvo na nuvem e sincroniza automaticamente.</span></h2>
+    <h3>Conta</h3>
+    <p class="sub" style="font-size:12px;margin:-6px 0 12px">Sua conta dá acesso a ver e editar tudo, em todas as abas, sincronizado na nuvem.</p>
     <div class="alvo-meta" style="margin-top:0">
       <div>
         <div style="font-weight:600">${escapeHtml(fb.user.displayName||fb.user.email||'Conectado')}</div>
@@ -1775,7 +1838,7 @@ function renderConta(){
     </div>
     <span class="save-status" id="cloudMsg" style="text-align:left;margin-top:8px;">sincronizado ✓</span>
     <hr class="soft">
-    <h2 style="margin-bottom:8px">👫 Modo casal</h2>
+    <h3>👫 Modo casal</h3>
     ${ own ? `
       <p class="sub" style="font-size:12.5px;margin:0 0 10px">Para a Juliana acessar os mesmos dados com a conta dela: 1) autorize o e-mail dela; 2) passe o código do seu espaço para ela colar em "Entrar no espaço".</p>
       <div class="form-row">
@@ -1836,6 +1899,7 @@ if('serviceWorker' in navigator){
   try{ const t = localStorage.getItem('rota-vida:tab'); if(t && META[t]) switchTab(t); }catch(e){}
   // Login/nuvem: mostra o gate e tenta iniciar o Firebase (sessao fica salva entre aberturas)
   initGateUI();
+  initAccountUI();
   if(getSavedFbConfig()){
     cloudEnable().then(ok=>{ if(!ok){ revealAuthForm(); if(!fb.offline) showGate(true); } });
     // fallback extra: se em ~7s nao houver sessao nem formulario, revela mesmo assim
