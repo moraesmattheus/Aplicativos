@@ -2189,11 +2189,23 @@ function renderCusto(){
 
   // ---- Listas ----
   const rl=document.getElementById('rendaList');
-  rl.innerHTML = state.custo.rendas.length ? state.custo.rendas.map(r=>`
-    <div class="entry"><div class="entry-head"><span>${escapeHtml(r.nome||'—')}</span>
-      <span style="display:flex;align-items:center;gap:8px"><span class="entry-val">${fmt(r.valor)}</span><button class="del" data-del-renda2="${r.id}">×</button></span></div></div>`).join('')
+  const uid = fb.user ? fb.user.uid : null;
+  rl.innerHTML = state.custo.rendas.length ? state.custo.rendas.map(r=>{
+    const mine = uid && r.dono===uid;
+    return `<div class="entry"><div class="entry-head">
+      <span>${escapeHtml(r.nome||'—')} ${mine?'<span class="tag" style="background:rgba(242,169,59,.22);color:var(--amber)">você</span>':''}</span>
+      <span style="display:flex;align-items:center;gap:8px">
+        ${uid && !mine ? `<button class="btn ghost sm" data-mine-renda="${r.id}" style="padding:4px 9px;font-size:11px">sou eu</button>`:''}
+        <span class="entry-val">${fmt(r.valor)}</span><button class="del" data-del-renda2="${r.id}">×</button>
+      </span></div></div>`;
+  }).join('')
     : '<p class="empty">Adicione a renda de cada um.</p>';
   rl.querySelectorAll('[data-del-renda2]').forEach(b=> b.onclick=()=>{ state.custo.rendas=state.custo.rendas.filter(x=>x.id!==b.dataset.delRenda2); save(); renderCusto(); });
+  rl.querySelectorAll('[data-mine-renda]').forEach(b=> b.onclick=()=>{
+    state.custo.rendas.forEach(x=>{ if(x.dono===uid) x.dono=null; });
+    const r=state.custo.rendas.find(x=>x.id===b.dataset.mineRenda); if(r) r.dono=uid;
+    save(); renderCusto(); renderInicio();
+  });
 
   const dl=document.getElementById('despesaList');
   dl.innerHTML = state.custo.despesas.length ? [...state.custo.despesas].sort((a,b)=>(b.valor||0)-(a.valor||0)).map(d=>`
@@ -2450,9 +2462,13 @@ function renderInicio(){
     <div class="hc-big">${big}</div><div class="hc-small">${small}</div></button>`;
 
   const insights=gerarInsights();
+  const minhaRenda = fb.user ? state.custo.rendas.find(r=>r.dono===fb.user.uid) : null;
+  const minhaPct = (minhaRenda && cv.rendaTotal>0) ? Math.round(minhaRenda.valor/cv.rendaTotal*100) : 0;
   el.innerHTML=`
     <p class="hi">${saudacao()}${nome?', '+escapeHtml(nome):''} 👋</p>
     <p class="hi-sub">Aqui está o resumo do plano de vocês hoje.</p>
+    ${ minhaRenda ? `<div class="insight good" style="margin-bottom:16px"><span class="ic">💼</span><span>Sua parte da renda: <b>${fmt(minhaRenda.valor)}</b>${cv.rendaTotal>0?` — <b>${minhaPct}%</b> da renda do casal`:''}.</span></div>`
+      : (fb.user && state.custo.rendas.length ? `<div class="insight" style="margin-bottom:16px"><span class="ic">💼</span><span>Marque qual renda é a sua em <b>Custo → Renda do casal → "sou eu"</b> para personalizar.</span></div>` : '') }
 
     <div class="panel" style="border-color:${cv.sobra>=0?'var(--green)':'var(--coral)'}">
       <h2>🔮 Seus insights<span class="hint">Gerados a partir dos seus números — mudam conforme vocês atualizam.</span></h2>
