@@ -377,6 +377,7 @@
   <!-- ABA 5: METAS -->
   <section class="tab-view" id="tab-metas">
     <div id="metasDash"></div>
+    <div class="panel" id="contaPanel"></div>
     <div class="panel">
       <h2>Novo marco</h2>
       <div class="form-row">
@@ -572,6 +573,7 @@ function save(){
   saveTimer = setTimeout(()=>{
     try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); flashStatus('salvo'); }
     catch(e){ flashStatus('erro ao salvar'); }
+    if(typeof cloudPush==='function') cloudPush();
   }, 250);
 }
 function saveNow(){ clearTimeout(saveTimer); try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
@@ -1493,7 +1495,152 @@ function renderRenda(){
   });
 }
 
-function renderAll(){ seedMapIfEmpty(); renderFinanceira(); renderDiario(); renderMent(); renderAmbiente(); renderMetas(); renderAlvos(); renderRenda(); drawMap(); }
+/* ================= NUVEM (Firebase · login Google) ================= */
+const FB_CONFIG_KEY = 'rota-vida:fbconfig';
+const FB_VER = '10.12.2';
+let fb = { app:null, auth:null, db:null, user:null, unsub:null, lastPushTs:0, m:null, loading:false };
+
+function getSavedFbConfig(){
+  try{ const raw=localStorage.getItem(FB_CONFIG_KEY); return raw?JSON.parse(raw):null; }catch(e){ return null; }
+}
+function parseFbConfig(text){
+  // aceita JSON puro ou o trecho "const firebaseConfig = { ... };"
+  let s = text.trim();
+  const a = s.indexOf('{'), b = s.lastIndexOf('}');
+  if(a>=0 && b>a) s = s.slice(a, b+1);
+  try{ return JSON.parse(s); }catch(e){}
+  try{ return (new Function('return ('+s+')'))(); }catch(e){}
+  return null;
+}
+function setCloudMsg(t, err){
+  const el=document.getElementById('cloudMsg'); if(!el) return;
+  el.textContent=t||''; el.style.color=err?'var(--coral)':'var(--muted)';
+}
+
+async function initFirebase(config){
+  if(fb.loading || fb.app) return;
+  fb.loading = true;
+  const base = 'https://www.gstatic.com/firebasejs/'+FB_VER+'/';
+  const [appMod, authMod, fsMod] = await Promise.all([
+    import(base+'firebase-app.js'),
+    import(base+'firebase-auth.js'),
+    import(base+'firebase-firestore.js')
+  ]);
+  fb.app = appMod.initializeApp(config);
+  fb.auth = authMod.getAuth(fb.app);
+  fb.db = fsMod.getFirestore(fb.app);
+  fb.m = { ...authMod, ...fsMod };
+  try{ await authMod.getRedirectResult(fb.auth); }catch(e){}
+  authMod.onAuthStateChanged(fb.auth, (user)=>{ fb.user=user; onAuthChanged(); });
+  fb.loading = false;
+}
+async function cloudEnable(){
+  const cfg = getSavedFbConfig(); if(!cfg) return false;
+  try{ await initFirebase(cfg); return true; }
+  catch(e){ setCloudMsg('Não consegui carregar a nuvem (precisa de internet).', true); return false; }
+}
+async function cloudSignIn(){
+  if(!fb.auth){ const ok=await cloudEnable(); if(!ok||!fb.auth) return; }
+  const provider = new fb.m.GoogleAuthProvider();
+  try{ await fb.m.signInWithPopup(fb.auth, provider); }
+  catch(e){
+    try{ await fb.m.signInWithRedirect(fb.auth, provider); }
+    catch(e2){ setCloudMsg('Não consegui abrir o login do Google.', true); }
+  }
+}
+async function cloudSignOut(){ if(fb.auth){ try{ await fb.m.signOut(fb.auth); }catch(e){} } }
+
+async function onAuthChanged(){
+  renderConta();
+  if(!fb.user){ if(fb.unsub){ fb.unsub(); fb.unsub=null; } return; }
+  const ref = fb.m.doc(fb.db, 'users', fb.user.uid);
+  try{
+    const snap = await fb.m.getDoc(ref);
+    if(snap.exists() && snap.data() && snap.data().state){ applyCloudState(snap.data()); }
+    else { await cloudPush(true); setCloudMsg('nuvem criada e sincronizada'); }
+  }catch(e){ setCloudMsg('erro ao sincronizar (verifique as regras do Firestore)', true); }
+  if(fb.unsub) fb.unsub();
+  fb.unsub = fb.m.onSnapshot(ref, (snap)=>{
+    if(!snap.exists()) return;
+    const d = snap.data(); if(!d || !d.state) return;
+    if(d._ts && d._ts === fb.lastPushTs) return; // ignora o eco do nosso proprio push
+    applyCloudState(d);
+  });
+}
+function applyCloudState(d){
+  try{
+    state = migrate(d.state);
+    saveNow();
+    if(state.mapa.view) mapView = {...state.mapa.view};
+    fillInputs(); renderAll();
+    setCloudMsg('sincronizado com a nuvem');
+  }catch(e){}
+}
+let cloudTimer;
+function cloudPush(immediate){
+  if(!fb.user || !fb.db) return;
+  clearTimeout(cloudTimer);
+  const doPush = async ()=>{
+    const ts = Date.now(); fb.lastPushTs = ts;
+    try{
+      await fb.m.setDoc(fb.m.doc(fb.db,'users',fb.user.uid), { state, _ts:ts, updatedAt:new Date().toISOString() });
+      setCloudMsg('salvo na nuvem ✓');
+    }catch(e){ setCloudMsg('erro ao salvar na nuvem', true); }
+  };
+  if(immediate) return doPush();
+  cloudTimer = setTimeout(doPush, 800);
+}
+
+function renderConta(){
+  const el = document.getElementById('contaPanel'); if(!el) return;
+  const cfg = getSavedFbConfig();
+  if(!cfg){
+    el.innerHTML = `
+      <h2>☁️ Conta e nuvem<span class="hint">Salve tudo na nuvem e sincronize os dois celulares, com login do Google.</span></h2>
+      <p class="sub" style="font-size:13px;margin:0 0 12px">Para ligar, crie um projeto grátis no Firebase (uns 10 min) e cole aqui a configuração web. Passo a passo no <b>README</b> do app.</p>
+      <div class="field"><label for="fbConfigInput">Configuração do Firebase (cole o objeto <code>firebaseConfig</code>)</label>
+        <textarea id="fbConfigInput" placeholder='{ "apiKey": "...", "authDomain": "...", "projectId": "...", "appId": "..." }'></textarea>
+      </div>
+      <div class="form-row" style="margin-top:10px;">
+        <button class="btn" id="fbSaveConfig">Ativar nuvem</button>
+        <span class="save-status" id="cloudMsg" style="flex:1;text-align:left;margin:0;align-self:center;"></span>
+      </div>`;
+    document.getElementById('fbSaveConfig').onclick = async ()=>{
+      const parsed = parseFbConfig(document.getElementById('fbConfigInput').value);
+      if(!parsed || !parsed.apiKey || !parsed.projectId){ setCloudMsg('configuração inválida — precisa ter apiKey e projectId', true); return; }
+      localStorage.setItem(FB_CONFIG_KEY, JSON.stringify(parsed));
+      setCloudMsg('config salva, carregando…');
+      renderConta();
+      await cloudEnable();
+    };
+    return;
+  }
+  if(!fb.user){
+    el.innerHTML = `
+      <h2>☁️ Conta e nuvem<span class="hint">Nuvem configurada. Entre para sincronizar os dois celulares.</span></h2>
+      <div class="data-actions">
+        <button class="btn" id="btnSignIn">Entrar com Google</button>
+        <button class="btn ghost sm" id="btnResetCfg">Trocar configuração</button>
+      </div>
+      <span class="save-status" id="cloudMsg" style="text-align:left;margin-top:8px;"></span>`;
+    document.getElementById('btnSignIn').onclick = cloudSignIn;
+    document.getElementById('btnResetCfg').onclick = ()=>{ if(confirm('Remover a configuração da nuvem deste aparelho?')){ localStorage.removeItem(FB_CONFIG_KEY); location.reload(); } };
+    return;
+  }
+  el.innerHTML = `
+    <h2>☁️ Conta e nuvem<span class="hint">Tudo é salvo na nuvem e sincroniza automaticamente.</span></h2>
+    <div class="alvo-meta" style="margin-top:0">
+      <div>
+        <div style="font-weight:600">${escapeHtml(fb.user.displayName||'Conectado')}</div>
+        <div class="entry-meta">${escapeHtml(fb.user.email||'')}</div>
+      </div>
+      <button class="btn ghost sm" id="btnSignOut">Sair</button>
+    </div>
+    <span class="save-status" id="cloudMsg" style="text-align:left;margin-top:8px;">sincronizado ✓</span>`;
+  document.getElementById('btnSignOut').onclick = cloudSignOut;
+}
+
+function renderAll(){ seedMapIfEmpty(); renderFinanceira(); renderDiario(); renderMent(); renderAmbiente(); renderMetas(); renderAlvos(); renderRenda(); renderConta(); drawMap(); }
 
 /* ---------------- Instalação (PWA) ---------------- */
 let deferredPrompt;
@@ -1526,6 +1673,7 @@ if('serviceWorker' in navigator){
   fillInputs();
   renderAll();
   try{ const t = localStorage.getItem('rota-vida:tab'); if(t && META[t]) switchTab(t); }catch(e){}
+  if(getSavedFbConfig()) cloudEnable(); // liga a nuvem se ja configurada
 })();
 </script>
 </body>

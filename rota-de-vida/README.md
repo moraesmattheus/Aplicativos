@@ -57,6 +57,52 @@ de navegador.
 - Fazer backup de vez em quando é recomendado: se limpar os dados do navegador,
   o histórico local é perdido.
 
+## Modo nuvem (login com Google) — opcional
+
+Dá para salvar tudo na nuvem e **sincronizar os dois celulares automaticamente**,
+entrando com a conta Google (que já traz a verificação em 2 etapas do Google).
+Isso usa o **Firebase**, do Google, e o plano grátis é de sobra. É opcional: sem
+configurar, o app segue 100% local como antes.
+
+### Passo a passo (uma vez só, ~10 min)
+
+1. Acesse <https://console.firebase.google.com> e clique em **Adicionar projeto**.
+   Dê um nome (ex.: `rota-de-vida`) e conclua.
+2. No projeto, menu **Build → Authentication → Get started**. Na aba
+   **Sign-in method**, ative **Google** e salve.
+3. Ainda em Authentication → **Settings → Authorized domains**, clique em
+   **Add domain** e adicione `moraesmattheus.github.io`.
+4. Menu **Build → Firestore Database → Create database** → modo **produção** →
+   escolha a região (ex.: `southamerica-east1`).
+5. Na aba **Rules** do Firestore, cole exatamente isto e **Publique**:
+
+   ```
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /users/{uid} {
+         allow read, write: if request.auth != null && request.auth.uid == uid;
+       }
+     }
+   }
+   ```
+
+6. Volte em **Project settings** (engrenagem) → seção **Your apps** → ícone
+   **`</>`** (Web) → registre um app. O Firebase mostra um trecho com
+   `const firebaseConfig = { ... }`. **Copie o objeto** `{ ... }`.
+7. No app, aba **Metas → ☁️ Conta e nuvem**, cole esse objeto e toque em
+   **Ativar nuvem**. Depois **Entrar com Google**.
+8. No **outro celular**, repita o passo 7 entrando com **a mesma conta Google**.
+   Pronto: os dois passam a compartilhar os mesmos dados, em tempo real.
+
+> Segurança: as chaves web do Firebase são públicas por design — quem protege os
+> dados são as **regras** acima (só o dono logado lê/escreve) + o login. Usem a
+> **mesma conta Google** nos dois aparelhos para compartilhar os dados do casal.
+>
+> 2FA: o login com Google já exige a verificação em 2 etapas **se ela estiver
+> ativada na conta Google de vocês**. 2FA por SMS/app dentro do próprio app
+> exigiria o plano pago (Identity Platform) — o login Google cobre isso de graça.
+
 ## Estrutura das abas
 
 1. **Rota** — veredito da rota recomendada + data-alvo, dashboard com anel de
