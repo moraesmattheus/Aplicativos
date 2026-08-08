@@ -57,23 +57,24 @@ de navegador.
 - Fazer backup de vez em quando é recomendado: se limpar os dados do navegador,
   o histórico local é perdido.
 
-## Modo nuvem (login com Google) — opcional
+## Login e nuvem
 
-Dá para salvar tudo na nuvem e **sincronizar os dois celulares automaticamente**,
-entrando com a conta Google (que já traz a verificação em 2 etapas do Google).
-Isso usa o **Firebase**, do Google, e o plano grátis é de sobra. É opcional: sem
-configurar, o app segue 100% local como antes.
+O app abre numa **tela de login**. Cada pessoa entra com **e-mail e senha** ou
+com **Google**, e cada conta tem seus próprios dados salvos na nuvem (Firebase).
+Há também o **modo casal**: duas contas separadas acessando o mesmo espaço de
+dados. Tudo continua funcionando **offline** depois do primeiro login (a sessão
+fica salva no aparelho). Existe ainda um atalho "usar sem conta neste aparelho"
+para uso local sem nuvem.
 
-### Passo a passo (uma vez só, ~10 min)
+### Configuração do projeto Firebase (uma vez só, ~10 min)
 
-1. Acesse <https://console.firebase.google.com> e clique em **Adicionar projeto**.
-   Dê um nome (ex.: `rota-de-vida`) e conclua.
-2. No projeto, menu **Build → Authentication → Get started**. Na aba
-   **Sign-in method**, ative **Google** e salve.
-3. Ainda em Authentication → **Settings → Authorized domains**, clique em
-   **Add domain** e adicione `moraesmattheus.github.io`.
-4. Menu **Build → Firestore Database → Create database** → modo **produção** →
-   escolha a região (ex.: `southamerica-east1`).
+1. Acesse <https://console.firebase.google.com> e crie um projeto.
+2. **Build → Authentication → Get started**. Em **Sign-in method**, ative
+   **Google** e também **E-mail/senha** (Email/Password), e salve.
+3. Authentication → **Settings → Authorized domains → Add domain** →
+   `moraesmattheus.github.io`.
+4. **Build → Firestore Database → Create database** → modo **produção** →
+   região `southamerica-east1`.
 5. Na aba **Rules** do Firestore, cole exatamente isto e **Publique**:
 
    ```
@@ -83,27 +84,42 @@ configurar, o app segue 100% local como antes.
        match /users/{uid} {
          allow read, write: if request.auth != null && request.auth.uid == uid;
        }
+       match /spaces/{spaceId} {
+         allow read, write: if request.auth != null && (
+           request.auth.uid == resource.data.owner ||
+           (resource.data.allowedEmails != null &&
+            request.auth.token.email in resource.data.allowedEmails)
+         );
+         allow create: if request.auth != null &&
+           request.auth.uid == request.resource.data.owner;
+       }
      }
    }
    ```
 
-6. A configuração web do projeto (`firebaseConfig`) **já vem embutida no app**,
-   então não é preciso colar nada. No app, aba **Metas → ☁️ Conta e nuvem**,
-   toque em **Entrar com Google**.
-7. No **outro celular**, abra o app e toque em **Entrar com Google** com a
-   **mesma conta Google**. Pronto: os dois compartilham os mesmos dados, em
-   tempo real.
+6. A `firebaseConfig` **já vem embutida no app** — não precisa colar nada. Abra
+   o app, e na tela de login toque em **Entrar com Google** ou crie uma conta
+   com e-mail/senha.
 
-> Se um dia trocar de projeto Firebase, dá para colar outra config manualmente
-> (a opção de colar aparece se a config embutida for removida do código).
+### Modo casal (contas separadas, mesmos dados)
+
+Cada usuário começa no **próprio espaço**. Para o casal compartilhar:
+
+1. Um dos dois (ex.: Mattheus) entra e vai em **Metas → ☁️ Conta e nuvem →
+   👫 Modo casal**. Em "E-mail do meu par", digita o e-mail da Juliana e toca
+   **Autorizar**. Depois copia o **código do espaço**.
+2. A Juliana entra com a **conta dela** (Google ou e-mail/senha), vai no mesmo
+   lugar, cola o código em **"Entrar no espaço do meu par"** e toca **Entrar**.
+3. Pronto: os dois passam a ver e editar os **mesmos dados**, em tempo real,
+   cada um com o seu login. Para desfazer, use **"Voltar ao meu espaço"**.
 
 > Segurança: as chaves web do Firebase são públicas por design — quem protege os
-> dados são as **regras** acima (só o dono logado lê/escreve) + o login. Usem a
-> **mesma conta Google** nos dois aparelhos para compartilhar os dados do casal.
+> dados são as **regras** acima (cada um só lê/escreve o próprio espaço ou um
+> espaço em que foi autorizado) + o login.
 >
 > 2FA: o login com Google já exige a verificação em 2 etapas **se ela estiver
-> ativada na conta Google de vocês**. 2FA por SMS/app dentro do próprio app
-> exigiria o plano pago (Identity Platform) — o login Google cobre isso de graça.
+> ativada na conta Google**. 2FA por SMS/app dentro do próprio app exigiria o
+> plano pago (Identity Platform) — o login Google cobre isso de graça.
 
 ## Estrutura das abas
 

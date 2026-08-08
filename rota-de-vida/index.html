@@ -193,6 +193,25 @@
   .mnode.st-done{ opacity:.7; }
   .mnode.st-done .mtitle{ text-decoration:line-through; }
   .mnode.root{ border-left-width:4px; background:linear-gradient(135deg,#1c4a44,#163944); }
+  /* ===== Tela de login (gate) ===== */
+  .auth-gate{ position:fixed; inset:0; z-index:60; background:radial-gradient(ellipse at top,#12313B 0%,#0D1B24 60%);
+    display:none; align-items:center; justify-content:center; padding:24px; }
+  .auth-gate.show{ display:flex; }
+  .auth-card{ width:100%; max-width:380px; background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:24px; }
+  .auth-brand{ display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+  .auth-logo{ font-size:32px; }
+  .auth-title{ font-family:'Roboto Slab',serif; font-weight:800; font-size:22px; line-height:1; }
+  .auth-sub{ color:var(--muted); font-size:12px; margin-top:3px; }
+  .auth-loading{ color:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:13px; text-align:center; padding:24px; }
+  .auth-tabs{ display:flex; gap:8px; margin-bottom:16px; }
+  .auth-tab{ flex:1; background:var(--ink); border:1px solid var(--line); color:var(--muted); border-radius:8px; padding:10px;
+    font-family:'IBM Plex Mono',monospace; font-size:13px; cursor:pointer; }
+  .auth-tab.active{ background:var(--amber); color:var(--ink); border-color:var(--amber); font-weight:600; }
+  .auth-or{ text-align:center; color:var(--muted); font-size:12px; margin:14px 0; position:relative; }
+  .auth-msg{ min-height:18px; font-size:12.5px; margin-top:12px; text-align:center; color:var(--coral); }
+  .auth-offline{ display:block; margin:16px auto 0; background:none; border:none; color:var(--muted); font-size:12px; text-decoration:underline; cursor:pointer; }
+  hr.soft{ border:none; border-top:1px solid var(--line); margin:16px 0; }
+
   .mnode-tools{ display:flex; gap:6px; margin-top:8px; }
   .mnb{ width:26px; height:26px; border-radius:7px; border:1px solid var(--line); background:var(--ink); color:var(--foam);
     font-size:13px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
@@ -480,6 +499,27 @@
   <button data-tab="ambiente"><span class="ic">🌱</span>Ambiente</button>
   <button data-tab="metas"><span class="ic">🚩</span>Metas</button>
 </nav>
+
+<!-- Tela de login (gate) -->
+<div class="auth-gate show" id="authGate">
+  <div class="auth-card">
+    <div class="auth-brand"><span class="auth-logo">🧭</span><div><div class="auth-title">Rota de Vida</div><div class="auth-sub">Entre para acessar o plano</div></div></div>
+    <div class="auth-loading" id="authLoading">carregando…</div>
+    <div id="authForm" style="display:none">
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-mode="login">Entrar</button>
+        <button class="auth-tab" data-mode="signup">Criar conta</button>
+      </div>
+      <div class="field"><label for="authEmail">E-mail</label><input type="email" id="authEmail" placeholder="voce@email.com" autocomplete="email"></div>
+      <div class="field" style="margin-top:10px"><label for="authPass">Senha</label><input type="password" id="authPass" placeholder="mínimo 6 caracteres" autocomplete="current-password"></div>
+      <button class="btn" id="authSubmit" style="width:100%;margin-top:14px">Entrar</button>
+      <div class="auth-or">— ou —</div>
+      <button class="btn ghost" id="authGoogle" style="width:100%">Entrar com Google</button>
+      <div class="auth-msg" id="authMsg"></div>
+      <button class="auth-offline" id="authOffline">usar sem conta neste aparelho</button>
+    </div>
+  </div>
+</div>
 
 <!-- Modal de edição de nó do mapa -->
 <div class="modal-overlay" id="nodeModal">
@@ -1498,7 +1538,7 @@ function renderRenda(){
 /* ================= NUVEM (Firebase · login Google) ================= */
 const FB_CONFIG_KEY = 'rota-vida:fbconfig';
 const FB_VER = '10.12.2';
-let fb = { app:null, auth:null, db:null, user:null, unsub:null, lastPushTs:0, m:null, loading:false };
+let fb = { app:null, auth:null, db:null, user:null, unsub:null, lastPushTs:0, m:null, loading:false, spaceId:null, offline:false };
 
 // Config do projeto Firebase do casal (chaves web sao publicas por design).
 const FIREBASE_CONFIG = {
@@ -1527,55 +1567,133 @@ function setCloudMsg(t, err){
   el.textContent=t||''; el.style.color=err?'var(--coral)':'var(--muted)';
 }
 
+let fbInitPromise = null;
 async function initFirebase(config){
-  if(fb.loading || fb.app) return;
-  fb.loading = true;
-  const base = 'https://www.gstatic.com/firebasejs/'+FB_VER+'/';
-  const [appMod, authMod, fsMod] = await Promise.all([
-    import(base+'firebase-app.js'),
-    import(base+'firebase-auth.js'),
-    import(base+'firebase-firestore.js')
-  ]);
-  fb.app = appMod.initializeApp(config);
-  fb.auth = authMod.getAuth(fb.app);
-  fb.db = fsMod.getFirestore(fb.app);
-  fb.m = { ...authMod, ...fsMod };
-  try{ await authMod.getRedirectResult(fb.auth); }catch(e){}
-  authMod.onAuthStateChanged(fb.auth, (user)=>{ fb.user=user; onAuthChanged(); });
-  fb.loading = false;
+  if(fb.app) return;
+  if(fbInitPromise){ return fbInitPromise; }
+  fbInitPromise = (async ()=>{
+    const base = 'https://www.gstatic.com/firebasejs/'+FB_VER+'/';
+    const [appMod, authMod, fsMod] = await Promise.all([
+      import(base+'firebase-app.js'),
+      import(base+'firebase-auth.js'),
+      import(base+'firebase-firestore.js')
+    ]);
+    fb.app = appMod.initializeApp(config);
+    fb.auth = authMod.getAuth(fb.app);
+    try{ fb.db = fsMod.initializeFirestore(fb.app, { localCache: fsMod.persistentLocalCache({}) }); }
+    catch(e){ fb.db = fsMod.getFirestore(fb.app); }
+    fb.m = { ...authMod, ...fsMod };
+    try{ await authMod.getRedirectResult(fb.auth); }catch(e){}
+    authMod.onAuthStateChanged(fb.auth, (user)=>{ fb.user=user; onAuthChanged(); });
+  })();
+  try{ await fbInitPromise; }
+  catch(e){ fbInitPromise=null; throw e; } // permite nova tentativa
 }
 async function cloudEnable(){
   const cfg = getSavedFbConfig(); if(!cfg) return false;
-  try{ await initFirebase(cfg); return true; }
-  catch(e){ setCloudMsg('Não consegui carregar a nuvem (precisa de internet).', true); return false; }
+  try{ await initFirebase(cfg); return !!fb.auth; }
+  catch(e){ setAuthMsg('Sem conexão para carregar o login agora.', true); return false; }
 }
-async function cloudSignIn(){
-  if(!fb.auth){ const ok=await cloudEnable(); if(!ok||!fb.auth) return; }
-  const provider = new fb.m.GoogleAuthProvider();
-  try{ await fb.m.signInWithPopup(fb.auth, provider); }
-  catch(e){
-    try{ await fb.m.signInWithRedirect(fb.auth, provider); }
-    catch(e2){ setCloudMsg('Não consegui abrir o login do Google.', true); }
-  }
-}
-async function cloudSignOut(){ if(fb.auth){ try{ await fb.m.signOut(fb.auth); }catch(e){} } }
 
+/* ---- Tela de login (gate) ---- */
+let authMode = 'login';
+function showGate(show){ const g=document.getElementById('authGate'); if(g) g.classList.toggle('show', show); }
+function revealAuthForm(){ const l=document.getElementById('authLoading'), f=document.getElementById('authForm'); if(l) l.style.display='none'; if(f) f.style.display=''; }
+function setAuthMsg(t, err){ const el=document.getElementById('authMsg'); if(!el) return; el.textContent=t||''; el.style.color=err?'var(--coral)':'var(--green)'; }
+function authErrMsg(e){
+  const c=(e&&e.code)||'';
+  if(c.includes('invalid-credential')||c.includes('wrong-password')||c.includes('user-not-found')) return 'e-mail ou senha incorretos';
+  if(c.includes('email-already-in-use')) return 'esse e-mail já tem conta — use "Entrar"';
+  if(c.includes('weak-password')) return 'senha muito curta (mínimo 6)';
+  if(c.includes('invalid-email')) return 'e-mail inválido';
+  if(c.includes('network')) return 'sem conexão';
+  if(c.includes('popup')) return 'o navegador bloqueou a janela; tente de novo';
+  return 'não consegui entrar ('+(c||'erro')+')';
+}
+async function onAuthSubmit(){
+  const email=document.getElementById('authEmail').value.trim();
+  const pass=document.getElementById('authPass').value;
+  if(!email || !pass){ setAuthMsg('preencha e-mail e senha', true); return; }
+  setAuthMsg('entrando…');
+  const ok=await cloudEnable(); if(!ok) return;
+  try{
+    if(authMode==='login') await fb.m.signInWithEmailAndPassword(fb.auth, email, pass);
+    else await fb.m.createUserWithEmailAndPassword(fb.auth, email, pass);
+  }catch(e){ setAuthMsg(authErrMsg(e), true); }
+}
+async function authGoogle(){
+  setAuthMsg('abrindo Google…');
+  const ok=await cloudEnable(); if(!ok) return;
+  const provider=new fb.m.GoogleAuthProvider();
+  try{ await fb.m.signInWithPopup(fb.auth, provider); }
+  catch(e){ try{ await fb.m.signInWithRedirect(fb.auth, provider); }catch(e2){ setAuthMsg('não consegui abrir o Google', true); } }
+}
+async function cloudSignOut(){
+  try{ if(fb.auth) await fb.m.signOut(fb.auth); }catch(e){}
+  fb.offline=false; fb.spaceId=null;
+  revealAuthForm(); showGate(true); setAuthMsg('');
+}
+function initGateUI(){
+  document.querySelectorAll('.auth-tab').forEach(b=> b.onclick=()=>{
+    authMode=b.dataset.mode;
+    document.querySelectorAll('.auth-tab').forEach(x=>x.classList.toggle('active', x===b));
+    document.getElementById('authSubmit').textContent = authMode==='login'?'Entrar':'Criar conta';
+    document.getElementById('authPass').setAttribute('autocomplete', authMode==='login'?'current-password':'new-password');
+    setAuthMsg('');
+  });
+  document.getElementById('authSubmit').onclick = onAuthSubmit;
+  document.getElementById('authGoogle').onclick = authGoogle;
+  document.getElementById('authOffline').onclick = ()=>{ fb.offline=true; showGate(false); };
+  document.getElementById('authPass').addEventListener('keydown', e=>{ if(e.key==='Enter') onAuthSubmit(); });
+}
+
+/* ---- Sincronização por espaço (multi-usuário + modo casal) ---- */
 async function onAuthChanged(){
   renderConta();
-  if(!fb.user){ if(fb.unsub){ fb.unsub(); fb.unsub=null; } return; }
-  const ref = fb.m.doc(fb.db, 'users', fb.user.uid);
+  if(fb.user){
+    showGate(false); setAuthMsg('');
+    await resolveSpaceAndSync();
+  } else {
+    if(fb.unsub){ fb.unsub(); fb.unsub=null; }
+    fb.spaceId=null;
+    revealAuthForm();
+    if(!fb.offline) showGate(true);
+  }
+}
+async function resolveSpaceAndSync(){
+  const { doc, getDoc, setDoc } = fb.m;
+  const uref = doc(fb.db,'users',fb.user.uid);
+  let spaceId=null;
   try{
-    const snap = await fb.m.getDoc(ref);
+    const usnap = await getDoc(uref);
+    if(usnap.exists() && usnap.data().spaceId){ spaceId = usnap.data().spaceId; }
+    else {
+      spaceId = fb.user.uid;
+      let initState = state;
+      if(usnap.exists() && usnap.data().state){ initState = usnap.data().state; } // migra dados antigos
+      await setDoc(doc(fb.db,'spaces',spaceId), { owner:fb.user.uid, allowedEmails:[(fb.user.email||'').toLowerCase()], state:initState, _ts:Date.now(), updatedAt:new Date().toISOString() }, {merge:true});
+      await setDoc(uref, { email:fb.user.email||'', spaceId }, {merge:true});
+    }
+  }catch(e){ setCloudMsg('erro ao preparar sua conta (verifique as regras do Firestore)', true); renderConta(); return; }
+  fb.spaceId = spaceId;
+  await bindSpace(spaceId);
+  renderConta();
+}
+async function bindSpace(spaceId){
+  const { doc, getDoc, onSnapshot } = fb.m;
+  const ref = doc(fb.db,'spaces',spaceId);
+  try{
+    const snap = await getDoc(ref);
     if(snap.exists() && snap.data() && snap.data().state){ applyCloudState(snap.data()); }
-    else { await cloudPush(true); setCloudMsg('nuvem criada e sincronizada'); }
-  }catch(e){ setCloudMsg('erro ao sincronizar (verifique as regras do Firestore)', true); }
+    else { await cloudPush(true); }
+  }catch(e){ setCloudMsg('erro ao sincronizar (verifique as regras)', true); }
   if(fb.unsub) fb.unsub();
-  fb.unsub = fb.m.onSnapshot(ref, (snap)=>{
+  fb.unsub = onSnapshot(ref, (snap)=>{
     if(!snap.exists()) return;
     const d = snap.data(); if(!d || !d.state) return;
-    if(d._ts && d._ts === fb.lastPushTs) return; // ignora o eco do nosso proprio push
+    if(d._ts && d._ts === fb.lastPushTs) return;
     applyCloudState(d);
-  });
+  }, (err)=>{ setCloudMsg('sincronização interrompida', true); });
 }
 function applyCloudState(d){
   try{
@@ -1583,17 +1701,17 @@ function applyCloudState(d){
     saveNow();
     if(state.mapa.view) mapView = {...state.mapa.view};
     fillInputs(); renderAll();
-    setCloudMsg('sincronizado com a nuvem');
+    setCloudMsg('sincronizado ✓');
   }catch(e){}
 }
 let cloudTimer;
 function cloudPush(immediate){
-  if(!fb.user || !fb.db) return;
+  if(!fb.user || !fb.db || !fb.spaceId) return;
   clearTimeout(cloudTimer);
   const doPush = async ()=>{
     const ts = Date.now(); fb.lastPushTs = ts;
     try{
-      await fb.m.setDoc(fb.m.doc(fb.db,'users',fb.user.uid), { state, _ts:ts, updatedAt:new Date().toISOString() });
+      await fb.m.setDoc(fb.m.doc(fb.db,'spaces',fb.spaceId), { state, _ts:ts, updatedAt:new Date().toISOString() }, {merge:true});
       setCloudMsg('salvo na nuvem ✓');
     }catch(e){ setCloudMsg('erro ao salvar na nuvem', true); }
   };
@@ -1601,52 +1719,86 @@ function cloudPush(immediate){
   cloudTimer = setTimeout(doPush, 800);
 }
 
+/* ---- Modo casal ---- */
+function setShareMsg(t, err){ const el=document.getElementById('contaShareMsg'); if(!el) return; el.textContent=t||''; el.style.color=err?'var(--coral)':'var(--green)'; }
+async function shareInvite(email){
+  email=(email||'').trim().toLowerCase(); if(!email) return;
+  try{
+    const ref=fb.m.doc(fb.db,'spaces',fb.spaceId);
+    const snap=await fb.m.getDoc(ref);
+    const cur=(snap.data()&&snap.data().allowedEmails)||[];
+    if(!cur.includes(email)) cur.push(email);
+    await fb.m.setDoc(ref,{ allowedEmails:cur },{merge:true});
+    setShareMsg('✓ '+email+' autorizado. Passe o código do espaço para essa pessoa.');
+  }catch(e){ setShareMsg('erro ao autorizar', true); }
+}
+async function joinSpace(code){
+  code=(code||'').trim(); if(!code) return;
+  if(code===fb.user.uid){ setShareMsg('esse já é o seu espaço', true); return; }
+  try{
+    const ref=fb.m.doc(fb.db,'spaces',code);
+    const snap=await fb.m.getDoc(ref);
+    if(!snap.exists()){ setShareMsg('código não encontrado', true); return; }
+    await fb.m.setDoc(fb.m.doc(fb.db,'users',fb.user.uid),{ spaceId:code },{merge:true});
+    fb.spaceId=code;
+    await bindSpace(code);
+    setShareMsg('entrou no espaço compartilhado ✓'); renderConta();
+  }catch(e){ setShareMsg('não consegui entrar — peça para o dono adicionar seu e-mail primeiro', true); }
+}
+async function leaveSpace(){
+  try{
+    await fb.m.setDoc(fb.m.doc(fb.db,'users',fb.user.uid),{ spaceId:fb.user.uid },{merge:true});
+    fb.spaceId=fb.user.uid;
+    await bindSpace(fb.user.uid); renderConta();
+  }catch(e){}
+}
+
 function renderConta(){
   const el = document.getElementById('contaPanel'); if(!el) return;
-  const cfg = getSavedFbConfig();
-  if(!cfg){
-    el.innerHTML = `
-      <h2>☁️ Conta e nuvem<span class="hint">Salve tudo na nuvem e sincronize os dois celulares, com login do Google.</span></h2>
-      <p class="sub" style="font-size:13px;margin:0 0 12px">Para ligar, crie um projeto grátis no Firebase (uns 10 min) e cole aqui a configuração web. Passo a passo no <b>README</b> do app.</p>
-      <div class="field"><label for="fbConfigInput">Configuração do Firebase (cole o objeto <code>firebaseConfig</code>)</label>
-        <textarea id="fbConfigInput" placeholder='{ "apiKey": "...", "authDomain": "...", "projectId": "...", "appId": "..." }'></textarea>
-      </div>
-      <div class="form-row" style="margin-top:10px;">
-        <button class="btn" id="fbSaveConfig">Ativar nuvem</button>
-        <span class="save-status" id="cloudMsg" style="flex:1;text-align:left;margin:0;align-self:center;"></span>
-      </div>`;
-    document.getElementById('fbSaveConfig').onclick = async ()=>{
-      const parsed = parseFbConfig(document.getElementById('fbConfigInput').value);
-      if(!parsed || !parsed.apiKey || !parsed.projectId){ setCloudMsg('configuração inválida — precisa ter apiKey e projectId', true); return; }
-      localStorage.setItem(FB_CONFIG_KEY, JSON.stringify(parsed));
-      setCloudMsg('config salva, carregando…');
-      renderConta();
-      await cloudEnable();
-    };
-    return;
-  }
   if(!fb.user){
     el.innerHTML = `
-      <h2>☁️ Conta e nuvem<span class="hint">Entre com o Google para salvar na nuvem e sincronizar os dois celulares.</span></h2>
-      <div class="data-actions">
-        <button class="btn" id="btnSignIn">Entrar com Google</button>
-      </div>
-      <p class="sub" style="font-size:12px;margin-top:10px">Usem a <b>mesma conta Google</b> nos dois aparelhos para compartilhar os dados do casal.</p>
-      <span class="save-status" id="cloudMsg" style="text-align:left;margin-top:8px;"></span>`;
-    document.getElementById('btnSignIn').onclick = cloudSignIn;
+      <h2>☁️ Conta e nuvem<span class="hint">Entre para salvar tudo na nuvem e sincronizar seus aparelhos.</span></h2>
+      <button class="btn" id="btnOpenGate">Entrar / criar conta</button>
+      <span class="save-status" id="cloudMsg" style="text-align:left;margin-top:8px;">${fb.offline?'usando offline neste aparelho':''}</span>`;
+    const b=document.getElementById('btnOpenGate'); if(b) b.onclick=()=>{ fb.offline=false; revealAuthForm(); showGate(true); };
     return;
   }
+  const own = fb.spaceId === fb.user.uid;
   el.innerHTML = `
     <h2>☁️ Conta e nuvem<span class="hint">Tudo é salvo na nuvem e sincroniza automaticamente.</span></h2>
     <div class="alvo-meta" style="margin-top:0">
       <div>
-        <div style="font-weight:600">${escapeHtml(fb.user.displayName||'Conectado')}</div>
+        <div style="font-weight:600">${escapeHtml(fb.user.displayName||fb.user.email||'Conectado')}</div>
         <div class="entry-meta">${escapeHtml(fb.user.email||'')}</div>
       </div>
       <button class="btn ghost sm" id="btnSignOut">Sair</button>
     </div>
-    <span class="save-status" id="cloudMsg" style="text-align:left;margin-top:8px;">sincronizado ✓</span>`;
+    <span class="save-status" id="cloudMsg" style="text-align:left;margin-top:8px;">sincronizado ✓</span>
+    <hr class="soft">
+    <h2 style="margin-bottom:8px">👫 Modo casal</h2>
+    ${ own ? `
+      <p class="sub" style="font-size:12.5px;margin:0 0 10px">Para a Juliana acessar os mesmos dados com a conta dela: 1) autorize o e-mail dela; 2) passe o código do seu espaço para ela colar em "Entrar no espaço".</p>
+      <div class="form-row">
+        <div class="field" style="flex:1 1 160px"><label for="inviteEmail">E-mail do meu par</label><input type="email" id="inviteEmail" placeholder="juliana@email.com"></div>
+        <button class="btn sm" id="btnInvite">Autorizar</button>
+      </div>
+      <div class="field" style="margin-top:10px"><label>Código do meu espaço (passe para o par)</label>
+        <div class="form-row"><input type="text" id="myCode" readonly value="${escapeHtml(fb.spaceId||'')}"><button class="btn ghost sm" id="btnCopyCode">copiar</button></div>
+      </div>
+    ` : `
+      <p class="sub" style="font-size:12.5px;margin:0 0 10px">Você está num espaço <b>compartilhado</b>. Código: <code>${escapeHtml(fb.spaceId||'')}</code></p>
+      <button class="btn ghost sm" id="btnLeave">Voltar ao meu espaço</button>
+    `}
+    <hr class="soft">
+    <div class="field"><label for="joinCode">Entrar no espaço do meu par (cole o código)</label>
+      <div class="form-row"><input type="text" id="joinCode" placeholder="código que seu par te passou"><button class="btn sm" id="btnJoin">Entrar</button></div>
+    </div>
+    <div class="save-status" id="contaShareMsg" style="text-align:left;margin-top:8px"></div>`;
   document.getElementById('btnSignOut').onclick = cloudSignOut;
+  const bi=document.getElementById('btnInvite'); if(bi) bi.onclick=()=> shareInvite(document.getElementById('inviteEmail').value);
+  const bc=document.getElementById('btnCopyCode'); if(bc) bc.onclick=()=>{ try{ navigator.clipboard.writeText(fb.spaceId||''); setShareMsg('código copiado ✓'); }catch(e){ document.getElementById('myCode').select(); } };
+  const bl=document.getElementById('btnLeave'); if(bl) bl.onclick=leaveSpace;
+  const bj=document.getElementById('btnJoin'); if(bj) bj.onclick=()=> joinSpace(document.getElementById('joinCode').value);
 }
 
 function renderAll(){ seedMapIfEmpty(); renderFinanceira(); renderDiario(); renderMent(); renderAmbiente(); renderMetas(); renderAlvos(); renderRenda(); renderConta(); drawMap(); }
@@ -1682,7 +1834,15 @@ if('serviceWorker' in navigator){
   fillInputs();
   renderAll();
   try{ const t = localStorage.getItem('rota-vida:tab'); if(t && META[t]) switchTab(t); }catch(e){}
-  if(getSavedFbConfig()) cloudEnable(); // liga a nuvem se ja configurada
+  // Login/nuvem: mostra o gate e tenta iniciar o Firebase (sessao fica salva entre aberturas)
+  initGateUI();
+  if(getSavedFbConfig()){
+    cloudEnable().then(ok=>{ if(!ok){ revealAuthForm(); if(!fb.offline) showGate(true); } });
+    // fallback extra: se em ~7s nao houver sessao nem formulario, revela mesmo assim
+    setTimeout(()=>{ if(!fb.user && !fb.offline){ revealAuthForm(); showGate(true); } }, 7000);
+  } else {
+    revealAuthForm(); showGate(false);
+  }
 })();
 </script>
 </body>
