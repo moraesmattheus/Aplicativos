@@ -14,34 +14,39 @@
   @import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500;600&family=Work+Sans:wght@400;500;600&display=swap');
 
   :root{
-    --ink: #0D1B24;
-    --panel: #12313B;
-    --panel-2: #163944;
-    --paper: #EFE8D8;
-    --paper-dim: #DCD3BC;
+    /* ESCURO — preto neutro */
+    --ink: #0E0F11;         /* superfície recuada (inputs/canvas) */
+    --panel: #17181B;
+    --panel-2: #202227;
+    --paper: #202227;       /* cartões "rota" = superfície elevada */
+    --paper-dim: rgba(255,255,255,0.14);
     --amber: #F2A93B;
     --coral: #E8563F;
     --green: #4FB477;
-    --foam: #F4F1E8;
-    --line: rgba(244,241,232,0.14);
-    --muted: rgba(244,241,232,0.6);
-    --on: #0D1B24;          /* texto sobre amber/paper/verde — sempre escuro */
-    --bg1: #12313B;         /* gradiente do fundo (topo) */
-    --bg2: #0D1B24;         /* gradiente do fundo (base) */
-    --shadow: 0 6px 20px rgba(0,0,0,.25);
+    --foam: #F5F6F7;
+    --line: rgba(255,255,255,0.10);
+    --muted: rgba(245,246,247,0.58);
+    --track: rgba(255,255,255,0.12);
+    --on: #0E0F11;          /* texto sobre amber/verde — sempre escuro */
+    --bg1: #16181B;         /* gradiente do fundo (topo) */
+    --bg2: #0A0B0C;         /* gradiente do fundo (base) */
+    --shadow: 0 6px 20px rgba(0,0,0,.38);
   }
   :root[data-theme="light"]{
-    --ink: #E7E1D2;         /* superfície recuada (inputs/canvas) */
+    /* CLARO — branco neutro */
+    --ink: #EEF0F2;
     --panel: #FFFFFF;
-    --panel-2: #F5F1E7;
-    --foam: #16272E;        /* texto principal (escuro) */
-    --line: rgba(13,27,36,0.12);
-    --muted: rgba(13,27,36,0.55);
-    --bg1: #FBF9F3;
-    --bg2: #ECE7DA;
-    --paper: #FFFFFF;
-    --paper-dim: #E7E1D2;
-    --shadow: 0 6px 18px rgba(13,27,36,.10);
+    --panel-2: #F4F5F7;
+    --paper: #F4F5F7;
+    --paper-dim: rgba(20,24,27,0.14);
+    --foam: #15181B;
+    --line: rgba(20,24,27,0.12);
+    --muted: rgba(20,24,27,0.55);
+    --track: rgba(20,24,27,0.10);
+    --on: #15181B;
+    --bg1: #FFFFFF;
+    --bg2: #EEF0F2;
+    --shadow: 0 6px 18px rgba(20,24,27,.09);
   }
   *{box-sizing:border-box;}
   html,body{margin:0;}
@@ -79,9 +84,9 @@
 
   .routes{ display:grid; grid-template-columns: 1fr; gap: 14px; }
   @media(min-width:640px){ .routes{ grid-template-columns: 1fr 1fr; } }
-  .route-card{ background: var(--paper); color: var(--on); border:1px solid var(--line); border-radius: 14px; padding: 18px; position: relative; overflow: hidden; box-shadow:var(--shadow); }
+  .route-card{ background: var(--paper); color: var(--foam); border:1px solid var(--line); border-radius: 14px; padding: 18px; position: relative; overflow: hidden; box-shadow:var(--shadow); }
   .route-card.winner{ box-shadow: 0 0 0 2px var(--amber) inset; }
-  .route-tag{ font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #6b5f45; margin-bottom: 4px; }
+  .route-tag{ font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
   .winner-badge{ position:absolute; top:14px; right:14px; background:var(--amber); color:var(--on); font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600; padding:3px 8px; border-radius:20px; text-transform:uppercase; letter-spacing:.05em;}
   .route-title{ font-family: 'Roboto Slab', serif; font-weight: 700; font-size: 18px; margin: 0 0 14px; padding-right:70px; }
   .chart-line{ position: relative; height: 60px; margin: 6px 0 14px; }
@@ -94,8 +99,8 @@
   .route-stats .row{ display:flex; justify-content:space-between; gap:8px; }
   .route-stats .row b{ font-family:'IBM Plex Mono', monospace; }
   .route-stats .headline{ font-family:'Roboto Slab', serif; font-weight:800; font-size: 24px; margin: 2px 0 8px; line-height:1.1;}
-  .route-stats .headline span{ font-size: 13px; font-weight: 500; display:block; color:#6b5f45; }
-  .note{ font-size: 12.5px; color: #4a4231; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--paper-dim); }
+  .route-stats .headline span{ font-size: 13px; font-weight: 500; display:block; color:var(--muted); }
+  .note{ font-size: 12.5px; color: var(--muted); margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--paper-dim); }
   .risk{ background:#fbe4de; border:1px solid var(--coral); color:#8a2f1f; border-radius:10px; padding:10px 12px; font-size:12.5px; margin-top:12px; display:flex; gap:8px; align-items:flex-start;}
   .risk b{ display:block; margin-bottom:2px; }
 
@@ -168,13 +173,13 @@
   .section-label{ font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:4px 0 12px; }
 
   /* ===== Barra de progresso das rotas ===== */
-  .pbar{ height:10px; border-radius:6px; background:rgba(13,27,36,.5); position:relative; overflow:hidden; margin:12px 0 6px; }
+  .pbar{ height:10px; border-radius:6px; background:var(--track); position:relative; overflow:hidden; margin:12px 0 6px; }
   .pbar .fill{ position:absolute; left:0; top:0; bottom:0; border-radius:6px; background:linear-gradient(90deg, var(--amber), #ffcf7a); }
-  .pbar-legend{ display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#6b5f45; }
+  .pbar-legend{ display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--muted); }
   .stages{ display:flex; gap:8px; margin:10px 0 0; }
-  .stage{ flex:1; background:#e5dcc6; border-radius:8px; padding:8px 10px; }
-  .stage .sk{ font-family:'IBM Plex Mono',monospace; font-size:10px; color:#6b5f45; text-transform:uppercase; letter-spacing:.04em; }
-  .stage .sv{ font-family:'Roboto Slab',serif; font-weight:700; font-size:14px; color:var(--on); margin-top:2px; }
+  .stage{ flex:1; background:var(--panel); border-radius:8px; padding:8px 10px; }
+  .stage .sk{ font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  .stage .sv{ font-family:'Roboto Slab',serif; font-weight:700; font-size:14px; color:var(--foam); margin-top:2px; }
 
   /* ===== Inputs recolhidos ===== */
   details.settings{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:0 18px; margin-bottom:16px; }
@@ -241,7 +246,7 @@
   .catrow{ margin-bottom:14px; }
   .catrow .cathead{ display:flex; justify-content:space-between; align-items:baseline; font-size:13.5px; margin-bottom:5px; }
   .catrow .cathead b{ font-family:'IBM Plex Mono',monospace; }
-  .catbar{ position:relative; height:12px; border-radius:6px; background:rgba(13,27,36,.5); overflow:hidden; }
+  .catbar{ position:relative; height:12px; border-radius:6px; background:var(--track); overflow:hidden; }
   .catbar .fill{ position:absolute; left:0; top:0; bottom:0; border-radius:6px; }
   .catbar .fill.ok{ background:linear-gradient(90deg,var(--green),#7fd6a0); }
   .catbar .fill.over{ background:linear-gradient(90deg,var(--coral),#ff8b76); }
@@ -254,6 +259,18 @@
   .insight{ display:flex; gap:10px; align-items:flex-start; background:var(--panel-2); border:1px solid var(--line); border-left:4px solid var(--amber); border-radius:10px; padding:11px 13px; margin-bottom:10px; font-size:13px; }
   .insight.good{ border-left-color:var(--green); } .insight.bad{ border-left-color:var(--coral); }
   .insight .ic{ font-size:17px; line-height:1; }
+  /* ===== Início / boas-vindas ===== */
+  .hi{ font-family:'Roboto Slab',serif; font-weight:800; font-size:clamp(22px,6vw,30px); margin:2px 0 2px; }
+  .hi-sub{ color:var(--muted); font-size:14px; margin:0 0 18px; }
+  .home-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px; }
+  .home-card{ background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:14px; cursor:pointer;
+    box-shadow:var(--shadow); transition:transform .12s ease; text-align:left; }
+  .home-card:active{ transform:scale(.97); }
+  .home-card .hc-top{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); margin-bottom:8px; }
+  .home-card .hc-ic{ width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; }
+  .home-card .hc-big{ font-family:'Roboto Slab',serif; font-weight:800; font-size:19px; line-height:1.1; }
+  .home-card .hc-small{ font-size:12px; color:var(--muted); margin-top:3px; }
+  .home-wide{ grid-column:1 / -1; }
 
   .mnode-tools{ display:flex; gap:6px; margin-top:8px; }
   .mnb{ width:26px; height:26px; border-radius:7px; border:1px solid var(--line); background:var(--ink); color:var(--foam);
@@ -366,8 +383,13 @@
     <button class="btn sm" id="installBtn">Instalar</button>
   </div>
 
+  <!-- ABA: INÍCIO (boas-vindas + resumo geral) -->
+  <section class="tab-view active" id="tab-inicio">
+    <div id="inicioBody"></div>
+  </section>
+
   <!-- ABA 1: FINANCEIRA -->
-  <section class="tab-view active" id="tab-financeira">
+  <section class="tab-view" id="tab-financeira">
     <!-- Veredito: a resposta em uma olhada -->
     <div id="verdict"></div>
 
@@ -829,7 +851,7 @@ function statusMeta(pct){
 function ringSVG(pct){
   const r=52, C=2*Math.PI*r, off=C*(1-Math.min(pct,1));
   return `<svg class="ring-svg" viewBox="0 0 140 140">
-    <circle cx="70" cy="70" r="${r}" fill="none" stroke="rgba(244,241,232,0.1)" stroke-width="14"/>
+    <circle cx="70" cy="70" r="${r}" fill="none" stroke="var(--track)" stroke-width="14"/>
     <circle cx="70" cy="70" r="${r}" fill="none" stroke="#F2A93B" stroke-width="14" stroke-linecap="round"
       stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 70 70)"/>
     <text class="ring-num" x="70" y="72" text-anchor="middle">${Math.round(pct*100)}%</text>
@@ -1248,6 +1270,7 @@ document.getElementById('importFile').onchange = (ev)=>{
 
 /* ---------------- Navegação por abas ---------------- */
 const META = {
+  inicio: ['Bem-vindos','Início','Um resumo de tudo, com o que os números de vocês estão dizendo agora.'],
   financeira: ['Carta de navegação · Mattheus & noiva','Rota de Vida','Duas rotas a partir do mesmo ponto. Ajuste os números com o que for real, o mapa recalcula sozinho.'],
   custo: ['Custo de vida','Custo de vida','Renda do casal, despesas por categoria, cartão e onde dá para economizar — a sobra vira seu aporte.'],
   mapa: ['Mapa mental','Mapa da estratégia','Caminhos, rotas alternativas, submetas, obstáculos, estudos e tarefas — tudo conectado.'],
@@ -1271,6 +1294,7 @@ function switchTab(name){
   if(name==='mapa'){ requestAnimationFrame(()=>{ if(!state.mapa.view) fitMap(); else applyMapView(); drawMap(); }); }
   if(name==='renda'){ refreshRenda(); }
   if(name==='custo'){ try{ if(!localStorage.getItem('rota-vida:tut-custo')) document.getElementById('custoTut').classList.add('show'); }catch(e){} }
+  if(name==='inicio'){ renderInicio(); }
 }
 document.querySelectorAll('#tabbar button').forEach(b=> b.onclick=()=> switchTab(b.dataset.tab));
 
@@ -1312,7 +1336,7 @@ function drawMap(){
   // links
   linksEl.innerHTML = nodes.filter(n=>n.parent && byId[n.parent]).map(n=>{
     const p = byId[n.parent];
-    return `<line x1="${p.x}" y1="${p.y}" x2="${n.x}" y2="${n.y}" stroke="rgba(244,241,232,0.22)" stroke-width="2"/>`;
+    return `<line x1="${p.x}" y1="${p.y}" x2="${n.x}" y2="${n.y}" stroke="#8A8F94" stroke-width="2"/>`;
   }).join('');
   // nodes
   nodesEl.innerHTML = nodes.map(n=>{
@@ -1447,7 +1471,7 @@ function attachNodeDrag(){
 function drawLinksOnly(){
   const nodes=state.mapa.nodes, byId=Object.fromEntries(nodes.map(n=>[n.id,n]));
   document.getElementById('mapLinks').innerHTML = nodes.filter(n=>n.parent&&byId[n.parent]).map(n=>{
-    const p=byId[n.parent]; return `<line x1="${p.x}" y1="${p.y}" x2="${n.x}" y2="${n.y}" stroke="rgba(244,241,232,0.22)" stroke-width="2"/>`;
+    const p=byId[n.parent]; return `<line x1="${p.x}" y1="${p.y}" x2="${n.x}" y2="${n.y}" stroke="#8A8F94" stroke-width="2"/>`;
   }).join('');
 }
 
@@ -2032,7 +2056,7 @@ function donutSVG(segs){
     acc += len; return el;
   }).join('');
   return `<svg viewBox="0 0 140 140" style="width:150px;height:150px;flex:0 0 auto">
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(244,241,232,0.08)" stroke-width="${sw}"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--track)" stroke-width="${sw}"/>
     ${arcs}
     <text x="70" y="67" text-anchor="middle" style="font-family:'Roboto Slab',serif;font-weight:800;font-size:15px;fill:var(--foam)">${fmt(total)}</text>
     <text x="70" y="83" text-anchor="middle" style="font-family:'IBM Plex Mono',monospace;font-size:8px;fill:var(--muted)">gasto/mês</text>
@@ -2307,6 +2331,7 @@ document.getElementById('cartaoClear').onclick=()=>{ state.custo.cartao={ total:
 
 /* ================= MENU CENTRAL + TEMA ================= */
 const SECTIONS = [
+  {tab:'inicio',     emoji:'🏠', label:'Início',   cor:'#F2A93B'},
   {tab:'financeira', emoji:'🧭', label:'Rota',     cor:'#7FB2C8'},
   {tab:'custo',      emoji:'💵', label:'Custo',    cor:'#4FB477'},
   {tab:'mapa',       emoji:'🗺️', label:'Mapa',     cor:'#9B8CFF'},
@@ -2341,13 +2366,113 @@ function toggleTheme(){ setTheme(currentTheme()==='light'?'dark':'light'); }
 function updateThemeLbl(){ const el=document.getElementById('menuThemeLbl'); if(el) el.textContent = currentTheme()==='light'?'Tema: Claro':'Tema: Escuro'; }
 function initMenuUI(){
   document.getElementById('menuBtn').onclick=openMenu;
+  const pt=document.getElementById('pageTitle'); if(pt){ pt.style.cursor='pointer'; pt.title='Voltar ao início'; pt.onclick=()=>switchTab('inicio'); }
   document.getElementById('menuClose').onclick=closeMenu;
   document.getElementById('menuOverlay').onclick=(e)=>{ if(e.target.id==='menuOverlay') closeMenu(); };
   document.getElementById('menuTheme').onclick=toggleTheme;
   document.getElementById('menuConta').onclick=()=>{ closeMenu(); renderConta(); document.getElementById('accountModal').classList.add('show'); };
 }
 
-function renderAll(){ seedMapIfEmpty(); renderFinanceira(); renderCusto(); renderDiario(); renderMent(); renderAmbiente(); renderMetas(); renderAlvos(); renderRenda(); renderConta(); drawMap(); }
+/* ================= INÍCIO (resumo + insights dos dados) ================= */
+function primeiroNome(){
+  if(fb.user){ const n=(fb.user.displayName||'').trim(); if(n) return n.split(' ')[0]; const e=(fb.user.email||'').split('@')[0]; if(e) return e.charAt(0).toUpperCase()+e.slice(1); }
+  return '';
+}
+function saudacao(){ const h=new Date().getHours(); return h<12?'Bom dia':h<18?'Boa tarde':'Boa noite'; }
+
+function gerarInsights(){
+  const c = calcular();               // meta
+  const cv = calcCusto();             // custo
+  const ins = [];
+  // 1) gasto maior que renda (urgente)
+  if(cv.rendaTotal>0 && cv.sobra<0){
+    ins.push({p:100,tone:'bad',ic:'🚨',txt:`Vocês estão gastando <b>${fmt(-cv.sobra)}</b> a mais do que ganham por mês. Ver em Custo onde cortar.`,go:'custo'});
+  }
+  // 2) maior categoria acima da referência -> economia + antecipa meta
+  if(cv.rendaTotal>0){
+    const over = CAT_KEYS.map(k=>({k, ex: cv.porCat[k]-CAT[k].ideal*cv.rendaTotal})).filter(o=>o.ex>0).sort((a,b)=>b.ex-a.ex)[0];
+    if(over && over.ex>50){
+      const novoAporte=(Number(state.inputs.aporte)||0)+over.ex;
+      const falta=Math.max(c.entradaApto-c.reserva,0);
+      const antes=isFinite(c.mesesA)?c.mesesA:null;
+      const dep=novoAporte>0?Math.ceil(falta/novoAporte):null;
+      const ganho=(antes&&dep)?antes-dep:0;
+      ins.push({p:80,tone:'',ic:'💡',txt:`Cortando <b>${CAT[over.k].nome}</b> até a referência sobram <b>${fmt(over.ex)}/mês</b>${ganho>0?` — isso antecipa o apartamento em ~<b>${ganho} ${ganho===1?'mês':'meses'}</b>`:''}.`,go:'custo'});
+    }
+  }
+  // 3) ETA da meta
+  if(isFinite(c.mesesA) && c.reserva<c.entradaApto){
+    ins.push({p:70,tone:'',ic:'🎯',txt:`No aporte de hoje (<b>${fmt(c.aporte)}/mês</b>), a entrada do apto chega em <b>${dateLabel(c.mesesA)}</b> (faltam ${monthsLabel(c.mesesA)}).`,go:'financeira'});
+  } else if(c.reserva>=c.entradaApto && c.entradaApto>0){
+    ins.push({p:95,tone:'good',ic:'🎉',txt:`Vocês já têm a entrada do apartamento! Hora de partir pra compra.`,go:'financeira'});
+  }
+  // 4) ritmo real x planejado (diário)
+  const dl=[...state.diario]; if(dl.length){
+    const media=dl.reduce((s,e)=>s+(Number(e.valor)||0),0)/dl.length;
+    const dif=media-(Number(state.inputs.aporte)||0);
+    if(dif>50) ins.push({p:60,tone:'good',ic:'📈',txt:`Vocês guardaram em média <b>${fmt(media)}/mês</b> — acima do plano. Dá pra subir o aporte e chegar antes.`,go:'diario'});
+    else if(dif<-50) ins.push({p:65,tone:'bad',ic:'📉',txt:`O ritmo real (<b>${fmt(media)}/mês</b>) está abaixo do aporte planejado. Vale ajustar o plano pra ficar honesto.`,go:'diario'});
+  }
+  // 5) reserva de emergência
+  if(cv.gastoTotal>0){
+    const meses=(Number(state.inputs.reserva)||0)/cv.gastoTotal;
+    if(meses<3) ins.push({p:55,tone:'',ic:'🛟',txt:`Sua reserva cobre <b>${meses.toFixed(1)} ${meses===1?'mês':'meses'}</b> de gasto. O ideal é ter de 3 a 6 (${fmt(cv.gastoTotal*3)}–${fmt(cv.gastoTotal*6)}).`,go:'custo'});
+  }
+  // 6) ações paradas no mapa
+  const acoes=state.mapa.nodes.filter(n=>['tarefa','submeta','estudo'].includes(n.tipo)&&n.status!=='done');
+  if(acoes.length) ins.push({p:50,tone:'',ic:'🗺️',txt:`Você tem <b>${acoes.length} ${acoes.length===1?'ação parada':'ações paradas'}</b> no mapa. A próxima: "${escapeHtml(acoes[0].titulo)}".`,go:'mapa'});
+  // 7) alvo principal x meta
+  const alvoP=state.alvos.find(a=>a.alvo);
+  if(alvoP && alvoP.preco>0 && Math.abs(alvoP.preco-(Number(state.inputs.valorApto)||0))>1000){
+    ins.push({p:45,tone:'',ic:'🏢',txt:`Seu alvo "${escapeHtml(alvoP.titulo)}" custa <b>${fmt(alvoP.preco)}</b>, diferente do valor usado na meta. Vale alinhar.`,go:'alvos'});
+  }
+  // 8) taxa de poupança boa
+  if(cv.rendaTotal>0){ const t=cv.sobra/cv.rendaTotal; if(t>=0.2) ins.push({p:40,tone:'good',ic:'✅',txt:`Ótima taxa de poupança: <b>${Math.round(t*100)}%</b> da renda sobra. Vocês estão no caminho.`,go:'custo'}); }
+  // fallback se ainda vazio
+  if(!ins.length) ins.push({p:1,tone:'',ic:'👋',txt:'Preencha a <b>Renda</b> e as <b>Despesas</b> no Custo para o app começar a te dar dicas com base nos seus números.',go:'custo'});
+  return ins.sort((a,b)=>b.p-a.p).slice(0,4);
+}
+
+function renderInicio(){
+  const el=document.getElementById('inicioBody'); if(!el) return;
+  const nome=primeiroNome();
+  const c=calcular(), cv=calcCusto();
+  const metasFeitos=state.metas.filter(m=>m.status==='done').length;
+  const proximo=[...state.metas].sort((a,b)=>(a.data||'9999')<(b.data||'9999')?-1:1).find(m=>m.status!=='done');
+  const acoes=state.mapa.nodes.filter(n=>['tarefa','submeta','estudo'].includes(n.tipo)&&n.status!=='done').length;
+  const alvoP=state.alvos.find(a=>a.alvo);
+  const dl=[...state.diario]; const mediaDia=dl.length?dl.reduce((s,e)=>s+(Number(e.valor)||0),0)/dl.length:0;
+
+  const card=(go,ic,cor,top,big,small)=>`<button class="home-card" data-go="${go}">
+    <div class="hc-top"><span class="hc-ic" style="background:${cor}2b;color:${cor}">${ic}</span>${top}</div>
+    <div class="hc-big">${big}</div><div class="hc-small">${small}</div></button>`;
+
+  const insights=gerarInsights();
+  el.innerHTML=`
+    <p class="hi">${saudacao()}${nome?', '+escapeHtml(nome):''} 👋</p>
+    <p class="hi-sub">Aqui está o resumo do plano de vocês hoje.</p>
+
+    <div class="panel" style="border-color:${cv.sobra>=0?'var(--green)':'var(--coral)'}">
+      <h2>🔮 Seus insights<span class="hint">Gerados a partir dos seus números — mudam conforme vocês atualizam.</span></h2>
+      ${insights.map(i=>`<div class="insight ${i.tone}" data-go="${i.go}" style="cursor:pointer"><span class="ic">${i.ic}</span><span>${i.txt}</span></div>`).join('')}
+    </div>
+
+    <div class="home-grid">
+      ${card('financeira','🎯','#7FB2C8','Meta do apto',`${Math.round(c.progressoA*100)}%`, c.reserva>=c.entradaApto?'entrada alcançada 🎉':`chega em ${isFinite(c.mesesA)?dateLabel(c.mesesA):'—'}`)}
+      ${card('custo','💵',cv.sobra>=0?'#4FB477':'#E8563F','Sobra no mês', fmt(cv.sobra), cv.rendaTotal>0?`de ${fmt(cv.rendaTotal)} que entram`:'preencha o custo')}
+      ${card('diario','📓','#7FB2C8','Ritmo', dl.length?fmt(mediaDia):'—', dl.length?`média em ${dl.length} ${dl.length===1?'mês':'meses'}`:'sem registros ainda')}
+      ${card('metas','🚩','#E8563F','Marcos', `${metasFeitos}/${state.metas.length}`, proximo?`próximo: ${escapeHtml(proximo.titulo)}`:'sem marcos')}
+      ${card('mapa','🗺️','#9B8CFF','Ações no mapa', String(acoes), acoes?'pendentes':'tudo em dia')}
+      ${card('alvos','🏢','#F2A93B','Alvo', alvoP?escapeHtml((alvoP.titulo||'').slice(0,16)):'—', alvoP&&alvoP.preco?fmt(alvoP.preco):'defina um alvo')}
+    </div>
+
+    <button class="btn ghost" id="inicioMenu" style="width:100%">☰ Abrir tudo do app</button>`;
+
+  el.querySelectorAll('[data-go]').forEach(b=> b.onclick=()=> switchTab(b.dataset.go));
+  const im=document.getElementById('inicioMenu'); if(im) im.onclick=openMenu;
+}
+
+function renderAll(){ renderInicio(); seedMapIfEmpty(); renderFinanceira(); renderCusto(); renderDiario(); renderMent(); renderAmbiente(); renderMetas(); renderAlvos(); renderRenda(); renderConta(); drawMap(); }
 
 /* ---------------- Instalação (PWA) ---------------- */
 let deferredPrompt;
@@ -2379,7 +2504,7 @@ if('serviceWorker' in navigator){
   document.getElementById('gData').value = currentYM();
   fillInputs();
   renderAll();
-  try{ const t = localStorage.getItem('rota-vida:tab'); if(t && META[t]) switchTab(t); }catch(e){}
+  switchTab('inicio'); // sempre abre na tela de boas-vindas
   // Login/nuvem: mostra o gate e tenta iniciar o Firebase (sessao fica salva entre aberturas)
   initGateUI();
   initAccountUI();

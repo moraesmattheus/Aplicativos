@@ -147,6 +147,14 @@ Cada usuário começa no **próprio espaço**. Para o casal compartilhar:
 No **Mapa**, cada nó tem um "＋" para criar um nó-filho ligado a ele ali mesmo,
 e um "🔍" que abre uma pesquisa na web sobre aquele tópico.
 
+## Início (boas-vindas)
+
+O app abre numa tela de **Início** com uma saudação, um **resumo de todas as
+áreas** (meta, sobra do mês, ritmo, marcos, ações do mapa, alvo) e um bloco de
+**insights gerados a partir dos números de vocês** — não são dicas genéricas:
+mudam conforme os dados (ex.: "cortando Moradia sobram R$X e antecipa a meta em
+~1 mês", "você tem 2 ações paradas no mapa"). Tocar em qualquer card leva à aba.
+
 ## Navegação e tema
 
 - A barra de baixo tem 4 atalhos (Rota, Custo, Mapa, Metas) e um **botão central
