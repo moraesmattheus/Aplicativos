@@ -2464,12 +2464,9 @@ function renderInicio(){
       ${card('metas','🚩','#E8563F','Marcos', `${metasFeitos}/${state.metas.length}`, proximo?`próximo: ${escapeHtml(proximo.titulo)}`:'sem marcos')}
       ${card('mapa','🗺️','#9B8CFF','Ações no mapa', String(acoes), acoes?'pendentes':'tudo em dia')}
       ${card('alvos','🏢','#F2A93B','Alvo', alvoP?escapeHtml((alvoP.titulo||'').slice(0,16)):'—', alvoP&&alvoP.preco?fmt(alvoP.preco):'defina um alvo')}
-    </div>
-
-    <button class="btn ghost" id="inicioMenu" style="width:100%">☰ Abrir tudo do app</button>`;
+    </div>`;
 
   el.querySelectorAll('[data-go]').forEach(b=> b.onclick=()=> switchTab(b.dataset.go));
-  const im=document.getElementById('inicioMenu'); if(im) im.onclick=openMenu;
 }
 
 function renderAll(){ renderInicio(); seedMapIfEmpty(); renderFinanceira(); renderCusto(); renderDiario(); renderMent(); renderAmbiente(); renderMetas(); renderAlvos(); renderRenda(); renderConta(); drawMap(); }
