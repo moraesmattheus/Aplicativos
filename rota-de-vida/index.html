@@ -1934,15 +1934,31 @@ function renderConta(){
 
 /* ================= CUSTO DE VIDA ================= */
 const CAT = {
-  moradia:     { nome:'Moradia',            emoji:'🏠', ideal:0.30, grupo:'need' },
-  alimentacao: { nome:'Alimentação',        emoji:'🍽️', ideal:0.15, grupo:'need' },
-  contas:      { nome:'Contas (luz/água/net)', emoji:'💡', ideal:0.10, grupo:'need' },
-  transporte:  { nome:'Transporte',         emoji:'🚗', ideal:0.12, grupo:'need' },
-  saude:       { nome:'Saúde',              emoji:'💊', ideal:0.08, grupo:'need' },
-  lazer:       { nome:'Lazer/Diversão',     emoji:'🎉', ideal:0.10, grupo:'want' },
-  parcelas:    { nome:'Parcelas/Dívidas',   emoji:'💳', ideal:0.10, grupo:'need' },
-  outros:      { nome:'Outros',             emoji:'📦', ideal:0.05, grupo:'want' }
+  moradia:     { nome:'Moradia',            emoji:'🏠', ideal:0.30, grupo:'need', cor:'#7FB2C8' },
+  alimentacao: { nome:'Alimentação',        emoji:'🍽️', ideal:0.15, grupo:'need', cor:'#F2A93B' },
+  contas:      { nome:'Contas (luz/água/net)', emoji:'💡', ideal:0.10, grupo:'need', cor:'#9B8CFF' },
+  transporte:  { nome:'Transporte',         emoji:'🚗', ideal:0.12, grupo:'need', cor:'#4FB477' },
+  saude:       { nome:'Saúde',              emoji:'💊', ideal:0.08, grupo:'need', cor:'#E8563F' },
+  lazer:       { nome:'Lazer/Diversão',     emoji:'🎉', ideal:0.10, grupo:'want', cor:'#E8A0C8' },
+  parcelas:    { nome:'Parcelas/Dívidas',   emoji:'💳', ideal:0.10, grupo:'need', cor:'#C77DBB' },
+  outros:      { nome:'Outros',             emoji:'📦', ideal:0.05, grupo:'want', cor:'#8FA3AA' }
 };
+function donutSVG(segs){
+  const total = segs.reduce((s,x)=>s+x.value,0);
+  if(total<=0) return '';
+  const r=54, cx=70, cy=70, sw=26, C=2*Math.PI*r; let acc=0;
+  const arcs = segs.map(s=>{
+    const len = (s.value/total)*C;
+    const el = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${sw}" stroke-dasharray="${len.toFixed(2)} ${(C-len).toFixed(2)}" stroke-dashoffset="${(-acc).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`;
+    acc += len; return el;
+  }).join('');
+  return `<svg viewBox="0 0 140 140" style="width:150px;height:150px;flex:0 0 auto">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(244,241,232,0.08)" stroke-width="${sw}"/>
+    ${arcs}
+    <text x="70" y="67" text-anchor="middle" style="font-family:'Roboto Slab',serif;font-weight:800;font-size:15px;fill:#F4F1E8">${fmt(total)}</text>
+    <text x="70" y="83" text-anchor="middle" style="font-family:'IBM Plex Mono',monospace;font-size:8px;fill:#9fb0b5">gasto/mês</text>
+  </svg>`;
+}
 const CAT_KEYS = Object.keys(CAT);
 
 function calcCusto(){
@@ -1967,22 +1983,29 @@ function renderCusto(){
   const c = calcCusto();
   const aporteAtual = Number(state.inputs.aporte)||0;
 
-  // ---- Dashboard hero ----
-  const sobraCls = c.sobra>=0 ? 'green' : 'coral';
+  // ---- Dashboard hero (linguagem simples) ----
+  const taxa = c.rendaTotal>0 ? c.sobra/c.rendaTotal : 0;
+  const gastoPer100 = c.rendaTotal>0 ? Math.round(c.pctGasto*100) : 0;
+  const guardaPer100 = Math.max(0, 100 - gastoPer100);
+  let sit, sitCls, sitEmoji;
+  if(c.rendaTotal<=0){ sit='Falta preencher'; sitCls='amber'; sitEmoji='✍️'; }
+  else if(c.sobra<0){ sit='No vermelho'; sitCls='coral'; sitEmoji='🔴'; }
+  else if(taxa<0.1){ sit='Apertado'; sitCls='amber'; sitEmoji='🟡'; }
+  else { sit='Tranquilo'; sitCls='green'; sitEmoji='🟢'; }
   document.getElementById('custoDash').innerHTML = `
     <div class="verdict" style="margin-bottom:16px">
-      <div class="vtop"><span class="vlabel">Resumo do mês</span>
-        <span class="chip ${sobraCls}">${c.rendaTotal>0?Math.round(c.pctGasto*100)+'% da renda gasto':'defina a renda'}</span></div>
-      <p class="vroute" style="font-size:20px">Sobra: <em style="color:${c.sobra>=0?'var(--green)':'var(--coral)'}">${fmt(c.sobra)}</em><span style="font-size:13px;color:var(--muted)">/mês</span></p>
-      <p class="vwhen">Renda do casal <b>${fmt(c.rendaTotal)}</b> · gastos <b>${fmt(c.gastoTotal)}</b></p>
+      <div class="vtop"><span class="vlabel">Como estão as contas</span>
+        <span class="chip ${sitCls}">${sitEmoji} ${sit}</span></div>
+      <p class="vroute" style="font-size:20px">Sobra <em style="color:${c.sobra>=0?'var(--green)':'var(--coral)'}">${fmt(c.sobra)}</em> <span style="font-size:13px;color:var(--muted)">por mês</span></p>
+      ${ c.rendaTotal>0 ? `<p class="vwhen" style="font-size:15px">De cada <b>R$ 100</b> que entram, vocês gastam <b>R$ ${gastoPer100}</b> e ${c.sobra>=0?`guardam <b>R$ ${guardaPer100}</b>`:`<b style="color:var(--coral)">faltam R$ ${gastoPer100-100}</b>`}.</p>` : '' }
       <p class="vsub">${ c.sobra>0
-        ? `Essa sobra é o combustível da meta. Hoje seu aporte na Rota é ${fmt(aporteAtual)}.`
-        : (c.rendaTotal>0 ? '⚠️ Vocês estão gastando tudo (ou mais) que ganham. Veja abaixo onde cortar.' : 'Adicione a renda e as despesas para ver o resumo.') }</p>
-      ${ c.sobra>0 ? `<button class="btn sm" id="usarSobra" style="margin-top:10px">Usar a sobra (${fmt(c.sobra)}) como aporte da meta</button>` : '' }
+        ? `Essa sobra é o que faz a meta andar. Hoje o valor que vai pra meta (aporte) é ${fmt(aporteAtual)}.`
+        : (c.rendaTotal>0 ? 'Vocês estão gastando tudo (ou mais) do que ganham. Veja abaixo onde dá pra cortar.' : 'Preencha a renda de cada um e as despesas para ver o resumo.') }</p>
+      ${ c.sobra>0 ? `<button class="btn sm" id="usarSobra" style="margin-top:10px">Colocar a sobra (${fmt(c.sobra)}) na meta</button>` : '' }
     </div>
     <div class="kpi">
-      <div class="box"><div class="n">${fmt(c.rendaTotal)}</div><div class="l">Renda do casal</div></div>
-      <div class="box"><div class="n">${fmt(c.gastoTotal)}</div><div class="l">Gasto total</div></div>
+      <div class="box"><div class="n">${fmt(c.rendaTotal)}</div><div class="l">Entra por mês</div></div>
+      <div class="box"><div class="n">${fmt(c.gastoTotal)}</div><div class="l">Sai por mês</div></div>
       <div class="box"><div class="n" style="color:${c.sobra>=0?'var(--green)':'var(--coral)'}">${fmt(c.sobra)}</div><div class="l">Sobra p/ meta</div></div>
     </div>`;
   const us=document.getElementById('usarSobra');
@@ -1992,29 +2015,56 @@ function renderCusto(){
   let catsHtml='';
   if(c.rendaTotal>0){
     const needP=Math.round(c.need/c.rendaTotal*100), wantP=Math.round(c.want/c.rendaTotal*100), saveP=Math.max(0,100-needP-wantP);
-    catsHtml += `<div class="panel"><h2>Regra 50 / 30 / 20<span class="hint">Necessidades 50% · Desejos 30% · Poupança 20% (referência).</span></h2>
+    catsHtml += `<div class="panel"><h2>Divisão do dinheiro<span class="hint">Uma boa referência: metade para contas essenciais, um terço para gostos, e o resto guardado.</span></h2>
       <div class="split">
         <div class="need" style="width:${Math.max(needP,6)}%">${needP}%</div>
         <div class="want" style="width:${Math.max(wantP,6)}%">${wantP}%</div>
         <div class="save" style="width:${Math.max(saveP,6)}%">${saveP}%</div>
       </div>
-      <div class="split-legend"><span>Necessidades ${fmt(c.need)}</span><span>Desejos ${fmt(c.want)}</span><span>Sobra ${fmt(Math.max(0,c.sobra))}</span></div>
+      <div class="split-legend"><span>🔵 Essenciais ${fmt(c.need)}</span><span>🟡 Gostos ${fmt(c.want)}</span><span>🟢 Guardado ${fmt(Math.max(0,c.sobra))}</span></div>
+      <p class="sub" style="font-size:11.5px;margin-top:8px">Referência saudável: 50% essenciais · 30% gostos · 20% guardado.</p>
     </div>`;
   }
-  // categorias com benchmark
-  const catRows = CAT_KEYS.filter(k=>c.porCat[k]>0).sort((a,b)=>c.porCat[b]-c.porCat[a]).map(k=>{
+  // gráfico de pizza (rosca) + legenda
+  const usados = CAT_KEYS.filter(k=>c.porCat[k]>0).sort((a,b)=>c.porCat[b]-c.porCat[a]);
+  const segs = usados.map(k=>({ label:CAT[k].nome, value:c.porCat[k], color:CAT[k].cor }));
+  let pizzaHtml='';
+  if(segs.length){
+    const totalSeg = segs.reduce((s,x)=>s+x.value,0);
+    const legenda = usados.map(k=>{
+      const val=c.porCat[k], pct=totalSeg>0?Math.round(val/totalSeg*100):0;
+      return `<div style="display:flex;align-items:center;gap:8px;font-size:13px;padding:3px 0">
+        <span style="width:11px;height:11px;border-radius:3px;background:${CAT[k].cor};flex:0 0 auto"></span>
+        <span style="flex:1">${CAT[k].emoji} ${CAT[k].nome}</span>
+        <b style="font-family:'IBM Plex Mono',monospace">${fmt(val)}</b>
+        <span style="color:var(--muted);width:38px;text-align:right">${pct}%</span>
+      </div>`;
+    }).join('');
+    pizzaHtml = `<div class="panel"><h2>Para onde vai o dinheiro</h2>
+      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:center">
+        ${donutSVG(segs)}
+        <div style="flex:1 1 200px;min-width:180px">${legenda}</div>
+      </div></div>`;
+  }
+  // categorias com semáforo e texto simples
+  const catRows = usados.map(k=>{
     const val=c.porCat[k], ideal=CAT[k].ideal*c.rendaTotal;
     const pct = c.rendaTotal>0 ? val/c.rendaTotal : 0;
-    const over = c.rendaTotal>0 && val>ideal;
+    const razao = ideal>0 ? val/ideal : 0;
+    let luz, txt, cls;
+    if(c.rendaTotal<=0){ luz='⚪'; txt=''; cls='ok'; }
+    else if(razao<=1){ luz='🟢'; txt='tranquilo'; cls='ok'; }
+    else if(razao<=1.25){ luz='🟡'; txt='um pouco alto'; cls='over'; }
+    else { luz='🔴'; txt='muito alto — dá pra cortar'; cls='over'; }
     const barW = Math.min(100, Math.round(pct*100));
     const markW = c.rendaTotal>0 ? Math.min(100, Math.round(CAT[k].ideal*100)) : 0;
     return `<div class="catrow">
-      <div class="cathead"><span>${CAT[k].emoji} ${CAT[k].nome}</span><b>${fmt(val)} · ${Math.round(pct*100)}%</b></div>
-      <div class="catbar"><div class="fill ${over?'over':'ok'}" style="width:${barW}%"></div>${c.rendaTotal>0?`<div class="catmark" style="left:${markW}%"></div>`:''}</div>
-      <div class="catmeta"><span>${over?'⚠️ acima da referência':'dentro da referência'}</span><span>ideal ≤ ${fmt(ideal)} (${Math.round(CAT[k].ideal*100)}%)</span></div>
+      <div class="cathead"><span>${CAT[k].emoji} ${CAT[k].nome}</span><b>${fmt(val)}</b></div>
+      <div class="catbar"><div class="fill ${cls}" style="width:${barW}%"></div>${c.rendaTotal>0?`<div class="catmark" style="left:${markW}%"></div>`:''}</div>
+      <div class="catmeta"><span>${luz} ${txt}</span>${c.rendaTotal>0?`<span>dá pra gastar até ${fmt(ideal)}</span>`:''}</div>
     </div>`;
   }).join('');
-  document.getElementById('custoCategorias').innerHTML = catsHtml + (catRows?`<div class="panel"><h2>Para onde vai o dinheiro</h2>${catRows}</div>`:'');
+  document.getElementById('custoCategorias').innerHTML = catsHtml + pizzaHtml + (catRows?`<div class="panel"><h2>Cada categoria por dentro<span class="hint">🟢 ok · 🟡 um pouco alto · 🔴 dá pra cortar. A risquinha branca é a sugestão.</span></h2>${catRows}</div>`:'');
 
   // ---- Insights: onde economizar ----
   const ins=[];
