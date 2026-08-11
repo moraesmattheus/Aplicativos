@@ -18,6 +18,26 @@
 
 ---
 
+## [2026-08-11] — Claude (Opus 5) — Verificação de saúde + correção do preview web (SSR)
+
+- **O QUE:** verificar se o app está pronto para rodar (typecheck + bundles web/android) e corrigir
+  o preview web, que estava quebrando com erro 500.
+- **ONDE / MUDOU:**
+  - ALTERADO **`app.json`** → `expo.web.output`: `"static"` → **`"single"`** (1 linha).
+- **POR QUÊ:** **bug comprovado.** Com `output: "static"`, o Expo Router faz *static rendering* (SSR
+  em Node) do HTML; esse bundle de servidor quebrava com
+  `TypeError: React.default.createContext is not a function` (interop CJS/ESM do React 19.2.3 dentro
+  de `@expo/cli/node_modules/@expo/router-server/node/render.js`), devolvendo **HTTP 500** em
+  `localhost:8081`. Com `"single"` o web vira SPA (o que faz sentido num app nativo-first): passou a
+  responder **HTTP 200**. Não afeta Android/iOS nem o build EAS — `web.output` só controla o alvo web.
+- **VERIFICADO:**
+  - `npx tsc --noEmit` → **0 erros**.
+  - Bundle **android** (`expo-router/entry`, platform=android) → **200**, ~8,9 MB, sem erro.
+  - Bundle **web** (platform=web) → **200**, ~7,3 MB, sem erro; `/` → **200** com HTML do app.
+- **STATUS:** ok, tsc limpo. App pronto para rodar.
+
+---
+
 ## [2026-08-11] — Claude (Opus 4.8) — Doc de estrutura + limpeza de lixo
 
 - **O QUE:** documentar o que é cada pasta/arquivo e remover lixo.

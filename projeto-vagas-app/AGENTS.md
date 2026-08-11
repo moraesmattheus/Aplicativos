@@ -16,9 +16,13 @@
 > Esta é a primeira coisa que qualquer IA deve ler e a última que deve atualizar.
 > Escreva aqui, em 1 minuto, onde o trabalho parou e qual é o próximo passo concreto.
 
-- **Última sessão:** 2026-08-11 — Claude (Opus).
-- **Estado:** ✅ **Fase 1 completa e funcionando** (typecheck limpo, renderizou no web sem erros).
+- **Última sessão:** 2026-08-11 — Claude (Opus 5) — *health check* do projeto.
+- **Estado:** ✅ **Fase 1 completa e funcionando.** Verificado nesta sessão: `npx tsc --noEmit` →
+  **0 erros**; bundle **android** → 200 (~8,9 MB); bundle **web** → 200 (~7,3 MB); `localhost` → 200.
   Todas as 5 telas + Config prontas. App roda 100% local. `eas.json` + `app.json` prontos p/ APK.
+- **Correção desta sessão:** `app.json` → `web.output` era `"static"` (SSR) e quebrava o preview web
+  com HTTP 500 (`React.default.createContext is not a function`); virou **`"single"`** (SPA).
+  Não afeta Android nem o build EAS. Detalhes no `CHANGELOG.md`.
 - **📁 CANÔNICO — ÚNICO lugar (organizado em 2026-08-11):**
   **`C:\Users\matth\Downloads\Apps\apps-claude\projeto-vagas-app`** (repo GitHub
   `moraesmattheus/apps-claude`, ao lado do `rota-de-vida` — NÃO mexer no rota-de-vida).
