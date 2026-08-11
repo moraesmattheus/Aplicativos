@@ -1,0 +1,19 @@
+Leia e siga SEMPRE o arquivo AGENTS.md na raiz do projeto antes de qualquer alteração.
+
+AGENTS.md é o documento-mãe: visão do produto, estado atual (seção 0 = ONDE PARAMOS),
+arquitetura, regras de o que fazer / não fazer, decisões técnicas e roadmap.
+
+REGRA DE OURO (seção 0.2 do AGENTS.md): NÃO apague, sobrescreva ou reescreva código que já
+funciona — mudança = adição/extensão. Só alterar/remover existente se for BUG comprovado ou
+pedido do dono. E SEMPRE registre no CHANGELOG.md o que foi feito, onde, o que mudou e por quê,
+para que qualquer problema seja rastreável.
+
+Protocolo de sinergia entre IAs (resumo da seção 0.1 do AGENTS.md):
+- Continue de onde a IA anterior parou (não recomece do zero).
+- Respeite as decisões já tomadas; complemente em vez de reescrever o que funciona.
+- Ao terminar, atualize a seção 0 (onde parou / próximo passo) e o changelog (seção 9) do AGENTS.md.
+- Rode `npx tsc --noEmit` antes de concluir. Não quebre: alias `@/`, camada de storage,
+  filtro de Florianópolis, priorização por faixas, modo assistido de candidatura.
+
+Regras críticas: nunca fazer scraping de LinkedIn/Gupy/Solides; candidatura é assistida;
+nunca guardar senhas de terceiros (login só via Google/OAuth); nunca commitar chaves de API.
