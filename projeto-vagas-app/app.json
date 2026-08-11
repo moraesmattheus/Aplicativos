@@ -21,6 +21,8 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR",
+        "android.permission.READ_CALENDAR",
         "android.permission.WRITE_CALENDAR"
       ]
     },
@@ -55,6 +57,12 @@
         "projectId": "52475c96-764d-4fd5-86bf-24fae1319d98"
       }
     },
-    "owner": "moraesmattheus"
+    "owner": "moraesmattheus",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/52475c96-764d-4fd5-86bf-24fae1319d98"
+    }
   }
 }

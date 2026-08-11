@@ -1,0 +1,44 @@
+# Publica um update OTA (EAS Update) automaticamente a cada push que mexa no app.
+# Assim, mudanças de JS/telas caem no celular sem precisar de novo build.
+# Só dispara para a pasta projeto-vagas-app (não afeta o rota-de-vida).
+#
+# PRÉ-REQUISITO (uma vez): criar o secret EXPO_TOKEN no repositório
+#   GitHub → Settings → Secrets and variables → Actions → New repository secret
+#   Nome: EXPO_TOKEN   Valor: um Access Token criado em https://expo.dev (Account → Settings → Access tokens)
+
+name: EAS Update — Radar de Vagas
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'projeto-vagas-app/**'
+  workflow_dispatch: {}
+
+jobs:
+  update:
+    name: Publicar OTA
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projeto-vagas-app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Publicar update no canal preview
+        run: eas update --branch preview --message "${{ github.event.head_commit.message }}"

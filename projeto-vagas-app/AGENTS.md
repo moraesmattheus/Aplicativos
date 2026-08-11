@@ -24,11 +24,15 @@
   `moraesmattheus/apps-claude`, ao lado do `rota-de-vida` — NÃO mexer no rota-de-vida).
   A pasta `Downloads\Apps\emprego` foi **deletada** (era duplicata) e o `.git` aninhado do repo
   `emprego` foi removido. `modelo/` guarda os PDFs do blueprint. Não há mais cópias soltas.
-- **PENDENTE que depende do dono (login):**
-  - **`git push origin main`** no repo `apps-claude` — commits já feitos local, falta autenticar o GitHub.
-  - **Apagar o repo `github.com/moraesmattheus/emprego`** no GitHub (redundante; conteúdo já está aqui).
-  - **`eas build -p android --profile preview`** — conta Expo (grátis) → gera APK; OU publicar como
-    **PWA** no GitHub Pages (padrão do repo, igual rota-de-vida) para instalar pelo navegador.
+- **Push:** login GitHub já cacheado — **o agente consegue dar `git push` sozinho** agora.
+- **EAS/OTA:** projeto EAS `@moraesmattheus/projeto-vagas-app` criado; **EAS Update (OTA) ligado**
+  (canal `preview`). Fluxo alvo: push em `projeto-vagas-app/**` → GitHub Action `eas-update.yml` →
+  `eas update --branch preview` → app atualiza sozinho ao abrir (só JS; nativo pede rebuild).
+- **PENDENTE que depende do dono:**
+  - Criar o secret **`EXPO_TOKEN`** no GitHub (Settings → Secrets → Actions) p/ o Action publicar OTA.
+  - **Apagar o repo `github.com/moraesmattheus/emprego`** (redundante; conteúdo já está aqui).
+  - Instalar **1 vez** o APK com OTA (rebuild final) — depois disso, updates são automáticos.
+- Para publicar OTA manualmente: `eas update --branch preview -m "msg"` (rodar em projeto-vagas-app).
 - **PRÓXIMO PASSO sugerido (escolha um):**
   1. **Pegar o CV real do usuário** (área Marketing/Performance) e ajustar `DEFAULT_PROFILE`
      (`src/types.ts`) + dicionário (`src/services/skills.ts`) para o perfil verdadeiro.

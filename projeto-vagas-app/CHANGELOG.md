@@ -18,6 +18,25 @@
 
 ---
 
+## [2026-08-11] — Claude (Opus 4.8) — EAS Update (OTA): atualizar sem rebuildar
+
+- **O QUE:** habilitar **atualização over-the-air (OTA)** — mudanças de JS/telas caem no celular
+  **sem novo build**. (Pedido do dono: beta, builds demoram.)
+- **ONDE / MUDOU:**
+  - Instalado **`expo-updates`**; `eas update:configure` gravou `updates.url` +
+    `runtimeVersion {policy: appVersion}` no `app.json`, e `channel` (development/preview/production) no `eas.json`.
+  - Cancelado o build anterior (sem OTA) — será rebuildado **uma vez** com OTA.
+  - Adicionado **`.github/workflows/eas-update.yml`** (raiz do repo apps-claude): a cada push em
+    `projeto-vagas-app/**` roda `eas update --branch preview`. Filtro **não afeta o rota-de-vida**.
+- **POR QUÊ:** pedido do dono — atualizar o app sem ficar rebuildando no dev.
+- **PENDENTE p/ o dono:** criar o secret **`EXPO_TOKEN`** no GitHub (Settings → Secrets → Actions) para
+  o Action publicar. Token gerado em expo.dev → Account → Settings → Access tokens.
+- **COMO FICA:** depois de **1 rebuild** (instala 1 última vez), todo push com mudança de **JS/tela**
+  atualiza o app sozinho ao abrir. Mudança **nativa** (lib nativa, permissão, ícone) ainda pede rebuild.
+- **STATUS:** OTA configurado; falta o rebuild final do APK (disparado a seguir) e o secret EXPO_TOKEN.
+
+---
+
 ## [2026-08-11] — Claude (Opus 4.8) — EAS: projeto criado + build do APK
 
 - **O QUE:** configurar o EAS e gerar o APK instalável (Android).
