@@ -18,6 +18,24 @@
 
 ---
 
+## [2026-08-11] — Claude (Opus 4.8) — Organização: um lugar só, um repo só
+
+- **O QUE:** consolidar tudo em `apps-claude/projeto-vagas-app` e remover duplicatas/lixo (pedido do dono).
+- **ONDE / MUDOU (REMOÇÕES):**
+  - Removido o **`.git` aninhado** que estava dentro de `apps-claude/projeto-vagas-app/` — era um clone
+    do repo `github.com/moraesmattheus/emprego`. História preservada no GitHub; localmente virava confusão.
+  - Deletados **`backend/`, `data/`, `frontend/`** de `projeto-vagas-app/` — protótipo inicial já
+    substituído pelo app real (`src/services/matching.ts`, `src/data/sampleJobs.ts`) e documentado.
+  - Deletada a pasta duplicada **`C:\Users\matth\Downloads\Apps\emprego\`** inteira — era cópia
+    idêntica do app (verificado por diff: nada único, nada diferente).
+  - **MANTIDO:** `modelo/` (9 PDFs do fluxograma/blueprint — referência valiosa), agora rastreado no repo.
+- **POR QUÊ:** pedido do dono ("tudo em um único lugar; se for lixo digital, delete").
+- **PENDENTE p/ o dono:** apagar o repositório `github.com/moraesmattheus/emprego` (agora redundante —
+  conteúdo consolidado aqui). Só ele pode deletar repo no GitHub.
+- **STATUS:** ✅ Local limpo: `Downloads\Apps\` contém só `apps-claude`. `rota-de-vida` intocado. Falta push.
+
+---
+
 ## [2026-08-11] — Claude (Opus 4.8) — Integra no monorepo apps-claude
 
 - **O QUE:** mover o app para dentro do repositório existente `moraesmattheus/apps-claude`

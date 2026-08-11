@@ -19,13 +19,14 @@
 - **Última sessão:** 2026-08-11 — Claude (Opus).
 - **Estado:** ✅ **Fase 1 completa e funcionando** (typecheck limpo, renderizou no web sem erros).
   Todas as 5 telas + Config prontas. App roda 100% local. `eas.json` + `app.json` prontos p/ APK.
-- **📁 CANÔNICO (onde trabalhar):** este app agora vive no monorepo
-  **`apps-claude/projeto-vagas-app`** (repo GitHub `moraesmattheus/apps-claude`, ao lado do
-  `rota-de-vida` — NÃO mexer no rota-de-vida). Localmente:
-  `C:\Users\matth\Downloads\Apps\apps-claude\projeto-vagas-app`.
-  A cópia antiga em `Downloads\Apps\emprego\projeto-vagas-app` é leftover local (pode ignorar/apagar).
+- **📁 CANÔNICO — ÚNICO lugar (organizado em 2026-08-11):**
+  **`C:\Users\matth\Downloads\Apps\apps-claude\projeto-vagas-app`** (repo GitHub
+  `moraesmattheus/apps-claude`, ao lado do `rota-de-vida` — NÃO mexer no rota-de-vida).
+  A pasta `Downloads\Apps\emprego` foi **deletada** (era duplicata) e o `.git` aninhado do repo
+  `emprego` foi removido. `modelo/` guarda os PDFs do blueprint. Não há mais cópias soltas.
 - **PENDENTE que depende do dono (login):**
-  - **`git push origin main`** no repo `apps-claude` — commit já feito local, falta autenticar o GitHub.
+  - **`git push origin main`** no repo `apps-claude` — commits já feitos local, falta autenticar o GitHub.
+  - **Apagar o repo `github.com/moraesmattheus/emprego`** no GitHub (redundante; conteúdo já está aqui).
   - **`eas build -p android --profile preview`** — conta Expo (grátis) → gera APK; OU publicar como
     **PWA** no GitHub Pages (padrão do repo, igual rota-de-vida) para instalar pelo navegador.
 - **PRÓXIMO PASSO sugerido (escolha um):**
