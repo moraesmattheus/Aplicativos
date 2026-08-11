@@ -127,6 +127,9 @@ export default function Dashboard() {
           })
         )}
 
+        <Text style={[styles.footer, { color: c.textSecondary }]}>
+          Radar de Vagas · beta · v1.0.0 · 🔄 atualização automática (OTA) ativa
+        </Text>
         <View style={{ height: 24 }} />
       </ScrollView>
     </SafeAreaView>
@@ -191,4 +194,5 @@ const styles = StyleSheet.create({
   bestScore: { fontSize: 20, fontWeight: '800', width: 52 },
   bestText: { flex: 1, gap: 2 },
   bestTitle: { fontSize: 15, fontWeight: '700' },
+  footer: { textAlign: 'center', fontSize: 12, marginTop: 12 },
 });

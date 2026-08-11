@@ -38,6 +38,17 @@
 
 ---
 
+## [2026-08-11] — Claude (Opus 4.8) — Rodapé de versão (teste visível de OTA)
+
+- **O QUE:** adicionar um rodapé de versão/beta no Dashboard — útil em beta e serve como teste
+  visível do OTA (o dono vê a mudança chegar sozinha no app já instalado).
+- **ONDE / MUDOU:** `src/app/index.tsx` — ADICIONADO um `<Text>` de rodapé
+  ("Radar de Vagas · beta · v1.0.0 · atualização automática (OTA) ativa") + estilo `footer`.
+- **POR QUÊ:** validar o pipeline OTA ponta a ponta (push → Action/eas update → app atualiza).
+- **STATUS:** tsc 0 erros. Publicado no canal `preview`.
+
+---
+
 ## [2026-08-11] — Claude (Opus 4.8) — Doc de estrutura + limpeza de lixo
 
 - **O QUE:** documentar o que é cada pasta/arquivo e remover lixo.
