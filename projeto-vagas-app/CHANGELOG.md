@@ -18,6 +18,22 @@
 
 ---
 
+## [2026-08-11] — Claude (Opus 4.8) — Integra no monorepo apps-claude
+
+- **O QUE:** mover o app para dentro do repositório existente `moraesmattheus/apps-claude`
+  (onde já mora o `rota-de-vida`), como pedido pelo dono.
+- **ONDE / MUDOU:**
+  - Repo `apps-claude` clonado localmente em `C:\Users\matth\Downloads\Apps\apps-claude`.
+  - App copiado para a subpasta **`apps-claude/projeto-vagas-app/`** (sem `.git`/`node_modules`).
+  - Commit `791013a` no branch `main` — **só a pasta nova** (73 arquivos). `rota-de-vida`, `index.html`
+    e `README.md` da raiz **NÃO foram tocados** (verificado com `git status`).
+  - AGENTS.md seção 0 atualizada: local canônico agora é `apps-claude/projeto-vagas-app`.
+- **POR QUÊ:** pedido do dono (um repo, dois apps separados; não mexer no rota-de-vida).
+- **STATUS:** commit local ✅. **`git push` pendente** (autenticação do GitHub — o ambiente do agente
+  não faz login; o dono empurra pelo VS Code ou terminal). A cópia antiga em `emprego/` virou leftover.
+
+---
+
 ## [2026-08-11] — Claude (Opus 4.8) — Setup GitHub + EAS/APK
 
 - **O QUE:** preparar o versionamento no GitHub e o build do APK instalável.

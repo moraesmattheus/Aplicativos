@@ -18,11 +18,16 @@
 
 - **Última sessão:** 2026-08-11 — Claude (Opus).
 - **Estado:** ✅ **Fase 1 completa e funcionando** (typecheck limpo, renderizou no web sem erros).
-  Todas as 5 telas + Config prontas. App roda 100% local. **Git iniciado** (repo próprio,
-  1º commit `7fb8be0`). `eas.json` + `app.json` prontos para gerar APK.
+  Todas as 5 telas + Config prontas. App roda 100% local. `eas.json` + `app.json` prontos p/ APK.
+- **📁 CANÔNICO (onde trabalhar):** este app agora vive no monorepo
+  **`apps-claude/projeto-vagas-app`** (repo GitHub `moraesmattheus/apps-claude`, ao lado do
+  `rota-de-vida` — NÃO mexer no rota-de-vida). Localmente:
+  `C:\Users\matth\Downloads\Apps\apps-claude\projeto-vagas-app`.
+  A cópia antiga em `Downloads\Apps\emprego\projeto-vagas-app` é leftover local (pode ignorar/apagar).
 - **PENDENTE que depende do dono (login):**
-  - **Push ao GitHub** — precisa do login/repo dele. Comandos prontos no README/chat.
-  - **`eas build -p android --profile preview`** — precisa de conta Expo (grátis) → gera o APK baixável.
+  - **`git push origin main`** no repo `apps-claude` — commit já feito local, falta autenticar o GitHub.
+  - **`eas build -p android --profile preview`** — conta Expo (grátis) → gera APK; OU publicar como
+    **PWA** no GitHub Pages (padrão do repo, igual rota-de-vida) para instalar pelo navegador.
 - **PRÓXIMO PASSO sugerido (escolha um):**
   1. **Pegar o CV real do usuário** (área Marketing/Performance) e ajustar `DEFAULT_PROFILE`
      (`src/types.ts`) + dicionário (`src/services/skills.ts`) para o perfil verdadeiro.
