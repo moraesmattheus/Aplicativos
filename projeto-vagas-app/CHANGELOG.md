@@ -18,6 +18,19 @@
 
 ---
 
+## [2026-08-11] — Claude (Opus 4.8) — EAS: projeto criado + build do APK
+
+- **O QUE:** configurar o EAS e gerar o APK instalável (Android).
+- **ONDE / MUDOU:**
+  - `app.json` — ADICIONADO `extra.eas.projectId` = `52475c96-764d-4fd5-86bf-24fae1319d98`.
+  - Projeto EAS criado: **`@moraesmattheus/projeto-vagas-app`** (conta pessoal do dono).
+  - `npm install` rodado local nesta pasta (node_modules é gitignored, não vai pro repo).
+  - `eas build -p android --profile preview` disparado (perfil que gera `.apk`).
+- **POR QUÊ:** pedido do dono ("baixar o app no celular"). Login Expo feito pelo dono; sessão em `~/.expo`.
+- **STATUS:** build roda na nuvem da Expo (~10-20 min). Link do `.apk` sai ao final.
+
+---
+
 ## [2026-08-11] — Claude (Opus 4.8) — Organização: um lugar só, um repo só
 
 - **O QUE:** consolidar tudo em `apps-claude/projeto-vagas-app` e remover duplicatas/lixo (pedido do dono).
