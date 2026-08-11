@@ -18,6 +18,18 @@
 
 ---
 
+## [2026-08-11] — Claude (Opus 4.8) — Doc de estrutura + limpeza de lixo
+
+- **O QUE:** documentar o que é cada pasta/arquivo e remover lixo.
+- **ONDE / MUDOU:**
+  - ADICIONADO **`ESTRUTURA.md`** — guia anotado de cada pasta/arquivo + as 5 abas.
+  - REMOVIDO **`path/to/the_file.txt`** (pasta `path/`) — placeholder de tutorial (conteúdo: "Contents of
+    the file"), lixo acidental, estava untracked.
+- **POR QUÊ:** pedido do dono (entender a estrutura; e deletar lixo digital).
+- **STATUS:** ok.
+
+---
+
 ## [2026-08-11] — Claude (Opus 4.8) — EAS Update (OTA): atualizar sem rebuildar
 
 - **O QUE:** habilitar **atualização over-the-air (OTA)** — mudanças de JS/telas caem no celular
