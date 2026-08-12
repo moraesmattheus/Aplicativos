@@ -3,7 +3,6 @@
 // se não, mostra as correções antes.
 
 import { Ionicons } from '@expo/vector-icons';
-import * as DocumentPicker from 'expo-document-picker';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -31,6 +30,16 @@ export default function CurriculoScreen() {
   const escolherArquivo = async () => {
     setAviso(null);
     setResult(null);
+    // Carrega o seletor sob demanda: em APK antigo (sem o módulo nativo, ex.: via OTA)
+    // isso degrada com um aviso em vez de derrubar a tela. O "colar texto" abaixo é JS
+    // puro e funciona sempre.
+    let DocumentPicker: typeof import('expo-document-picker');
+    try {
+      DocumentPicker = require('expo-document-picker') as typeof import('expo-document-picker');
+    } catch {
+      setAviso('📱 A seleção de arquivo precisa de uma atualização do app (novo build). Por enquanto, cole o texto do currículo no campo abaixo — a análise funciona igual.');
+      return;
+    }
     try {
       const r = await DocumentPicker.getDocumentAsync({
         type: ['text/plain', 'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
