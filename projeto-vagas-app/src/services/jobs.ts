@@ -190,6 +190,53 @@ const arbeitnow: Source = {
   },
 };
 
+// Gupy — API pública do portal de vagas (sem chave). Cobre muitas empresas BR
+// que usam o Gupy como ATS. Endpoint público que alimenta o portal employability.
+const gupy: Source = {
+  nome: 'Gupy',
+  run: async (q) => {
+    type R = {
+      data?: {
+        id?: number;
+        name?: string;
+        careerPageName?: string;
+        companyName?: string;
+        jobUrl?: string;
+        careerPageUrl?: string;
+        workplaceType?: string; // 'remote' | 'on-site' | 'hybrid'
+        isRemoteWork?: boolean;
+        city?: string;
+        state?: string;
+        country?: string;
+        type?: string; // 'effective' (CLT) / 'internship' / ...
+        publishedDate?: string;
+        description?: string;
+      }[];
+    };
+    const url = `https://portal.api.gupy.io/api/v1/jobs?jobName=${encodeURIComponent(q.termo)}&limit=40&offset=0`;
+    const data = await fetchJSON<R>(url);
+    return (data.data ?? [])
+      .map((j) => {
+        const remoto = j.isRemoteWork === true || /remot/i.test(j.workplaceType ?? '');
+        const hibrido = /hybrid|h[íi]brid/i.test(j.workplaceType ?? '');
+        const local = remoto ? 'Remoto' : [j.city, j.state].filter(Boolean).join(', ') || 'Brasil';
+        return toJob({
+          id: `gupy:${j.id ?? normalize(j.name ?? '')}`,
+          source: 'gupy',
+          titulo: j.name ?? 'Vaga',
+          empresa: j.companyName || j.careerPageName || 'Empresa',
+          local,
+          modalidade: remoto ? 'Remoto' : hibrido ? 'Híbrido' : 'Presencial',
+          descricao: stripHtml(j.description ?? ''),
+          tipo: j.type,
+          link: j.jobUrl || j.careerPageUrl || '',
+          dataPublicacao: j.publishedDate,
+        });
+      })
+      .filter((j) => j.link);
+  },
+};
+
 // ------------------------------------------------------------------
 // Fontes com chave opcional
 // ------------------------------------------------------------------
@@ -214,10 +261,12 @@ const jsearch: Source = {
         job_posted_at_datetime_utc?: string;
       }[];
     };
-    const busca = q.remoto
-      ? `${q.termo} in ${q.cidade}, Brazil`
-      : `${q.termo} in ${q.cidade}, Brazil`;
-    const url = `https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(busca)}&page=1&num_pages=1`;
+    // Presencial/híbrido: foca na cidade. Remoto: busca no Brasil + remotas
+    // (o Google for Jobs já traz vagas mundiais remotas junto).
+    const busca = q.remoto ? `${q.termo} Brazil` : `${q.termo} in ${q.cidade}, Brazil`;
+    const params = new URLSearchParams({ query: busca, page: '1', num_pages: '1', country: 'br' });
+    if (q.remoto) params.set('work_from_home', 'true');
+    const url = `https://jsearch.p.rapidapi.com/search?${params.toString()}`;
     const data = await fetchJSON<R>(url, {
       headers: { 'X-RapidAPI-Key': s.jsearchKey, 'X-RapidAPI-Host': 'jsearch.p.rapidapi.com' },
     });
@@ -327,7 +376,7 @@ const jooble: Source = {
   },
 };
 
-const SOURCES: Source[] = [remotive, remoteok, arbeitnow, jsearch, adzuna, jooble];
+const SOURCES: Source[] = [remotive, remoteok, arbeitnow, gupy, jsearch, adzuna, jooble];
 
 // ------------------------------------------------------------------
 // API pública do módulo
