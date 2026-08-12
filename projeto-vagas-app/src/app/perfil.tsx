@@ -32,6 +32,15 @@ export default function PerfilScreen() {
     setSalvo(false);
   };
 
+  const toggleContratacao = (t: string) => {
+    setForm((f) => {
+      const atuais = f.tiposContratacao ?? [];
+      const novo = atuais.includes(t) ? atuais.filter((x) => x !== t) : [...atuais, t];
+      return { ...f, tiposContratacao: novo };
+    });
+    setSalvo(false);
+  };
+
   const salvar = async () => {
     await saveProfile({
       ...form,
@@ -80,10 +89,15 @@ export default function PerfilScreen() {
           ))}
         </View>
 
-        <Text style={[styles.label, { color: c.text }]}>Tipo de contratação</Text>
+        <Text style={[styles.label, { color: c.text }]}>Tipo de contratação (pode escolher mais de um)</Text>
         <View style={styles.chips}>
           {CONTRATACOES.map((t) => (
-            <Selectable key={t} label={t} active={form.tipoContratacao === t} onPress={() => set('tipoContratacao', t)} />
+            <Selectable
+              key={t}
+              label={t}
+              active={(form.tiposContratacao ?? []).includes(t)}
+              onPress={() => toggleContratacao(t)}
+            />
           ))}
         </View>
 

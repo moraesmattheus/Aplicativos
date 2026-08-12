@@ -129,7 +129,8 @@ export interface Profile {
   linkedin?: string;
   portfolio?: string;
   pretensaoSalarial?: string;
-  tipoContratacao?: string; // CLT / PJ / Estágio / Freelance
+  /** tipos de contratação aceitos (pode ser mais de um): CLT / PJ / Estágio / Freelance */
+  tiposContratacao?: string[];
 }
 
 export const DEFAULT_PROFILE: Profile = {
@@ -155,5 +156,5 @@ export const DEFAULT_PROFILE: Profile = {
   linkedin: '',
   portfolio: '',
   pretensaoSalarial: '',
-  tipoContratacao: 'CLT',
+  tiposContratacao: ['CLT', 'PJ'],
 };
