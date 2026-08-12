@@ -18,14 +18,16 @@
 
 - **Última sessão:** 2026-08-12 — Claude (Opus 4.8) — nova aba **Currículo (ATS)** (na `main`).
 - **Feito nesta sessão:** aba **Currículo** que sobe/cola o CV, dá um **score ATS 0-100**, lista o que
-  melhorar e, se aprovado (>=70), **preenche o Perfil sozinho**. Novos: `src/services/ats.ts` (motor
-  local, reaproveita `skills.ts`) e `src/app/curriculo.tsx`; registrada no `_layout.tsx`; dependência
-  `expo-document-picker` adicionada ao `package.json`. Commits granulares direto na `main` (pedido do dono).
+  melhorar e, se aprovado (>=70), **preenche o Perfil sozinho** — E leitura **real de PDF/DOCX** no
+  upload. Novos: `src/services/ats.ts` (motor de score, reaproveita `skills.ts`),
+  `src/services/documents.ts` (extrator PDF/DOCX com pako) e `src/app/curriculo.tsx`; registrada no
+  `_layout.tsx`; deps `expo-document-picker`, `pako`, `@types/pako`. Commits granulares na `main`.
 - **⚠️ PENDÊNCIA PRA RODAR:** este ambiente remoto está sem `node_modules`. Na máquina do dono:
-  `git pull origin main` → `npx expo install expo-document-picker` → `npm install` → `npx tsc --noEmit`
-  (validar) → `npm run web`. O `tsc` NÃO foi rodado nesta sessão.
-- **Limite conhecido:** PDF/DOCX no app é **best-effort** (sem extrator on-device confiável). `.txt`/
-  colar texto sempre funcionam; leitura profunda de PDF/DOCX fica pra **Fase 2 (Claude API no backend)**.
+  `git pull origin main` → `npx expo install expo-document-picker` → `npm install` (traz o pako) →
+  `npx tsc --noEmit` (validar) → `npm run web`. O `tsc` NÃO foi rodado nesta sessão.
+- **Limite que permanece:** PDF **escaneado (imagem)** ou com **fontes CID** ainda é ilegível
+  on-device (precisa OCR/CMap → **Fase 2 com Claude API**). `.txt`, DOCX e PDFs "de texto" funcionam;
+  quando não dá, o app avisa e pede pra colar.
 - **Sessão anterior (2026-08-11, Opus 5):** health check + correção do preview web
   (`app.json` `web.output`: `"static"` → `"single"`, bug de SSR/HTTP 500). Detalhes no `CHANGELOG.md`.
 - **📁 CANÔNICO — ÚNICO lugar (organizado em 2026-08-11):**
@@ -185,6 +187,7 @@ src/
 │   ├── matching.ts      # motor de compatibilidade + filtro de localização
 │   ├── skills.ts        # normalização/sinônimos/dicionário de skills
 │   ├── ats.ts           # motor de análise ATS do currículo (score + extração p/ o Perfil)
+│   ├── documents.ts     # extrator local de texto de PDF/DOCX (pako) usado no upload do CV
 │   ├── storage.ts       # persistência (AsyncStorage) + tipo Settings
 │   └── calendar.ts      # expo-calendar (Google Calendar do aparelho)
 ├── store/AppStore.tsx   # estado global (perfil, candidaturas, settings)

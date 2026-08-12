@@ -18,6 +18,33 @@
 
 ---
 
+## [2026-08-12] — Claude (Opus 4.8) — Leitura real de PDF/DOCX no upload do currículo
+
+- **O QUE:** deixar o upload de currículo ler **PDF e DOCX de verdade** no aparelho (antes era só
+  `fetch().text()`, que corrompe binário). Pedido do dono (opção "A").
+- **ONDE / MUDOU:**
+  - ADICIONADO **`src/services/documents.ts`** — extrator local:
+    - `extrairTextoPdf(bytes)`: varre os content streams do PDF, descomprime `FlateDecode` com **pako**
+      e extrai os operadores de texto (strings literais `(...)`, hex `<...>`, `Tj`/`TJ`, quebras por
+      `T*`/`ET`, espaços por `Td/TD/Tm`). Pula imagens (`/Image`, `DCTDecode`, `JPXDecode`).
+    - `extrairTextoDocx(bytes)`: lê o ZIP (diretório central), acha `word/document.xml`, faz
+      `inflateRaw` e remove as tags XML.
+    - `lerBytesDeUri(uri)`: bytes via `fetch().arrayBuffer()` → fallback `blob`+`FileReader` (dataURL)
+      → base64 (portável web+nativo, sem depender da versão do expo-file-system).
+    - `pareceTexto()` e decodificadores Latin1/UTF-8/base64.
+  - ALTERADO **`src/app/curriculo.tsx`** — `escolherArquivo` agora chama `extrairTextoDeArquivo`
+    (documents.ts) em vez do `fetch().text()` local (removida a função `lerArquivo` antiga, que só
+    servia para .txt). Adicionado estado `lendo` + spinner "Lendo arquivo..." e contagem de palavras.
+  - ALTERADO **`package.json`** — dependências `pako` (^2.1.0) + `@types/pako` (^2.0.3).
+- **POR QUÊ:** pedido do dono — tornar o "subir currículo" realmente útil com PDF/DOCX, sem backend.
+  A função `lerArquivo` removida era nova (do commit anterior desta mesma feature) e nunca lia binário;
+  foi substituída, não havia comportamento estável dependendo dela.
+- **LIMITE que permanece:** PDF **escaneado (imagem)** ou com **fontes CID embutidas** continua
+  ilegível on-device (precisaria de OCR/CMap — território da Fase 2 com Claude API). Nesses casos o
+  app detecta e pede pra colar o texto. `.txt`, DOCX e a maioria dos PDFs "de texto" funcionam.
+- **STATUS:** ⚠️ **tsc NÃO rodado** (ambiente remoto sem `node_modules`). Na máquina do dono:
+  `npx expo install expo-document-picker` + `npm install` (traz pako) + `npx tsc --noEmit` + `npm run web`.
+
 ## [2026-08-12] — Claude (Opus 4.8) — Nova aba "Currículo (ATS)" com score + auto-preenchimento
 
 - **O QUE:** adicionar ao app a capacidade de subir/colar o currículo, receber um **score ATS**
