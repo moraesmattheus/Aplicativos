@@ -21,8 +21,12 @@
 - **Fontes de vaga (2026-08-12):** adicionada **Gupy** (API pública, sem chave) e corrigido o JSearch
   (query BR + remoto). Google for Jobs (JSearch) cobre LinkedIn/Indeed/vagas.com/Catho/InfoJobs — dono
   vai criar contas grátis (JSearch/Adzuna/Jooble) e colar as chaves em Config. Multi-seleção de tipo
-  de contratação (`Profile.tiposContratacao: string[]`). **Fase 2 escolhida: IA grátis (Gemini/Groq)
-  em backend grátis (Cloudflare Workers)** — a construir.
+  de contratação (`Profile.tiposContratacao: string[]`).
+- **Fase 2 iniciada (2026-08-12):** backend de IA grátis em **`radar-vagas-backend/`** (raiz do repo) —
+  Cloudflare Worker + **Gemini** (`POST /cv`, lê texto ou PDF base64, devolve ATS + `resumoIA`; chave
+  = secret, nunca no app). App ligado via `src/services/ai.ts` + `Settings.aiBackendUrl` + botão
+  "Analisar com IA" na aba Currículo. **Falta o dono publicar o Worker** (ver `radar-vagas-backend/README.md`)
+  e colar a URL em Config. Próximo na Fase 2: geração de carta/CV e central de e-mails.
 - **Feito nesta sessão:** aba **Currículo** que sobe/cola o CV, dá um **score ATS 0-100**, lista o que
   melhorar e, se aprovado (>=70), **preenche o Perfil sozinho** — E leitura **real de PDF/DOCX** no
   upload. Novos: `src/services/ats.ts` (motor de score, reaproveita `skills.ts`),

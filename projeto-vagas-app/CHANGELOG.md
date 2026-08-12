@@ -18,6 +18,30 @@
 
 ---
 
+## [2026-08-12] — Claude (Opus 4.8) — Fase 2: backend de IA grátis (Cloudflare Worker + Gemini)
+
+- **O QUE:** primeira parte da **Fase 2** — análise de currículo por IA, **grátis**, com a chave no
+  servidor (nunca no app). Escolha do dono: IA grátis (Gemini) em backend grátis (Cloudflare).
+- **ONDE / MUDOU:**
+  - ADICIONADO **`radar-vagas-backend/`** (novo, na RAIZ do repo, ao lado de projeto-vagas-app):
+    Cloudflare Worker (`src/index.js`) com endpoints `GET /` (health) e `POST /cv`. Recebe texto ou
+    **PDF em base64** e chama o **Gemini** (`gemini-2.0-flash`, free tier) pedindo JSON no mesmo
+    formato do ATS local + `resumoIA`. `wrangler.toml`, `package.json`, `README.md` (passo a passo
+    grátis: Google AI Studio + Cloudflare, sem cartão), `.gitignore`. Chave = secret `GEMINI_API_KEY`.
+  - ADICIONADO **`projeto-vagas-app/src/services/ai.ts`** — cliente do backend (`analisarCVComIA`,
+    `pingBackend`); mapeia a resposta para `AtsResult` (reaproveita a mesma UI) + `resumoIA`.
+  - ALTERADO **`src/services/storage.ts`** — `Settings.aiBackendUrl?` (URL pública do Worker).
+  - ALTERADO **`src/app/config.tsx`** — seção "Backend de IA (Fase 2)" com o campo da URL.
+  - ALTERADO **`src/services/documents.ts`** — exporta `lerArquivoBase64` (envia o PDF ao Gemini).
+  - ALTERADO **`src/app/curriculo.tsx`** — com backend configurado, botão **"Analisar com IA (grátis)"**
+    (PDF vai em base64 → Gemini lê até escaneado), card com o resumo da IA, e "Analisar local" como
+    alternativa. Sem backend, tudo segue no ATS local (nada quebra).
+- **POR QUÊ:** pedido do dono (Fase 2 + tudo grátis). Arquitetura respeita a regra: chave de IA só no
+  servidor. O app funciona com ou sem o backend.
+- **A FAZER (dono):** publicar o Worker (ver `radar-vagas-backend/README.md`): criar chave Gemini
+  (aistudio.google.com/apikey) + conta Cloudflare + `wrangler deploy`, e colar a URL em Config.
+- **STATUS:** ⚠️ tsc não rodado aqui (sem node_modules). App = JS puro → OTA. Backend é deploy à parte.
+
 ## [2026-08-12] — Claude (Opus 4.8) — Fontes de vaga (Gupy + fix JSearch) + multi-contratação
 
 - **O QUE:** resolver o "vagas aleatórias" (só vinham boards globais de tech remoto) e atender aos
