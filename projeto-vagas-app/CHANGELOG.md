@@ -18,6 +18,29 @@
 
 ---
 
+## [2026-08-12] — Claude (Opus 4.8) — OTA-safe + correção do lock (Action de EAS Update)
+
+- **O QUE:** publicar o update via **OTA** (pedido do dono). Duas correções necessárias:
+  1. **`package-lock.json` fora de sincronia** — a Action `eas-update.yml` falhava no `npm ci`
+     ("Missing: expo-document-picker@57.0.1 / pako@2.2.0 / @types/pako@2.0.4 from lock file"),
+     porque os commits anteriores adicionaram deps no `package.json` sem atualizar o lock.
+  2. **`expo-document-picker` é módulo NATIVO** — OTA entrega só JS. O APK instalado foi buildado
+     antes dessa dep, então o seletor de arquivo poderia derrubar a tela via OTA.
+- **ONDE / MUDOU:**
+  - ALTERADO **`package-lock.json`** — regenerado com `npm install --package-lock-only` (adiciona as 3
+    deps; nenhum node_modules baixado). Destrava o `npm ci` da Action.
+  - ALTERADO **`src/app/curriculo.tsx`** — o `import * as DocumentPicker` estático virou
+    `require('expo-document-picker')` **preguiçoso dentro de `escolherArquivo`, protegido por try/catch**.
+    Em APK sem o módulo nativo (caso do OTA), mostra aviso "precisa de novo build; cole o texto" em vez
+    de crashar. Todo o resto (motor ATS, leitura PDF/DOCX com pako, colar texto) é JS puro → roda no OTA.
+- **POR QUÊ:** **bug comprovado** (Action vermelha no `npm ci`) + segurança do OTA (evitar crash por
+  módulo nativo ausente). O `EXPO_TOKEN` já estava configurado no repo (confirmado no log da Action).
+- **RESULTADO ESPERADO:** com este push, a Action roda `npm ci` (verde) → `eas update --branch preview`
+  publica o OTA. Melhorias de JS chegam sozinhas ao abrir o app. **O botão "escolher arquivo" só
+  funciona após um novo build do APK** (`eas build -p android --profile preview`) — até lá, usar o
+  "colar texto", que funciona 100% via OTA.
+- **STATUS:** ⚠️ `tsc` ainda não rodado no ambiente remoto (sem node_modules). Lock e código revisados à mão.
+
 ## [2026-08-12] — Claude (Opus 4.8) — Leitura real de PDF/DOCX no upload do currículo
 
 - **O QUE:** deixar o upload de currículo ler **PDF e DOCX de verdade** no aparelho (antes era só
