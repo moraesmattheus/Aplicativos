@@ -12,21 +12,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Bar, Card, Muted, SectionTitle } from '@/components/ui';
 import { useTheme } from '@/hooks/use-theme';
 import { analyzeCV, AtsResult, mergeExtractedIntoProfile, NIVEL_META } from '@/services/ats';
+import { extrairTextoDeArquivo } from '@/services/documents';
 import { useApp } from '@/store/AppStore';
-
-/** Lê o texto de um arquivo escolhido. Confiável p/ .txt; PDF/DOCX é best-effort. */
-async function lerArquivo(uri: string): Promise<{ texto: string; legivel: boolean }> {
-  try {
-    const res = await fetch(uri);
-    const texto = await res.text();
-    // heurística: se a maioria dos caracteres for "imprimível", provavelmente é texto real
-    const limpos = texto.replace(/[^\x09\x0A\x0D\x20-\x7EÀ-ÿ]/g, '');
-    const legivel = texto.length > 0 && limpos.length / texto.length > 0.7 && limpos.trim().length > 40;
-    return { texto: limpos, legivel };
-  } catch {
-    return { texto: '', legivel: false };
-  }
-}
 
 export default function CurriculoScreen() {
   const c = useTheme();
@@ -37,11 +24,13 @@ export default function CurriculoScreen() {
   const [nomeArquivo, setNomeArquivo] = useState<string | null>(null);
   const [result, setResult] = useState<AtsResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [lendo, setLendo] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
   const [aplicado, setAplicado] = useState(false);
 
   const escolherArquivo = async () => {
     setAviso(null);
+    setResult(null);
     try {
       const r = await DocumentPicker.getDocumentAsync({
         type: ['text/plain', 'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
@@ -50,14 +39,17 @@ export default function CurriculoScreen() {
       if (r.canceled || !r.assets?.[0]) return;
       const asset = r.assets[0];
       setNomeArquivo(asset.name);
-      const { texto: lido, legivel } = await lerArquivo(asset.uri);
-      if (legivel) {
-        setTexto(lido);
-        setAviso(`✅ "${asset.name}" carregado. Toque em Analisar.`);
+      setLendo(true);
+      const res = await extrairTextoDeArquivo(asset.uri, asset.name, asset.mimeType);
+      setLendo(false);
+      if (res.ok) {
+        setTexto(res.texto);
+        setAviso(`✅ "${asset.name}" lido (${res.texto.split(/\s+/).filter(Boolean).length} palavras). Toque em Analisar.`);
       } else {
-        setAviso(`⚠️ Não consegui ler o texto de "${asset.name}" (PDF/DOCX ainda não são lidos direto no app). Copie e cole o conteúdo do currículo no campo abaixo.`);
+        setAviso(`⚠️ ${res.motivo}`);
       }
     } catch {
+      setLendo(false);
       setAviso('Não foi possível abrir o arquivo. Cole o texto do currículo abaixo.');
     }
   };
@@ -95,10 +87,10 @@ export default function CurriculoScreen() {
         <Muted>Descubra como os robôs de RH leem seu CV — e conserte antes de enviar.</Muted>
 
         {/* entrada */}
-        <Pressable onPress={escolherArquivo} style={[styles.upload, { borderColor: c.tint, backgroundColor: c.tint + '12' }]}>
-          <Ionicons name="cloud-upload-outline" size={22} color={c.tint} />
+        <Pressable onPress={escolherArquivo} disabled={lendo} style={[styles.upload, { borderColor: c.tint, backgroundColor: c.tint + '12', opacity: lendo ? 0.6 : 1 }]}>
+          {lendo ? <ActivityIndicator color={c.tint} /> : <Ionicons name="cloud-upload-outline" size={22} color={c.tint} />}
           <Text style={[styles.uploadText, { color: c.tint }]}>
-            {nomeArquivo ? `Trocar arquivo (${nomeArquivo})` : 'Escolher arquivo (.txt, PDF, DOCX)'}
+            {lendo ? 'Lendo arquivo...' : nomeArquivo ? `Trocar arquivo (${nomeArquivo})` : 'Escolher arquivo (.txt, PDF, DOCX)'}
           </Text>
         </Pressable>
 
