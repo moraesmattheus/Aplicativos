@@ -1,0 +1,9 @@
+# Configuração do Cloudflare Worker.
+# A chave do Gemini NÃO fica aqui — é um secret: `npx wrangler secret put GEMINI_API_KEY`.
+name = "radar-vagas-backend"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+# Modelo do Gemini (free tier). Pode trocar por gemini-2.0-flash-lite se quiser.
+[vars]
+GEMINI_MODEL = "gemini-2.0-flash"

@@ -1,0 +1,13 @@
+{
+  "name": "radar-vagas-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Backend de IA (Cloudflare Worker + Gemini) do app Radar de Vagas",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  }
+}
