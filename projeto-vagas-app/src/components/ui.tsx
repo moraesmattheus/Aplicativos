@@ -1,11 +1,11 @@
 // Pequenos componentes de UI reutilizáveis, tematizados (claro/escuro).
 
 import React from 'react';
-import { StyleSheet, Text, TextStyle, View, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, Text, TextStyle, View, ViewStyle } from 'react-native';
 
 import { useTheme } from '@/hooks/use-theme';
 
-export function Card({ children, style }: { children: React.ReactNode; style?: ViewStyle }) {
+export function Card({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
   const c = useTheme();
   return (
     <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }, style]}>
@@ -14,7 +14,7 @@ export function Card({ children, style }: { children: React.ReactNode; style?: V
   );
 }
 
-export function SectionTitle({ children, style }: { children: React.ReactNode; style?: TextStyle }) {
+export function SectionTitle({ children, style }: { children: React.ReactNode; style?: StyleProp<TextStyle> }) {
   const c = useTheme();
   return <Text style={[styles.section, { color: c.text }, style]}>{children}</Text>;
 }
@@ -25,7 +25,7 @@ export function Muted({
   numberOfLines,
 }: {
   children: React.ReactNode;
-  style?: TextStyle;
+  style?: StyleProp<TextStyle>;
   numberOfLines?: number;
 }) {
   const c = useTheme();

@@ -18,6 +18,18 @@
 
 ---
 
+## [2026-08-12] — Claude (Opus 4.8) — Fix de tipo: Card/SectionTitle/Muted aceitam array de estilo
+
+- **O QUE:** corrigir 2 erros de `tsc` em `src/app/curriculo.tsx` (linhas 224 e 248) reportados pelo dono.
+- **CAUSA:** o componente `Card` (em `src/components/ui.tsx`) tipava `style?: ViewStyle` (estilo único),
+  mas a aba Currículo passa **array** de estilos (`[styles.iaCard, { borderColor: c.tint }]`).
+- **ONDE / MUDOU:** `src/components/ui.tsx` — `style?: ViewStyle` → `style?: StyleProp<ViewStyle>` no
+  `Card`; e `style?: TextStyle` → `style?: StyleProp<TextStyle>` no `SectionTitle` e `Muted`. Import de
+  `StyleProp` adicionado. Widening idiomático do RN — 100% compatível com os usos de estilo único que
+  já existiam; previne a mesma classe de erro em edições futuras.
+- **POR QUÊ:** bug comprovado (typecheck vermelho). Nada de comportamento removido.
+- **STATUS:** deve zerar o `tsc`. JS puro → vai por OTA.
+
 ## [2026-08-12] — Claude (Opus 4.8) — JSearch: blinda a chave do RapidAPI (trim)
 
 - **O QUE:** garantir que a requisição do JSearch use a chave certa do AsyncStorage e os cabeçalhos
