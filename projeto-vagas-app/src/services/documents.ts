@@ -215,6 +215,33 @@ function lerEntradaZip(bytes: Uint8Array, nomeAlvo: string): string | null {
 // I/O — bytes de um uri (web e nativo)
 // ------------------------------------------------------------------
 
+/** Lê um arquivo e devolve seu conteúdo em base64 (para enviar ao backend de IA). */
+export async function lerArquivoBase64(uri: string): Promise<string | null> {
+  const bytes = await lerBytesDeUri(uri);
+  return bytes ? bytesParaBase64(bytes) : null;
+}
+
+function bytesParaBase64(bytes: Uint8Array): string {
+  let bin = '';
+  const CH = 8192;
+  for (let i = 0; i < bytes.length; i += CH) {
+    bin += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + CH)));
+  }
+  if (typeof btoa === 'function') return btoa(bin);
+  // fallback manual
+  let out = '';
+  for (let i = 0; i < bin.length; i += 3) {
+    const a = bin.charCodeAt(i);
+    const b = i + 1 < bin.length ? bin.charCodeAt(i + 1) : 0;
+    const cc = i + 2 < bin.length ? bin.charCodeAt(i + 2) : 0;
+    out += B64_CHARS[a >> 2];
+    out += B64_CHARS[((a & 3) << 4) | (b >> 4)];
+    out += i + 1 < bin.length ? B64_CHARS[((b & 15) << 2) | (cc >> 6)] : '=';
+    out += i + 2 < bin.length ? B64_CHARS[cc & 63] : '=';
+  }
+  return out;
+}
+
 async function lerBytesDeUri(uri: string): Promise<Uint8Array | null> {
   // 1) arrayBuffer direto (funciona na web e em RN novos)
   try {

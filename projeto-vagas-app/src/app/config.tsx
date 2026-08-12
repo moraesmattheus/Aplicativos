@@ -96,6 +96,31 @@ export default function ConfigScreen() {
           link="https://br.jooble.org/api/about"
         />
 
+        <SectionTitle style={styles.h2}>Backend de IA (Fase 2)</SectionTitle>
+        <Card style={{ gap: 6 }}>
+          <View style={styles.keyLabelRow}>
+            <Text style={[styles.label, { color: c.text }]}>URL do backend</Text>
+            <Pressable onPress={() => WebBrowser.openBrowserAsync('https://aistudio.google.com/apikey')} hitSlop={6}>
+              <Text style={[styles.linkText, { color: c.tint }]}>como criar ↗</Text>
+            </Pressable>
+          </View>
+          <Muted>
+            Opcional e grátis. Com ele, a aba Currículo ganha &quot;Analisar com IA&quot; (lê PDF de verdade,
+            até escaneado). Sem ele, a análise ATS local segue funcionando. Passo a passo: pasta
+            radar-vagas-backend no repositório.
+          </Muted>
+          <TextInput
+            value={form.aiBackendUrl ?? ''}
+            onChangeText={(v) => set('aiBackendUrl', v)}
+            placeholder="https://radar-vagas-backend.xxx.workers.dev"
+            placeholderTextColor={c.textSecondary}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+            style={[styles.input, { color: c.text, borderColor: c.border }]}
+          />
+        </Card>
+
         <SectionTitle style={styles.h2}>Follow-up</SectionTitle>
         <Card>
           <Text style={[styles.label, { color: c.text }]}>Lembrar de dar follow-up após (dias)</Text>

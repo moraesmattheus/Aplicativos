@@ -10,22 +10,28 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Bar, Card, Muted, SectionTitle } from '@/components/ui';
 import { useTheme } from '@/hooks/use-theme';
+import { analisarCVComIA } from '@/services/ai';
 import { analyzeCV, AtsResult, mergeExtractedIntoProfile, NIVEL_META } from '@/services/ats';
-import { extrairTextoDeArquivo } from '@/services/documents';
+import { extrairTextoDeArquivo, lerArquivoBase64 } from '@/services/documents';
 import { useApp } from '@/store/AppStore';
 
 export default function CurriculoScreen() {
   const c = useTheme();
   const router = useRouter();
-  const { profile, saveProfile } = useApp();
+  const { profile, saveProfile, settings } = useApp();
 
   const [texto, setTexto] = useState('');
   const [nomeArquivo, setNomeArquivo] = useState<string | null>(null);
+  const [pdfBase64, setPdfBase64] = useState<string | null>(null);
+  const [mimeType, setMimeType] = useState<string | null>(null);
   const [result, setResult] = useState<AtsResult | null>(null);
+  const [resumoIA, setResumoIA] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [lendo, setLendo] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
   const [aplicado, setAplicado] = useState(false);
+
+  const temIA = !!(settings.aiBackendUrl && settings.aiBackendUrl.trim());
 
   const escolherArquivo = async () => {
     setAviso(null);
@@ -49,11 +55,25 @@ export default function CurriculoScreen() {
       const asset = r.assets[0];
       setNomeArquivo(asset.name);
       setLendo(true);
+      setResumoIA(null);
+      const ehPdf = (asset.name ?? '').toLowerCase().endsWith('.pdf') || asset.mimeType === 'application/pdf';
+      // Guarda o PDF em base64 para o Gemini ler nativamente (funciona até escaneado).
+      let b64: string | null = null;
+      if (ehPdf && temIA) {
+        b64 = await lerArquivoBase64(asset.uri);
+        setPdfBase64(b64);
+        setMimeType('application/pdf');
+      } else {
+        setPdfBase64(null);
+        setMimeType(null);
+      }
       const res = await extrairTextoDeArquivo(asset.uri, asset.name, asset.mimeType);
       setLendo(false);
       if (res.ok) {
         setTexto(res.texto);
         setAviso(`✅ "${asset.name}" lido (${res.texto.split(/\s+/).filter(Boolean).length} palavras). Toque em Analisar.`);
+      } else if (b64) {
+        setAviso(`✅ "${asset.name}" carregado. O texto não saiu direto, mas a IA lê o PDF — toque em "Analisar com IA".`);
       } else {
         setAviso(`⚠️ ${res.motivo}`);
       }
@@ -82,6 +102,34 @@ export default function CurriculoScreen() {
     }
   };
 
+  const analisarComIA = async () => {
+    if (!temIA) return;
+    if (!pdfBase64 && texto.trim().length < 40) {
+      setAviso('Cole o texto do currículo (ou escolha um PDF) antes de analisar com IA.');
+      return;
+    }
+    setLoading(true);
+    setAplicado(false);
+    setResumoIA(null);
+    setAviso('🤖 Analisando com IA...');
+    try {
+      const res = await analisarCVComIA(settings.aiBackendUrl!, {
+        texto: pdfBase64 ? undefined : texto,
+        pdfBase64: pdfBase64 ?? undefined,
+        mimeType: mimeType ?? undefined,
+        alvo: profile,
+      });
+      setResult(res);
+      setResumoIA(res.resumoIA ?? null);
+      setAviso(null);
+      if (res.aprovado) await aplicarNoPerfil(res, true);
+    } catch (e) {
+      setAviso(`Falha na IA: ${e instanceof Error ? e.message : 'erro'}. Usando análise local — toque em "Analisar currículo".`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const aplicarNoPerfil = async (res: AtsResult, auto = false) => {
     const novo = mergeExtractedIntoProfile(profile, res.extracted);
     await saveProfile(novo);
@@ -106,7 +154,7 @@ export default function CurriculoScreen() {
         <Muted style={styles.ou}>ou cole o texto do currículo:</Muted>
         <TextInput
           value={texto}
-          onChangeText={(v) => { setTexto(v); setResult(null); }}
+          onChangeText={(v) => { setTexto(v); setResult(null); setPdfBase64(null); setMimeType(null); }}
           placeholder="Cole aqui todo o conteúdo do seu currículo..."
           placeholderTextColor={c.textSecondary}
           multiline
@@ -119,13 +167,33 @@ export default function CurriculoScreen() {
           </Card>
         )}
 
-        <Pressable onPress={analisar} disabled={loading} style={[styles.btn, { backgroundColor: c.tint, opacity: loading ? 0.6 : 1 }]}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Ionicons name="scan-outline" size={18} color="#fff" />}
-          <Text style={styles.btnText}>{loading ? 'Analisando...' : 'Analisar currículo'}</Text>
+        {temIA && (
+          <Pressable onPress={analisarComIA} disabled={loading} style={[styles.btn, { backgroundColor: c.tint, opacity: loading ? 0.6 : 1 }]}>
+            {loading ? <ActivityIndicator color="#fff" /> : <Ionicons name="sparkles" size={18} color="#fff" />}
+            <Text style={styles.btnText}>Analisar com IA (grátis)</Text>
+          </Pressable>
+        )}
+
+        <Pressable
+          onPress={analisar}
+          disabled={loading}
+          style={[temIA ? styles.btnGhostFull : styles.btn, temIA ? { borderColor: c.border } : { backgroundColor: c.tint }, { opacity: loading ? 0.6 : 1 }]}>
+          {loading && !temIA ? <ActivityIndicator color="#fff" /> : <Ionicons name="scan-outline" size={18} color={temIA ? c.tint : '#fff'} />}
+          <Text style={[temIA ? { color: c.tint, fontWeight: '700' } : styles.btnText]}>
+            {temIA ? 'Analisar local (sem IA)' : loading ? 'Analisando...' : 'Analisar currículo'}
+          </Text>
         </Pressable>
 
         {/* resultado */}
-        {result && <Resultado res={result} onAplicar={() => aplicarNoPerfil(result)} aplicado={aplicado} irParaPerfil={() => router.push('/perfil')} />}
+        {result && (
+          <Resultado
+            res={result}
+            resumoIA={resumoIA}
+            onAplicar={() => aplicarNoPerfil(result)}
+            aplicado={aplicado}
+            irParaPerfil={() => router.push('/perfil')}
+          />
+        )}
 
         <View style={{ height: 24 }} />
       </ScrollView>
@@ -135,11 +203,13 @@ export default function CurriculoScreen() {
 
 function Resultado({
   res,
+  resumoIA,
   onAplicar,
   aplicado,
   irParaPerfil,
 }: {
   res: AtsResult;
+  resumoIA?: string | null;
   onAplicar: () => void;
   aplicado: boolean;
   irParaPerfil: () => void;
@@ -149,6 +219,17 @@ function Resultado({
 
   return (
     <View style={styles.result}>
+      {/* resumo da IA (quando veio do backend) */}
+      {resumoIA ? (
+        <Card style={[styles.iaCard, { borderColor: c.tint }]}>
+          <View style={styles.iaHeader}>
+            <Ionicons name="sparkles" size={16} color={c.tint} />
+            <Text style={[styles.iaTitle, { color: c.tint }]}>Análise da IA</Text>
+          </View>
+          <Text style={[styles.iaText, { color: c.text }]}>{resumoIA}</Text>
+        </Card>
+      ) : null}
+
       {/* score grande */}
       <Card style={styles.scoreCard}>
         <View style={[styles.scoreCircle, { borderColor: meta.color }]}>
@@ -257,6 +338,11 @@ const styles = StyleSheet.create({
   aviso: { paddingVertical: 12 },
   btn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 12, marginTop: 4 },
   btnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  btnGhostFull: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 13, borderRadius: 12, borderWidth: StyleSheet.hairlineWidth, marginTop: 4 },
+  iaCard: { gap: 6, borderWidth: 1 },
+  iaHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  iaTitle: { fontSize: 14, fontWeight: '800' },
+  iaText: { fontSize: 14, lineHeight: 20 },
   result: { gap: 10, marginTop: 8 },
   scoreCard: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   scoreCircle: { width: 84, height: 84, borderRadius: 42, borderWidth: 5, alignItems: 'center', justifyContent: 'center' },

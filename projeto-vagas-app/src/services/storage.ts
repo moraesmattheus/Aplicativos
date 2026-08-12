@@ -16,6 +16,8 @@ export interface Settings {
   adzunaAppId?: string;
   adzunaAppKey?: string;
   joobleKey?: string;
+  /** URL pública do backend de IA (Fase 2). Vazio = usa só o ATS local. */
+  aiBackendUrl?: string;
   /** intervalo (horas) para lembrete de follow-up de cards parados */
   followUpDias: number;
   /** já passou pelo onboarding do perfil? */
