@@ -244,7 +244,10 @@ const gupy: Source = {
 const jsearch: Source = {
   nome: 'JSearch (Google for Jobs)',
   run: async (q, s) => {
-    if (!s.jsearchKey) return [];
+    // Token vindo das Configurações (AsyncStorage → storage.ts → Settings).
+    // trim() evita header inválido quando a chave é colada com espaços.
+    const chave = s.jsearchKey?.trim();
+    if (!chave) return [];
     type R = {
       data: {
         job_id: string;
@@ -268,7 +271,7 @@ const jsearch: Source = {
     if (q.remoto) params.set('work_from_home', 'true');
     const url = `https://jsearch.p.rapidapi.com/search?${params.toString()}`;
     const data = await fetchJSON<R>(url, {
-      headers: { 'X-RapidAPI-Key': s.jsearchKey, 'X-RapidAPI-Host': 'jsearch.p.rapidapi.com' },
+      headers: { 'X-RapidAPI-Key': chave, 'X-RapidAPI-Host': 'jsearch.p.rapidapi.com' },
     });
     return (data.data ?? []).map((j) =>
       toJob({

@@ -18,6 +18,19 @@
 
 ---
 
+## [2026-08-12] — Claude (Opus 4.8) — JSearch: blinda a chave do RapidAPI (trim)
+
+- **O QUE:** garantir que a requisição do JSearch use a chave certa do AsyncStorage e os cabeçalhos
+  corretos (pedido do dono).
+- **ONDE / MUDOU:** `src/services/jobs.ts`, source `jsearch`. Os headers `X-RapidAPI-Key` e
+  `X-RapidAPI-Host: jsearch.p.rapidapi.com` **já existiam** e a chave **já vinha** das Configurações
+  (AsyncStorage → `storage.ts` → `Settings.jsearchKey`). Ajuste feito: `const chave = s.jsearchKey?.trim()`
+  e guarda `if (!chave) return []`, usando `chave` no header. Evita header inválido quando a chave é
+  colada com espaços; também remove o tipo `string | undefined` do header.
+- **POR QUÊ:** robustez (chave colada com espaço quebrava o RapidAPI). Não li AsyncStorage direto no
+  service — a regra do projeto exige passar por `storage.ts` (a chave já flui de lá via `Settings`).
+- **STATUS:** ⚠️ tsc não rodado aqui. JS puro → vai por OTA.
+
 ## [2026-08-12] — Claude (Opus 4.8) — Fase 2: backend de IA grátis (Cloudflare Worker + Gemini)
 
 - **O QUE:** primeira parte da **Fase 2** — análise de currículo por IA, **grátis**, com a chave no
