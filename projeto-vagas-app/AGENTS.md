@@ -16,7 +16,13 @@
 > Esta é a primeira coisa que qualquer IA deve ler e a última que deve atualizar.
 > Escreva aqui, em 1 minuto, onde o trabalho parou e qual é o próximo passo concreto.
 
-- **Última sessão:** 2026-08-12 — Claude (Opus 4.8) — nova aba **Currículo (ATS)** (na `main`).
+- **Última sessão:** 2026-08-12 — Claude (Opus 4.8) — aba **Currículo (ATS)** + **fontes de vaga** +
+  OTA publicado (na `main`).
+- **Fontes de vaga (2026-08-12):** adicionada **Gupy** (API pública, sem chave) e corrigido o JSearch
+  (query BR + remoto). Google for Jobs (JSearch) cobre LinkedIn/Indeed/vagas.com/Catho/InfoJobs — dono
+  vai criar contas grátis (JSearch/Adzuna/Jooble) e colar as chaves em Config. Multi-seleção de tipo
+  de contratação (`Profile.tiposContratacao: string[]`). **Fase 2 escolhida: IA grátis (Gemini/Groq)
+  em backend grátis (Cloudflare Workers)** — a construir.
 - **Feito nesta sessão:** aba **Currículo** que sobe/cola o CV, dá um **score ATS 0-100**, lista o que
   melhorar e, se aprovado (>=70), **preenche o Perfil sozinho** — E leitura **real de PDF/DOCX** no
   upload. Novos: `src/services/ats.ts` (motor de score, reaproveita `skills.ts`),

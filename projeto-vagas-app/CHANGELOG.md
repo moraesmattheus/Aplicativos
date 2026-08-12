@@ -18,6 +18,32 @@
 
 ---
 
+## [2026-08-12] — Claude (Opus 4.8) — Fontes de vaga (Gupy + fix JSearch) + multi-contratação
+
+- **O QUE:** resolver o "vagas aleatórias" (só vinham boards globais de tech remoto) e atender aos
+  pedidos do dono: mais fontes BR conhecidas, vagas mundiais + brasileiras, e tipo de contratação
+  com múltipla escolha.
+- **ONDE / MUDOU:**
+  - ADICIONADO em **`src/services/jobs.ts`** a fonte **`gupy`** — API pública `portal.api.gupy.io`
+    (sem chave), vagas BR de empresas que usam Gupy; registrada em `SOURCES`.
+  - CORRIGIDO **bug no JSearch** (`jobs.ts`): os dois ramos do `const busca` eram idênticos. Agora
+    usa `country=br` + `work_from_home=true` p/ remoto e foca na cidade p/ presencial. O Google for
+    Jobs (JSearch) cobre **LinkedIn, Gupy, Indeed, vagas.com, Catho, InfoJobs/Pandapé** — ativa com a
+    chave grátis na tela Config.
+  - ALTERADO **`src/types.ts`**: `Profile.tipoContratacao` (string) → **`tiposContratacao` (string[])**;
+    `DEFAULT_PROFILE` agora `['CLT','PJ']`.
+  - ALTERADO **`src/app/perfil.tsx`**: seletor de contratação virou **multi-seleção** (marca vários).
+- **POR QUÊ:** pedido do dono (fontes conhecidas grátis, mundial+BR, multi-contratação). Nenhuma
+  fonte antiga removida — as globais (Remotive/RemoteOK/Arbeitnow) seguem cobrindo remoto mundial.
+- **DECISÃO respeitando as regras:** LinkedIn/Solides/vagas.com/Pandapé **não têm API grátis** e
+  scraping é proibido pelo `AGENTS.md` — a via legítima é o **Google for Jobs (JSearch)**, que os
+  indexa. Gupy tem endpoint público, então entrou direto.
+- **A FAZER (dono):** criar contas grátis e colar as chaves em *Perfil → ⚙️ Config*: **JSearch**
+  (RapidAPI), **Adzuna**, **Jooble**. Sem elas, rodam Gupy + os 3 globais.
+- **NOTA:** o mapeamento da Gupy foi escrito por padrão do endpoint público (não testado neste
+  ambiente); isolado em try/catch — se o formato mudar, ela só não retorna, sem quebrar a busca.
+- **STATUS:** ⚠️ tsc não rodado aqui (sem node_modules). Tudo é JS puro → vai por OTA também.
+
 ## [2026-08-12] — Claude (Opus 4.8) — OTA-safe + correção do lock (Action de EAS Update)
 
 - **O QUE:** publicar o update via **OTA** (pedido do dono). Duas correções necessárias:
