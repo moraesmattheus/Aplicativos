@@ -36,6 +36,13 @@ export default function RootLayout() {
               }}
             />
             <Tabs.Screen
+              name="curriculo"
+              options={{
+                title: 'Currículo',
+                tabBarIcon: ({ color, size }) => <Ionicons name="document-text" color={color} size={size} />,
+              }}
+            />
+            <Tabs.Screen
               name="vagas"
               options={{
                 title: 'Vagas',
