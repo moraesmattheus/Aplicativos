@@ -16,13 +16,18 @@
 > Esta é a primeira coisa que qualquer IA deve ler e a última que deve atualizar.
 > Escreva aqui, em 1 minuto, onde o trabalho parou e qual é o próximo passo concreto.
 
-- **Última sessão:** 2026-08-11 — Claude (Opus 5) — *health check* do projeto.
-- **Estado:** ✅ **Fase 1 completa e funcionando.** Verificado nesta sessão: `npx tsc --noEmit` →
-  **0 erros**; bundle **android** → 200 (~8,9 MB); bundle **web** → 200 (~7,3 MB); `localhost` → 200.
-  Todas as 5 telas + Config prontas. App roda 100% local. `eas.json` + `app.json` prontos p/ APK.
-- **Correção desta sessão:** `app.json` → `web.output` era `"static"` (SSR) e quebrava o preview web
-  com HTTP 500 (`React.default.createContext is not a function`); virou **`"single"`** (SPA).
-  Não afeta Android nem o build EAS. Detalhes no `CHANGELOG.md`.
+- **Última sessão:** 2026-08-12 — Claude (Opus 4.8) — nova aba **Currículo (ATS)** (na `main`).
+- **Feito nesta sessão:** aba **Currículo** que sobe/cola o CV, dá um **score ATS 0-100**, lista o que
+  melhorar e, se aprovado (>=70), **preenche o Perfil sozinho**. Novos: `src/services/ats.ts` (motor
+  local, reaproveita `skills.ts`) e `src/app/curriculo.tsx`; registrada no `_layout.tsx`; dependência
+  `expo-document-picker` adicionada ao `package.json`. Commits granulares direto na `main` (pedido do dono).
+- **⚠️ PENDÊNCIA PRA RODAR:** este ambiente remoto está sem `node_modules`. Na máquina do dono:
+  `git pull origin main` → `npx expo install expo-document-picker` → `npm install` → `npx tsc --noEmit`
+  (validar) → `npm run web`. O `tsc` NÃO foi rodado nesta sessão.
+- **Limite conhecido:** PDF/DOCX no app é **best-effort** (sem extrator on-device confiável). `.txt`/
+  colar texto sempre funcionam; leitura profunda de PDF/DOCX fica pra **Fase 2 (Claude API no backend)**.
+- **Sessão anterior (2026-08-11, Opus 5):** health check + correção do preview web
+  (`app.json` `web.output`: `"static"` → `"single"`, bug de SSR/HTTP 500). Detalhes no `CHANGELOG.md`.
 - **📁 CANÔNICO — ÚNICO lugar (organizado em 2026-08-11):**
   **`C:\Users\matth\Downloads\Apps\apps-claude\projeto-vagas-app`** (repo GitHub
   `moraesmattheus/apps-claude`, ao lado do `rota-de-vida` — NÃO mexer no rota-de-vida).
@@ -164,8 +169,9 @@ build do **APK (EAS)**, e **assinatura** (Google Play Billing via **RevenueCat**
 ```
 src/
 ├── app/                 # telas (Expo Router, file-based)
-│   ├── _layout.tsx      # AppProvider + ThemeProvider + Tabs (5 abas)
+│   ├── _layout.tsx      # AppProvider + ThemeProvider + Tabs (6 abas)
 │   ├── index.tsx        # Dashboard
+│   ├── curriculo.tsx    # Currículo (ATS): sobe/cola CV, score, melhorias, auto-preenche o Perfil
 │   ├── vagas.tsx        # Radar de vagas (busca + ranking)
 │   ├── kanban.tsx       # Kanban
 │   ├── agenda.tsx       # Entrevistas + Google Calendar
@@ -178,6 +184,7 @@ src/
 │   ├── jobs.ts          # agregador das APIs + normalização + dedup
 │   ├── matching.ts      # motor de compatibilidade + filtro de localização
 │   ├── skills.ts        # normalização/sinônimos/dicionário de skills
+│   ├── ats.ts           # motor de análise ATS do currículo (score + extração p/ o Perfil)
 │   ├── storage.ts       # persistência (AsyncStorage) + tipo Settings
 │   └── calendar.ts      # expo-calendar (Google Calendar do aparelho)
 ├── store/AppStore.tsx   # estado global (perfil, candidaturas, settings)

@@ -18,6 +18,36 @@
 
 ---
 
+## [2026-08-12] — Claude (Opus 4.8) — Nova aba "Currículo (ATS)" com score + auto-preenchimento
+
+- **O QUE:** adicionar ao app a capacidade de subir/colar o currículo, receber um **score ATS**
+  (0-100) simulando a leitura dos robôs de RH, ver **o que melhorar** e, se o CV estiver bom,
+  **preencher o Perfil automaticamente** com os dados extraídos. Pedido direto do dono.
+- **ONDE / MUDOU:**
+  - ADICIONADO **`src/services/ats.ts`** — motor de ATS 100% local: `analyzeCV(texto, alvo?)`
+    pontua 5 critérios (palavras-chave 32, contato 20, seções 18, resultados 18, formato 12),
+    devolve `issues` (problema+sugestão por gravidade), `pontosFortes` e `extracted` (nome, e-mail,
+    telefone, LinkedIn, portfólio, cargo, senioridade, skills, resumo). `mergeExtractedIntoProfile()`
+    mescla no Perfil sem apagar o que já existe. Reaproveita `extractSkills`/`canonicalSet`/`normalize`
+    de `skills.ts`. `NIVEL_META` para rótulos/cores. `aprovado = score >= 70`.
+  - ADICIONADO **`src/app/curriculo.tsx`** — aba nova: botão de upload (`expo-document-picker`,
+    leitura via `fetch(uri)`), campo de colar texto, botão Analisar, card de score grande, nota por
+    critério (barras), pontos fortes, lista de melhorias e aplicação no Perfil (automática se aprovado,
+    manual se não).
+  - ALTERADO **`src/app/_layout.tsx`** — registrada a aba `curriculo` (entre Início e Vagas), ícone
+    `document-text`. (Só adição de um `<Tabs.Screen>`; nada removido.)
+  - ALTERADO **`package.json`** — adicionada dependência `expo-document-picker` (~57.0.1).
+- **POR QUÊ:** **nova feature pedida pelo dono** ("aba que suba currículo, dê rank de ATS, mostre o
+  que mudar e, se estiver bom, preencha tudo do app"). Nada existente foi removido/reescrito.
+- **NOTA (limite conhecido):** leitura de **PDF/DOCX no aparelho é best-effort** — não há extrator
+  de texto confiável 100% on-device. `.txt` e texto colado funcionam sempre; para PDF/DOCX o app
+  avisa e pede pra colar. A leitura profunda de PDF/DOCX é candidata natural à **Fase 2 (Claude API
+  no backend)**, onde `analyzeCV` pode ser complementado por análise da IA.
+- **STATUS:** ⚠️ **tsc NÃO rodado nesta sessão** — o ambiente remoto está sem `node_modules`
+  (clone fresco) e sem `expo-document-picker` instalado. **Antes de rodar, o dono deve executar
+  `npx expo install expo-document-picker` + `npm install`** e então `npx tsc --noEmit` / `npm run web`.
+  Código escrito seguindo os padrões e tipos existentes.
+
 ## [2026-08-11] — Claude (Opus 5) — Verificação de saúde + correção do preview web (SSR)
 
 - **O QUE:** verificar se o app está pronto para rodar (typecheck + bundles web/android) e corrigir
