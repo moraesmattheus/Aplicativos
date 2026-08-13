@@ -18,6 +18,24 @@
 
 ---
 
+## [2026-08-12] — Claude (Opus 4.8) — Fix: Gupy estava 404 (fonte morta) + paginação
+
+- **O QUE:** consertar a fonte de vagas **Gupy** (era o maior motivo real do "poucas vagas") e trazer mais resultados.
+- **ONDE / MUDOU:** `src/services/jobs.ts` → source `gupy`.
+- **MUDOU (bug + melhoria):**
+  - **Host corrigido:** `portal.api.gupy.io` (retornava **HTTP 404**, nginx — fonte 100% morta) →
+    **`employability-portal.gupy.io/api/v1/jobs`** (retorna JSON de verdade). Testado ao vivo: ~100 vagas
+    BR reais p/ "analista de marketing" (ex.: Analista de Marketing Pleno — Lojas Torra).
+  - **Paginação:** de 1 página (40) para **3 páginas em paralelo** (offset 0/40/80 → até ~100-120 vagas);
+    página que falha não derruba as outras. Header `Accept: application/json`.
+- **POR QUÊ:** bug comprovado (404 ao vivo) + pedido do dono ("colocar mais sites, tem poucos").
+- **VERIFICADO:** `tsc` 0 erros; endpoint testado com `node fetch` (200 + JSON + 100 vagas).
+- **NOTA:** o grande salto de cobertura BR/marketing ainda é ligar o **JSearch (Google for Jobs)** com a
+  chave grátis — cobre LinkedIn/Indeed/Catho/Vagas/InfoJobs num call só.
+- **STATUS:** ok, publicado por OTA no canal preview.
+
+---
+
 ## [2026-08-12] — Claude (Opus 4.8) — Fix de tipo: Card/SectionTitle/Muted aceitam array de estilo
 
 - **O QUE:** corrigir 2 erros de `tsc` em `src/app/curriculo.tsx` (linhas 224 e 248) reportados pelo dono.

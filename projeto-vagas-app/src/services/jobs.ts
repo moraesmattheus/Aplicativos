@@ -213,9 +213,18 @@ const gupy: Source = {
         description?: string;
       }[];
     };
-    const url = `https://portal.api.gupy.io/api/v1/jobs?jobName=${encodeURIComponent(q.termo)}&limit=40&offset=0`;
-    const data = await fetchJSON<R>(url);
-    return (data.data ?? [])
+    // host correto: employability-portal (o antigo portal.api.gupy.io saiu do ar / 404)
+    const base = `https://employability-portal.gupy.io/api/v1/jobs?jobName=${encodeURIComponent(q.termo)}&limit=40`;
+    // busca 3 páginas em paralelo (até ~100-120 vagas); página que falhar não derruba as outras
+    const pages = await Promise.all(
+      [0, 40, 80].map((offset) =>
+        fetchJSON<R>(`${base}&offset=${offset}`, { headers: { Accept: 'application/json' } }).catch(
+          () => ({ data: [] }) as R,
+        ),
+      ),
+    );
+    return pages
+      .flatMap((p) => p.data ?? [])
       .map((j) => {
         const remoto = j.isRemoteWork === true || /remot/i.test(j.workplaceType ?? '');
         const hibrido = /hybrid|h[íi]brid/i.test(j.workplaceType ?? '');
