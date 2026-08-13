@@ -42,7 +42,9 @@
   (`app.json` `web.output`: `"static"` → `"single"`, bug de SSR/HTTP 500). Detalhes no `CHANGELOG.md`.
 - **📁 CANÔNICO — ÚNICO lugar (organizado em 2026-08-11):**
   **`C:\Users\matth\Downloads\Apps\apps-claude\projeto-vagas-app`** (repo GitHub
-  `moraesmattheus/apps-claude`, ao lado do `rota-de-vida` — NÃO mexer no rota-de-vida).
+  `moraesmattheus/Aplicativos` (repo GitHub **renomeado** de `apps-claude` em 2026-08-13; a PASTA
+  local segue `...\apps-claude\...`), ao lado do `rota-de-vida` — NÃO mexer no rota-de-vida.
+  OTA é independente do nome do repo (usa o projectId Expo). Remote local já aponta pro nome novo.
   A pasta `Downloads\Apps\emprego` foi **deletada** (era duplicata) e o `.git` aninhado do repo
   `emprego` foi removido. `modelo/` guarda os PDFs do blueprint. Não há mais cópias soltas.
 - **Push:** login GitHub já cacheado — **o agente consegue dar `git push` sozinho** agora.

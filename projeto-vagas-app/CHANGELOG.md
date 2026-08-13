@@ -18,6 +18,24 @@
 
 ---
 
+## [2026-08-13] — Claude (Opus 4.8) — Revisão pós-rename do repo (apps-claude → Aplicativos)
+
+- **O QUE:** verificar OTA e fluxo depois que o dono renomeou o repositório no GitHub.
+- **ACHADOS / MUDOU:**
+  - Repo GitHub renomeado **`apps-claude` → `Aplicativos`** (a pasta LOCAL segue `apps-claude`).
+  - **OTA do app: 100% intacto** — depende do `projectId` Expo (`u.expo.dev/52475c96…`), não do nome do
+    repo. App instalado continua recebendo updates normalmente.
+  - **Action de OTA: confirmada funcionando pós-rename** — `eas update:list` mostra updates publicados
+    com mensagens de commit (ex.: "fix(jobs): JSearch v5…"), o que só a Action faz. Secret EXPO_TOKEN e
+    o workflow migraram junto com o repo.
+  - **Remote local atualizado:** `git remote set-url origin …/Aplicativos.git` (não depender do redirect).
+  - AGENTS.md seção 0 atualizada com o nome novo.
+- **HEADS-UP (não mexi):** se o `rota-de-vida` é publicado via GitHub Pages, a URL virou
+  `moraesmattheus.github.io/Aplicativos/rota-de-vida/` (a antiga redireciona por ora).
+- **STATUS:** ok — fluxo e OTA normais.
+
+---
+
 ## [2026-08-12] — Claude (Opus 4.8) — Fix: JSearch v5 (endpoint /search e formato mudaram)
 
 - **O QUE:** consertar a fonte **JSearch (Google for Jobs)** — não trazia nada mesmo com chave válida.
