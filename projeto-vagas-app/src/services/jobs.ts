@@ -257,32 +257,31 @@ const jsearch: Source = {
     // trim() evita header inválido quando a chave é colada com espaços.
     const chave = s.jsearchKey?.trim();
     if (!chave) return [];
-    type R = {
-      data: {
-        job_id: string;
-        job_title: string;
-        employer_name: string;
-        employer_logo?: string;
-        job_city?: string;
-        job_state?: string;
-        job_country?: string;
-        job_is_remote?: boolean;
-        job_apply_link: string;
-        job_description: string;
-        job_employment_type?: string;
-        job_posted_at_datetime_utc?: string;
-      }[];
+    // JSearch v5: endpoint mudou p/ /search-v2 e as vagas vêm em data.jobs (antes era data direto).
+    type Vaga = {
+      job_id: string;
+      job_title: string;
+      employer_name: string;
+      employer_logo?: string;
+      job_city?: string;
+      job_state?: string;
+      job_country?: string;
+      job_is_remote?: boolean;
+      job_apply_link: string;
+      job_description: string;
+      job_employment_type?: string;
+      job_posted_at_datetime_utc?: string;
     };
+    type R = { data?: { jobs?: Vaga[]; cursor?: string } };
     // Presencial/híbrido: foca na cidade. Remoto: busca no Brasil + remotas
     // (o Google for Jobs já traz vagas mundiais remotas junto).
     const busca = q.remoto ? `${q.termo} Brazil` : `${q.termo} in ${q.cidade}, Brazil`;
-    const params = new URLSearchParams({ query: busca, page: '1', num_pages: '1', country: 'br' });
-    if (q.remoto) params.set('work_from_home', 'true');
-    const url = `https://jsearch.p.rapidapi.com/search?${params.toString()}`;
+    const params = new URLSearchParams({ query: busca, num_pages: '1', country: 'br', date_posted: 'all' });
+    const url = `https://jsearch.p.rapidapi.com/search-v2?${params.toString()}`;
     const data = await fetchJSON<R>(url, {
       headers: { 'X-RapidAPI-Key': chave, 'X-RapidAPI-Host': 'jsearch.p.rapidapi.com' },
     });
-    return (data.data ?? []).map((j) =>
+    return (data.data?.jobs ?? []).map((j) =>
       toJob({
         id: `jsearch:${j.job_id}`,
         source: 'jsearch',

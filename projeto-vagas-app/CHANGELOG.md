@@ -18,6 +18,26 @@
 
 ---
 
+## [2026-08-12] — Claude (Opus 4.8) — Fix: JSearch v5 (endpoint /search e formato mudaram)
+
+- **O QUE:** consertar a fonte **JSearch (Google for Jobs)** — não trazia nada mesmo com chave válida.
+- **ONDE / MUDOU:** `src/services/jobs.ts` → source `jsearch`.
+- **CAUSA (bug comprovado):** o JSearch subiu pra **v5** e mudou:
+  - endpoint `/search` → **`/search-v2`** (o antigo dá 404 "Endpoint does not exist");
+  - as vagas agora vêm em **`data.jobs`** (antes era `data` direto); resposta tem `cursor`;
+  - params: usa `country=br` + `date_posted=all` (tirado `page` e `work_from_home`).
+- **DIAGNÓSTICO:** testado ao vivo com a chave do dono — `/search` e `/v5/search` davam 404, mas
+  `/job-details`, `/estimated-salary` e `/company-job-salary` davam 200 (chave OK, só o path da busca
+  mudou). Com `/search-v2`: **200 OK, 10/10 vagas BR de marketing** (ex.: Especialista Financial Media
+  Marketing — Experian/SP). Cota do plano free: 200 req/mês.
+- **NOTA DE CHAVE:** o dono tinha 2 apps no RapidAPI; a chave que funciona é a do app inscrito no JSearch
+  (a outra dava 404 de "não inscrito"). Chave fica só no aparelho (Config), nunca no código (repo público).
+- **POR QUÊ:** bug comprovado + pedido do dono (ligar mais sites de vaga).
+- **VERIFICADO:** `tsc` 0 erros; endpoint testado com `node fetch` (200 + 10 vagas BR).
+- **STATUS:** ok, publicado por OTA no canal preview.
+
+---
+
 ## [2026-08-12] — Claude (Opus 4.8) — Fix: Gupy estava 404 (fonte morta) + paginação
 
 - **O QUE:** consertar a fonte de vagas **Gupy** (era o maior motivo real do "poucas vagas") e trazer mais resultados.
