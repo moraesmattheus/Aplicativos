@@ -6,7 +6,11 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { initLogger } from '@/services/logger';
 import { AppProvider } from '@/store/AppStore';
+
+// Inicia captura de logs internos
+initLogger();
 
 export default function RootLayout() {
   const scheme = useColorScheme();
@@ -72,6 +76,7 @@ export default function RootLayout() {
             />
             {/* rotas fora das abas */}
             <Tabs.Screen name="config" options={{ href: null }} />
+            <Tabs.Screen name="logs" options={{ href: null }} />
           </Tabs>
         </ThemeProvider>
       </AppProvider>

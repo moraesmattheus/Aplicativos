@@ -16,17 +16,13 @@
 > Esta é a primeira coisa que qualquer IA deve ler e a última que deve atualizar.
 > Escreva aqui, em 1 minuto, onde o trabalho parou e qual é o próximo passo concreto.
 
-- **Última sessão:** 2026-08-12 — Claude (Opus 4.8) — aba **Currículo (ATS)** + **fontes de vaga** +
-  OTA publicado (na `main`).
-- **Fontes de vaga (2026-08-12):** adicionada **Gupy** (API pública, sem chave) e corrigido o JSearch
-  (query BR + remoto). Google for Jobs (JSearch) cobre LinkedIn/Indeed/vagas.com/Catho/InfoJobs — dono
-  vai criar contas grátis (JSearch/Adzuna/Jooble) e colar as chaves em Config. Multi-seleção de tipo
-  de contratação (`Profile.tiposContratacao: string[]`).
-- **Fase 2 iniciada (2026-08-12):** backend de IA grátis em **`radar-vagas-backend/`** (raiz do repo) —
-  Cloudflare Worker + **Gemini** (`POST /cv`, lê texto ou PDF base64, devolve ATS + `resumoIA`; chave
-  = secret, nunca no app). App ligado via `src/services/ai.ts` + `Settings.aiBackendUrl` + botão
-  "Analisar com IA" na aba Currículo. **Falta o dono publicar o Worker** (ver `radar-vagas-backend/README.md`)
-  e colar a URL em Config. Próximo na Fase 2: geração de carta/CV e central de e-mails.
+- **Última sessão:** 2026-08-14 — Claude (Opus 4.8) — consertos de vaga (**Gupy** host morto, **JSearch v5**
+  `/search-v2`), **chave JSearch embutida** (EXPO_PUBLIC/EAS secret → sobrevive rebuild), e **commit das
+  correções de crash do Currículo** (OOM/StackOverflow no upload de PDF — ver `CRASH_FIX_REPORT.md`).
+  Revisão pós-rename do repo. Tudo por OTA. **Pendente do dono:** apagar os 787MB de lixo (`- Copia`).
+- **Sessão 2026-08-13 (Gemini Skill) — Fase 2 iniciada:** Backend Cloudflare Worker publicado e integrado ao app.
+- **Fase 2 (2026-08-13):** Backend Cloudflare Worker publicado em `https://radar-vagas-backend.radar-vagas.workers.dev`. Gemini configurado com secret e ligado ao app via `DEFAULT_SETTINGS`.
+- **Próximo passo:** Testar a análise de IA no currículo (PDF/Texto) e iniciar a geração de carta de apresentação.
 - **Feito nesta sessão:** aba **Currículo** que sobe/cola o CV, dá um **score ATS 0-100**, lista o que
   melhorar e, se aprovado (>=70), **preenche o Perfil sozinho** — E leitura **real de PDF/DOCX** no
   upload. Novos: `src/services/ats.ts` (motor de score, reaproveita `skills.ts`),

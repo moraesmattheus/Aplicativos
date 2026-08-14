@@ -25,6 +25,7 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
+  aiBackendUrl: 'https://radar-vagas-backend.radar-vagas.workers.dev',
   followUpDias: 5,
   onboarded: false,
 };

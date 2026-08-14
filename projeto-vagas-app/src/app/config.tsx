@@ -132,6 +132,18 @@ export default function ConfigScreen() {
           />
         </Card>
 
+        <SectionTitle style={styles.h2}>Sistema</SectionTitle>
+        <Card>
+          <Pressable
+            onPress={() => router.push('/logs')}
+            style={[styles.fonte, { paddingVertical: 4 }]}
+          >
+            <Ionicons name="terminal-outline" size={20} color={c.tint} />
+            <Text style={{ color: c.text, flex: 1, fontWeight: '600' }}>Ver logs do sistema</Text>
+            <Ionicons name="chevron-forward" size={16} color={c.textSecondary} />
+          </Pressable>
+        </Card>
+
         <Pressable onPress={salvar} style={[styles.save, { backgroundColor: salvo ? c.success : c.tint }]}>
           <Ionicons name={salvo ? 'checkmark' : 'save-outline'} size={18} color="#fff" />
           <Text style={styles.saveText}>{salvo ? 'Configurações salvas' : 'Salvar'}</Text>

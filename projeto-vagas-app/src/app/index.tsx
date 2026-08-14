@@ -128,7 +128,7 @@ export default function Dashboard() {
         )}
 
         <Text style={[styles.footer, { color: c.textSecondary }]}>
-          Radar de Vagas · beta · v1.0.0 · 🔄 atualização automática (OTA) ativa
+          Radar de Vagas · beta · v1.0.2 · 🔄 atualização automática (OTA) ativa
         </Text>
         <View style={{ height: 24 }} />
       </ScrollView>
