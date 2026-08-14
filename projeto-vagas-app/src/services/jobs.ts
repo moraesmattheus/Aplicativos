@@ -1,4 +1,4 @@
-// Agregador de vagas: consulta várias APIs legítimas em paralelo, normaliza
+﻿// Agregador de vagas: consulta várias APIs legítimas em paralelo, normaliza
 // tudo para o tipo `Job` e devolve uma lista deduplicada.
 //
 // Fontes SEM chave (funcionam de cara): Remotive, RemoteOK, Arbeitnow.
@@ -304,7 +304,10 @@ const jsearch: Source = {
 const adzuna: Source = {
   nome: 'Adzuna',
   run: async (q, s) => {
-    if (!s.adzunaAppId || !s.adzunaAppKey) return [];
+    // Chave: 1º a que o usuário salvou em Config; senão a EMBUTIDA no build (EXPO_PUBLIC_*).
+    const appId  = s.adzunaAppId?.trim()  || process.env.EXPO_PUBLIC_ADZUNA_APP_ID?.trim();
+    const appKey = s.adzunaAppKey?.trim() || process.env.EXPO_PUBLIC_ADZUNA_APP_KEY?.trim();
+    if (!appId || !appKey) return [];
     type R = {
       results: {
         id: string;
@@ -320,8 +323,8 @@ const adzuna: Source = {
       }[];
     };
     const params = new URLSearchParams({
-      app_id: s.adzunaAppId,
-      app_key: s.adzunaAppKey,
+      app_id: appId,
+      app_key: appKey,
       results_per_page: '40',
       what: q.termo,
       where: q.cidade,
@@ -350,7 +353,9 @@ const adzuna: Source = {
 const jooble: Source = {
   nome: 'Jooble',
   run: async (q, s) => {
-    if (!s.joobleKey) return [];
+    // Chave: 1º a que o usuário salvou em Config; senão a EMBUTIDA no build (EXPO_PUBLIC_*).
+    const chave = s.joobleKey?.trim() || process.env.EXPO_PUBLIC_JOOBLE_KEY?.trim();
+    if (!chave) return [];
     type R = {
       jobs: {
         id?: number;
@@ -365,7 +370,7 @@ const jooble: Source = {
         updated: string;
       }[];
     };
-    const data = await fetchJSON<R>(`https://br.jooble.org/api/${s.joobleKey}`, {
+    const data = await fetchJSON<R>(`https://br.jooble.org/api/${chave}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ keywords: q.termo, location: q.cidade }),
@@ -421,12 +426,25 @@ export async function searchJobs(query: SearchQuery, settings: Settings): Promis
   return { jobs: dedupe(results.flat()), fontesOk, fontesErro };
 }
 
-/** Lista quais fontes com chave estão ativas (para mostrar no app). */
-export function fontesComChave(s: Settings): { nome: string; ativa: boolean }[] {
+/**
+ * Lista quais fontes com chave estão ativas (para mostrar no app).
+ * Considera a chave digitada pelo usuário E a embutida no build (EXPO_PUBLIC_*).
+ * Assim o status fica correto mesmo sem o usuário digitar nada na Config.
+ */
+export function fontesComChave(s: Settings): { nome: string; ativa: boolean; origem: 'usuario' | 'secret' | 'inativa' }[] {
+  const jsearchAtiva  = !!(s.jsearchKey?.trim() || process.env.EXPO_PUBLIC_JSEARCH_KEY?.trim());
+  const jsearchOrigin = s.jsearchKey?.trim() ? 'usuario' : process.env.EXPO_PUBLIC_JSEARCH_KEY?.trim() ? 'secret' : 'inativa';
+  const adzunaAtiva   = !!(
+    (s.adzunaAppId?.trim() || process.env.EXPO_PUBLIC_ADZUNA_APP_ID?.trim()) &&
+    (s.adzunaAppKey?.trim() || process.env.EXPO_PUBLIC_ADZUNA_APP_KEY?.trim())
+  );
+  const adzunaOrigin  = s.adzunaAppId?.trim() ? 'usuario' : process.env.EXPO_PUBLIC_ADZUNA_APP_ID?.trim() ? 'secret' : 'inativa';
+  const joobleAtiva   = !!(s.joobleKey?.trim() || process.env.EXPO_PUBLIC_JOOBLE_KEY?.trim());
+  const joobleOrigin  = s.joobleKey?.trim() ? 'usuario' : process.env.EXPO_PUBLIC_JOOBLE_KEY?.trim() ? 'secret' : 'inativa';
   return [
-    { nome: 'JSearch (Google for Jobs)', ativa: !!s.jsearchKey },
-    { nome: 'Adzuna', ativa: !!(s.adzunaAppId && s.adzunaAppKey) },
-    { nome: 'Jooble', ativa: !!s.joobleKey },
+    { nome: 'JSearch (Google for Jobs)', ativa: jsearchAtiva,  origem: jsearchOrigin  as 'usuario' | 'secret' | 'inativa' },
+    { nome: 'Adzuna',                    ativa: adzunaAtiva,   origem: adzunaOrigin   as 'usuario' | 'secret' | 'inativa' },
+    { nome: 'Jooble',                    ativa: joobleAtiva,   origem: joobleOrigin   as 'usuario' | 'secret' | 'inativa' },
   ];
 }
 
@@ -458,3 +476,5 @@ function formatSalario(min: number, max?: number): string {
   const f = (n: number) => `R$ ${Math.round(n).toLocaleString('pt-BR')}`;
   return max && max !== min ? `${f(min)} - ${f(max)}` : f(min);
 }
+
+
