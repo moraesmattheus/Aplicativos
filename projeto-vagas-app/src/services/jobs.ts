@@ -253,9 +253,10 @@ const gupy: Source = {
 const jsearch: Source = {
   nome: 'JSearch (Google for Jobs)',
   run: async (q, s) => {
-    // Token vindo das Configurações (AsyncStorage → storage.ts → Settings).
+    // Chave: 1º a que o usuário salvou em Config; senão a EMBUTIDA no build (EXPO_PUBLIC_JSEARCH_KEY,
+    // vinda do secret do EAS / .env local) — assim ela sobrevive a rebuild/reinstalação.
     // trim() evita header inválido quando a chave é colada com espaços.
-    const chave = s.jsearchKey?.trim();
+    const chave = s.jsearchKey?.trim() || process.env.EXPO_PUBLIC_JSEARCH_KEY?.trim();
     if (!chave) return [];
     // JSearch v5: endpoint mudou p/ /search-v2 e as vagas vêm em data.jobs (antes era data direto).
     type Vaga = {

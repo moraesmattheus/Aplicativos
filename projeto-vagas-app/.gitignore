@@ -44,3 +44,6 @@ example
 
 # IDE (Android Studio / IntelliJ)
 .idea/
+
+# variaveis de ambiente locais (chaves) - NUNCA versionar
+.env
