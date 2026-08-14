@@ -1,4 +1,4 @@
-# 📊 DASH DIÁRIO — Radar de Vagas
+﻿# 📊 DASH DIÁRIO — Radar de Vagas
 
 > Painel de status vivo. **Atualizado a cada mudança relevante.** Última atualização no rodapé.
 > Histórico detalhado fica no `CHANGELOG.md`; regras e visão no `AGENTS.md`.
@@ -24,9 +24,9 @@
 - Revisão pós-**rename do repo** (`apps-claude` → `Aplicativos`); remote local atualizado.
 
 ## ⏳ Pendências
-- [ ] **Apagar 787 MB de lixo** (`projeto-vagas-app - Copia/` + `.zip`) — aguardando OK do dono.
-- [ ] **Limpar 12 duplicatas** da entrada "Gemini Skill" no `CHANGELOG.md`.
-- [ ] Decidir: manter build de **dev** (Metro/local) ou gerar **preview APK** standalone.
+- [x] ~~**Apagar 787 MB de lixo**~~ — arquivos **não encontrados** (já deletados em sessão anterior). ✅
+- [x] ~~**Limpar 12 duplicatas** da entrada "Gemini Skill" no `CHANGELOG.md`~~ — **11 removidas, 1 mantida**, commitado (`ae6612d`). ✅
+- [x] **Build de dev** (Metro/USB) — **decisão tomada**: continuar no dev build por ora. APK standalone quando necessário. ✅
 - [ ] Login e senha (Firebase) · Preparar lançamento (LinkedIn) — próximas fases.
 - [ ] Adzuna/Jooble: pegar chaves grátis (opcional, mais fontes).
 
@@ -39,4 +39,5 @@
 - **JDK p/ build nativo:** 17 em `C:\Program Files\Eclipse Adoptium\jdk-17.0.20.8-hotspot` (o 25 é incompatível)
 
 ---
-_Atualizado: 2026-08-14 09:0x — por Claude (Opus 4.8). Erro da IA de CV resolvido._
+_Atualizado: 2026-08-14 10:xx — por Claude (Fable 5). 787MB lixo não encontrado (já era); 11 entradas duplicadas CHANGELOG removidas e commitadas; decisão: manter build dev._
+
