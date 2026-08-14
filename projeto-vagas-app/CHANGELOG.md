@@ -1,3 +1,22 @@
+﻿## [2026-08-14] — Claude (Fable 5) — Chaves via EXPO_PUBLIC secret; Config enxuta
+
+- O QUE: Adzuna e Jooble passam a usar process.env.EXPO_PUBLIC_* como fallback (igual ao JSearch).
+          Tela de Config removeu campos de texto para chaves e campo de URL do backend de IA.
+- ONDE: src/services/jobs.ts, src/app/config.tsx, .env
+- MUDOU:
+    * jobs.ts - dzuna e jooble leem EXPO_PUBLIC_ADZUNA_* / EXPO_PUBLIC_JOOBLE_KEY antes de falhar.
+    * jobs.ts - ontesComChave() retorna campo origem: 'usuario'|'secret'|'inativa' para status preciso.
+    * config.tsx - removidos: KeyField de JSearch, Adzuna (appId + appKey), Jooble e campo aiBackendUrl.
+    * config.tsx - painel de fontes mostra "embutida no app" quando chave vem do secret do EAS.
+    * .env - adicionados placeholders comentados para as 3 novas EXPO_PUBLIC vars (Adzuna/Jooble).
+- POR QUÊ: chaves invisíveis na UI aumentam segurança e eliminam necessidade de redigitar após rebuild.
+           Backend de IA já fixo em DEFAULT_SETTINGS — campo visual era desnecessário e carregava o front.
+- STATUS: ok / tsc limpo (zero erros) / commit 4afb3f4 / push main
+- OBS: Adzuna e Jooble NÃO tinham chaves no histórico do projeto. Placeholders adicionados ao .env;
+       usuário precisa pegar as chaves (Adzuna: developer.adzuna.com | Jooble: jooble.org/api/about).
+
+---
+
 # CHANGELOG — Diário de bordo do projeto
 
 > **Leitura/escrita obrigatória para todas as IAs e pessoas.** Ver a REGRA DE OURO em `AGENTS.md` (0.2).
@@ -411,3 +430,4 @@
 - **POR QUÊ:** entrega da Fase 1 do produto (visão do fluxograma).
 - **STATUS:** ✅ `npx tsc --noEmit` limpo. Renderizou no preview web sem erros de console.
   App roda 100% local (sem backend). Próximo passo: ver seção 0 do AGENTS.md.
+

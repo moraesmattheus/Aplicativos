@@ -16,6 +16,10 @@
 - **Kanban, Agenda, Perfil, Dashboard** — ok.
 
 ## 🔧 O que mudou hoje
+- **Config enxuta:** removidos campos de chave (JSearch/Adzuna/Jooble) e campo do backend de IA da tela Config. Menos carga no front.
+- **Chaves via secret:** Adzuna e Jooble agora usam EXPO_PUBLIC_* como fallback (igual ao JSearch) — ativas sem o usuário digitar nada.
+- **Status de fontes:** painel mostra "embutida no app" quando a chave vem do secret EAS.
+- **Adzuna/Jooble:** NÃO havia chaves no histórico. Placeholders no .env criados; usuário precisa obter as chaves.
 - Consertada a **Gupy** (host morto 404 → `employability-portal`) + paginação.
 - Consertado o **JSearch** (v5: `/search` → `/search-v2`, vagas em `data.jobs`).
 - **Chave JSearch** passa a sobreviver a rebuild (EAS secret + `.env`).
@@ -39,5 +43,6 @@
 - **JDK p/ build nativo:** 17 em `C:\Program Files\Eclipse Adoptium\jdk-17.0.20.8-hotspot` (o 25 é incompatível)
 
 ---
-_Atualizado: 2026-08-14 10:xx — por Claude (Fable 5). 787MB lixo não encontrado (já era); 11 entradas duplicadas CHANGELOG removidas e commitadas; decisão: manter build dev._
+_Atualizado: 2026-08-14 11:xx — por Claude (Fable 5). Config enxuta; chaves via EXPO_PUBLIC secret; tsc limpo._
+
 
