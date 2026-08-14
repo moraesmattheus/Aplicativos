@@ -26,7 +26,21 @@ export default {
     const url = new URL(request.url);
 
     if (request.method === 'GET' && url.pathname === '/') {
-      return json({ ok: true, servico: 'radar-vagas-backend', modelo: env.GEMINI_MODEL || 'gemini-2.0-flash' });
+      return json({ ok: true, servico: 'radar-vagas-backend', modelo: env.GEMINI_MODEL || 'gemini-flash-latest' });
+    }
+
+    // Diagnóstico: lista os modelos que a chave pode usar com generateContent.
+    if (request.method === 'GET' && url.pathname === '/models') {
+      try {
+        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${env.GEMINI_API_KEY}`);
+        const d = await r.json();
+        const gen = (d.models || [])
+          .filter((m) => (m.supportedGenerationMethods || []).includes('generateContent'))
+          .map((m) => m.name.replace('models/', ''));
+        return json({ status: r.status, generateContent: gen });
+      } catch (e) {
+        return json({ erro: e?.message || 'falha ao listar modelos' }, 500);
+      }
     }
 
     if (request.method === 'POST' && url.pathname === '/cv') {
@@ -53,7 +67,7 @@ async function analisarCV(body, env) {
   const { texto, pdfBase64, mimeType, alvo } = body || {};
   if (!texto && !pdfBase64) throw new Error('Envie "texto" ou "pdfBase64" do currículo.');
 
-  const model = env.GEMINI_MODEL || 'gemini-2.0-flash';
+  const model = env.GEMINI_MODEL || 'gemini-flash-latest';
   const alvoTxt = alvo
     ? `Cargo-alvo: ${alvo.titulo || '—'}. Skills desejadas: ${(alvo.competencias || []).join(', ') || '—'}.`
     : 'Sem cargo-alvo específico.';
@@ -90,14 +104,26 @@ português. ${alvoTxt}`;
   }
 
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`;
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts }],
-      generationConfig: { temperature: 0.2, responseMimeType: 'application/json', maxOutputTokens: 2048 },
-    }),
+  const reqBody = JSON.stringify({
+    contents: [{ parts }],
+    generationConfig: { temperature: 0.2, responseMimeType: 'application/json', maxOutputTokens: 2048 },
   });
+
+  // Retry em 503/429 (sobrecarga temporária do Gemini): até 3 tentativas com backoff.
+  let res;
+  for (let tent = 1; tent <= 3; tent++) {
+    res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: reqBody,
+    });
+    if (res.ok) break;
+    if ((res.status === 503 || res.status === 429) && tent < 3) {
+      await new Promise((r) => setTimeout(r, 1200 * tent));
+      continue;
+    }
+    break;
+  }
 
   if (!res.ok) {
     const t = await res.text();
