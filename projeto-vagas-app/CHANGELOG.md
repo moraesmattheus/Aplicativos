@@ -36,9 +36,6 @@
   **antes do lançamento público**, mover as keys pro **backend Worker** (proxy) → 100% server-side.
 - **STATUS:** tsc 0 erros; secret criado (preview+prod); publicado por OTA.
 
-> ⚠️ NOTA: este CHANGELOG tem 12 cópias duplicadas da entrada "Claude (Gemini Skill)" (loop de outra
-> sessão). Dá pra limpar deixando só 1 — não é conteúdo novo, é repetição.
-
 ---
 
 ## [2026-08-13] — Claude (Gemini Skill)
@@ -66,13 +63,6 @@
 
 ---
 
-## [2026-08-13] — Claude (Gemini Skill)
-- O QUE: Ativação da Fase 2 (IA) com backend real
-- ONDE: `src/services/storage.ts`, `radar-vagas-backend/`
-- MUDOU: Adicionado o deploy do Cloudflare Worker com Gemini e configurado no `DEFAULT_SETTINGS` do app.
-- POR QUÊ: Pedido do dono para iniciar a Fase 2 e criar a URL do backend.
-- STATUS: ok / tsc limpo / Backend em produção
-
 ## [2026-08-12] — Claude (Opus 4.8) — Fix: JSearch v5 (endpoint /search e formato mudaram)
 
 - **O QUE:** consertar a fonte **JSearch (Google for Jobs)** — não trazia nada mesmo com chave válida.
@@ -93,13 +83,6 @@
 
 ---
 
-## [2026-08-13] — Claude (Gemini Skill)
-- O QUE: Ativação da Fase 2 (IA) com backend real
-- ONDE: `src/services/storage.ts`, `radar-vagas-backend/`
-- MUDOU: Adicionado o deploy do Cloudflare Worker com Gemini e configurado no `DEFAULT_SETTINGS` do app.
-- POR QUÊ: Pedido do dono para iniciar a Fase 2 e criar a URL do backend.
-- STATUS: ok / tsc limpo / Backend em produção
-
 ## [2026-08-12] — Claude (Opus 4.8) — Fix: Gupy estava 404 (fonte morta) + paginação
 
 - **O QUE:** consertar a fonte de vagas **Gupy** (era o maior motivo real do "poucas vagas") e trazer mais resultados.
@@ -117,13 +100,6 @@
 - **STATUS:** ok, publicado por OTA no canal preview.
 
 ---
-
-## [2026-08-13] — Claude (Gemini Skill)
-- O QUE: Ativação da Fase 2 (IA) com backend real
-- ONDE: `src/services/storage.ts`, `radar-vagas-backend/`
-- MUDOU: Adicionado o deploy do Cloudflare Worker com Gemini e configurado no `DEFAULT_SETTINGS` do app.
-- POR QUÊ: Pedido do dono para iniciar a Fase 2 e criar a URL do backend.
-- STATUS: ok / tsc limpo / Backend em produção
 
 ## [2026-08-12] — Claude (Opus 4.8) — Fix de tipo: Card/SectionTitle/Muted aceitam array de estilo
 
@@ -300,13 +276,6 @@
 
 ---
 
-## [2026-08-13] — Claude (Gemini Skill)
-- O QUE: Ativação da Fase 2 (IA) com backend real
-- ONDE: `src/services/storage.ts`, `radar-vagas-backend/`
-- MUDOU: Adicionado o deploy do Cloudflare Worker com Gemini e configurado no `DEFAULT_SETTINGS` do app.
-- POR QUÊ: Pedido do dono para iniciar a Fase 2 e criar a URL do backend.
-- STATUS: ok / tsc limpo / Backend em produção
-
 ## [2026-08-11] — Claude (Opus 4.8) — Rodapé de versão (teste visível de OTA)
 
 - **O QUE:** adicionar um rodapé de versão/beta no Dashboard — útil em beta e serve como teste
@@ -317,13 +286,6 @@
 - **STATUS:** tsc 0 erros. Publicado no canal `preview`.
 
 ---
-
-## [2026-08-13] — Claude (Gemini Skill)
-- O QUE: Ativação da Fase 2 (IA) com backend real
-- ONDE: `src/services/storage.ts`, `radar-vagas-backend/`
-- MUDOU: Adicionado o deploy do Cloudflare Worker com Gemini e configurado no `DEFAULT_SETTINGS` do app.
-- POR QUÊ: Pedido do dono para iniciar a Fase 2 e criar a URL do backend.
-- STATUS: ok / tsc limpo / Backend em produção
 
 ## [2026-08-11] — Claude (Opus 4.8) — Doc de estrutura + limpeza de lixo
 
@@ -336,13 +298,6 @@
 - **STATUS:** ok.
 
 ---
-
-## [2026-08-13] — Claude (Gemini Skill)
-- O QUE: Ativação da Fase 2 (IA) com backend real
-- ONDE: `src/services/storage.ts`, `radar-vagas-backend/`
-- MUDOU: Adicionado o deploy do Cloudflare Worker com Gemini e configurado no `DEFAULT_SETTINGS` do app.
-- POR QUÊ: Pedido do dono para iniciar a Fase 2 e criar a URL do backend.
-- STATUS: ok / tsc limpo / Backend em produção
 
 ## [2026-08-11] — Claude (Opus 4.8) — EAS Update (OTA): atualizar sem rebuildar
 
@@ -363,13 +318,6 @@
 
 ---
 
-## [2026-08-13] — Claude (Gemini Skill)
-- O QUE: Ativação da Fase 2 (IA) com backend real
-- ONDE: `src/services/storage.ts`, `radar-vagas-backend/`
-- MUDOU: Adicionado o deploy do Cloudflare Worker com Gemini e configurado no `DEFAULT_SETTINGS` do app.
-- POR QUÊ: Pedido do dono para iniciar a Fase 2 e criar a URL do backend.
-- STATUS: ok / tsc limpo / Backend em produção
-
 ## [2026-08-11] — Claude (Opus 4.8) — EAS: projeto criado + build do APK
 
 - **O QUE:** configurar o EAS e gerar o APK instalável (Android).
@@ -382,13 +330,6 @@
 - **STATUS:** build roda na nuvem da Expo (~10-20 min). Link do `.apk` sai ao final.
 
 ---
-
-## [2026-08-13] — Claude (Gemini Skill)
-- O QUE: Ativação da Fase 2 (IA) com backend real
-- ONDE: `src/services/storage.ts`, `radar-vagas-backend/`
-- MUDOU: Adicionado o deploy do Cloudflare Worker com Gemini e configurado no `DEFAULT_SETTINGS` do app.
-- POR QUÊ: Pedido do dono para iniciar a Fase 2 e criar a URL do backend.
-- STATUS: ok / tsc limpo / Backend em produção
 
 ## [2026-08-11] — Claude (Opus 4.8) — Organização: um lugar só, um repo só
 
@@ -408,13 +349,6 @@
 
 ---
 
-## [2026-08-13] — Claude (Gemini Skill)
-- O QUE: Ativação da Fase 2 (IA) com backend real
-- ONDE: `src/services/storage.ts`, `radar-vagas-backend/`
-- MUDOU: Adicionado o deploy do Cloudflare Worker com Gemini e configurado no `DEFAULT_SETTINGS` do app.
-- POR QUÊ: Pedido do dono para iniciar a Fase 2 e criar a URL do backend.
-- STATUS: ok / tsc limpo / Backend em produção
-
 ## [2026-08-11] — Claude (Opus 4.8) — Integra no monorepo apps-claude
 
 - **O QUE:** mover o app para dentro do repositório existente `moraesmattheus/apps-claude`
@@ -431,13 +365,6 @@
 
 ---
 
-## [2026-08-13] — Claude (Gemini Skill)
-- O QUE: Ativação da Fase 2 (IA) com backend real
-- ONDE: `src/services/storage.ts`, `radar-vagas-backend/`
-- MUDOU: Adicionado o deploy do Cloudflare Worker com Gemini e configurado no `DEFAULT_SETTINGS` do app.
-- POR QUÊ: Pedido do dono para iniciar a Fase 2 e criar a URL do backend.
-- STATUS: ok / tsc limpo / Backend em produção
-
 ## [2026-08-11] — Claude (Opus 4.8) — Setup GitHub + EAS/APK
 
 - **O QUE:** preparar o versionamento no GitHub e o build do APK instalável.
@@ -453,13 +380,6 @@
   comandos entregues no chat. Nada de código de produto foi alterado (só config de build/publicação).
 
 ---
-
-## [2026-08-13] — Claude (Gemini Skill)
-- O QUE: Ativação da Fase 2 (IA) com backend real
-- ONDE: `src/services/storage.ts`, `radar-vagas-backend/`
-- MUDOU: Adicionado o deploy do Cloudflare Worker com Gemini e configurado no `DEFAULT_SETTINGS` do app.
-- POR QUÊ: Pedido do dono para iniciar a Fase 2 e criar a URL do backend.
-- STATUS: ok / tsc limpo / Backend em produção
 
 ## [2026-08-11] — Claude (Opus 4.8) — Fase 1 (criação do app)
 
