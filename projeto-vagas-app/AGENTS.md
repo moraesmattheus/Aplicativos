@@ -1,4 +1,4 @@
-# AGENTS.md — Contexto-mãe do projeto (LEIA ANTES DE TUDO)
+﻿# AGENTS.md — Contexto-mãe do projeto (LEIA ANTES DE TUDO)
 
 > **Para qualquer IA (Claude, ChatGPT, Cursor, Copilot, Gemini…) e para humanos.**
 > Este é o **arquivo de verdade** do projeto. Leia-o **inteiro** antes de escrever ou alterar

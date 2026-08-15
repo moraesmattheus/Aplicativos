@@ -16,6 +16,11 @@
 - **Kanban, Agenda, Perfil, Dashboard** — ok.
 
 ## 🔧 O que mudou hoje
+- **APK standalone gerado** (`eas build --profile preview`) com as 4 chaves embutidas — build ID `01514efb`. Pronto para instalar no celular e mostrar para a família.
+- **Chave Jooble obtida** (`41860bb7-aab7-4b37-818c-a8350085eacd`) → inserida no `.env` + EAS Secret (preview).
+- **Chave Adzuna obtida** (App ID `48401365` / Key `e25c77bcff...`) → inserida no `.env` + EAS Secret (preview).
+- **4 EAS Secrets cadastrados** no painel expo.dev (ambiente preview, visibilidade Sensitive): JSearch, Adzuna (ID+Key), Jooble.
+- Metro reiniciado 2x com `--clear` para embutir as novas vars no bundle local.
 - **Config enxuta:** removidos campos de chave (JSearch/Adzuna/Jooble) e campo do backend de IA da tela Config. Menos carga no front.
 - **Chaves via secret:** Adzuna e Jooble agora usam EXPO_PUBLIC_* como fallback (igual ao JSearch) — ativas sem o usuário digitar nada.
 - **Status de fontes:** painel mostra "embutida no app" quando a chave vem do secret EAS.
@@ -32,7 +37,7 @@
 - [x] ~~**Limpar 12 duplicatas** da entrada "Gemini Skill" no `CHANGELOG.md`~~ — **11 removidas, 1 mantida**, commitado (`ae6612d`). ✅
 - [x] **Build de dev** (Metro/USB) — **decisão tomada**: continuar no dev build por ora. APK standalone quando necessário. ✅
 - [ ] Login e senha (Firebase) · Preparar lançamento (LinkedIn) — próximas fases.
-- [ ] Adzuna/Jooble: pegar chaves grátis (opcional, mais fontes).
+- [x] ~~Adzuna/Jooble: pegar chaves grátis~~ — chaves obtidas e embutidas. ✅
 
 ## 🖥️ Ambiente
 - **Projeto:** `C:\Users\matth\Downloads\Apps\apps-claude\projeto-vagas-app`
