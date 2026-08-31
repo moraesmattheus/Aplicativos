@@ -549,7 +549,7 @@
     </div>
 
     <div class="panel">
-      <h2>Cartão de crédito<span class="hint">Suba a planilha (CSV) da fatura — o app soma e categoriza sozinho.</span></h2>
+      <h2>Transações &amp; Fatura<span class="hint">Suba a planilha (CSV) da fatura — o app soma, categoriza e separa <b>por pessoa</b> pra você copiar no Notion.</span></h2>
       <div class="data-actions">
         <button class="btn" id="cartaoImport">Subir planilha (CSV)</button>
         <input type="file" id="cartaoFile" accept=".csv,text/csv,text/plain" style="display:none">
@@ -557,7 +557,7 @@
         <span class="save-status" id="cartaoStatus" style="flex:1;text-align:left;margin:0;align-self:center;"></span>
       </div>
       <div id="cartaoBox"></div>
-      <p class="map-hint" style="margin-top:10px;">Exporte o CSV da fatura no app do banco (Nubank, Itaú, etc.). Formatos comuns: data, descrição, valor. O que já estiver no cartão não precisa lançar de novo em "Despesas".</p>
+      <p class="map-hint" style="margin-top:10px;">Exporte o CSV da fatura no app do banco/corretora (XP, Nubank, Itaú, etc.). Formatos comuns: data, descrição, valor — e, quando houver, a coluna de <b>portador/titular</b> (quem comprou). O que já estiver no cartão não precisa lançar de novo em "Despesas".</p>
     </div>
   </section>
 
@@ -782,7 +782,7 @@ const DEFAULTS = {
   mapa: { nodes: [], view: null },
   alvos: [],
   renda: { token: '', itens: [] },
-  custo: { rendas: [], despesas: [], cartao: { itens:[], total:0, porCat:{}, top:[], count:0 } }
+  custo: { rendas: [], despesas: [], cartao: { itens:[], total:0, porCat:{}, top:[], count:0, pessoas:[], pessoaKW:{} } }
 };
 let state = load();
 
@@ -804,7 +804,7 @@ function migrate(d){
     custo: {
       rendas:(d.custo&&d.custo.rendas)||[],
       despesas:(d.custo&&d.custo.despesas)||[],
-      cartao: Object.assign({ itens:[], total:0, porCat:{}, top:[], count:0 }, (d.custo&&d.custo.cartao)||{})
+      cartao: Object.assign({ itens:[], total:0, porCat:{}, top:[], count:0, pessoas:[], pessoaKW:{} }, (d.custo&&d.custo.cartao)||{})
     }
   };
 }
@@ -828,6 +828,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6
 
 /* ---------------- Helpers ---------------- */
 function fmt(n){ return 'R$ ' + Math.round(n||0).toLocaleString('pt-BR'); }
+function fmtCents(n){ return 'R$ ' + (Number(n)||0).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}); }
 function monthsLabel(m){
   if(!isFinite(m)) return 'sem aporte';
   if(m <= 0) return 'já alcançado';
@@ -843,6 +844,21 @@ function ymLabel(ym){
 }
 function currentYM(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fallbackCopy(text, done){
+  try{ const ta=document.createElement('textarea'); ta.value=text; ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.top='-1000px'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if(done) done(true);
+  }catch(e){ if(done) done(false); }
+}
+function copyText(text, okMsg){
+  const flash=(ok)=>{ const el=document.getElementById('cartaoStatus'); if(!el) return;
+    el.textContent = ok ? (okMsg||'copiado ✓') : 'não consegui copiar — selecione e copie manual';
+    el.style.color = ok ? 'var(--green)' : 'var(--coral)';
+    clearTimeout(el._ct); el._ct=setTimeout(()=>{ el.textContent=''; }, 3000);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>flash(true)).catch(()=> fallbackCopy(text, flash));
+  } else { fallbackCopy(text, flash); }
+}
 function dateFromMonths(m){ if(!isFinite(m)) return null; const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()+Math.max(0,m)); return d; }
 function dateLabel(m){ const d=dateFromMonths(m); if(!d) return '—'; let s=d.toLocaleDateString('pt-BR',{month:'long',year:'numeric'}); return s.charAt(0).toUpperCase()+s.slice(1); }
 function statusMeta(pct){
@@ -2300,6 +2316,26 @@ function fillCatSelect(){
   sel.innerHTML=CAT_KEYS.map(k=>`<option value="${k}">${CAT[k].emoji} ${CAT[k].nome}</option>`).join('');
   if(cur) sel.value=cur;
 }
+const PESSOA_UNSET='__none';
+function cartaoPessoasList(){
+  const cc=state.custo.cartao||{};
+  const set=new Set((cc.pessoas||[]).map(p=>String(p).trim()).filter(Boolean));
+  (cc.itens||[]).forEach(it=>{ if(it.pessoa) set.add(it.pessoa); });
+  return [...set].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+}
+/* monta um bloco TSV (cola direto no Notion como tabela / ou no Sheets/Excel) */
+function cartaoTSV(itens, withPerson){
+  const clean=(c)=>String(c==null?'':c).replace(/[\t\r\n]+/g,' ').trim();
+  const head=(withPerson?['Pessoa']:[]).concat(['Data','Descrição','Categoria','Valor (R$)']);
+  const rows=itens.map(it=>{
+    const cols=(withPerson?[it.pessoa||'A definir']:[]).concat([
+      it.data||'', it.desc||'', (CAT[it.cat]?CAT[it.cat].nome:(it.cat||'')),
+      (Number(it.valor)||0).toFixed(2).replace('.',',')
+    ]);
+    return cols.map(clean).join('\t');
+  });
+  return [head.join('\t')].concat(rows).join('\n');
+}
 function renderCartaoBox(){
   const box=document.getElementById('cartaoBox'); const cc=state.custo.cartao||{};
   if(!cc.total){ box.innerHTML=''; return; }
@@ -2314,19 +2350,91 @@ function renderCartaoBox(){
       </div>
       <select class="status-select" data-cat-item="${it.id}" style="width:100%;margin-top:6px">${optaFor(it.cat)}</select>
     </div>`).join('') : '';
+
+  /* ---------- Compras por pessoa (nova visualização p/ o Notion) ---------- */
+  const people = cartaoPessoasList();
+  const personOpts=(sel)=>[`<option value="" ${!sel?'selected':''}>— a definir —</option>`]
+    .concat(people.map(p=>`<option value="${escapeHtml(p)}" ${p===sel?'selected':''}>${escapeHtml(p)}</option>`)).join('');
+  const groups={};
+  itens.forEach(it=>{ const key=it.pessoa||PESSOA_UNSET; (groups[key]=groups[key]||{nome:it.pessoa||'A definir',itens:[]}).itens.push(it); });
+  const groupArr=Object.entries(groups).map(([key,g])=>({ key, nome:g.nome, itens:g.itens.slice().sort((a,b)=>b.valor-a.valor), total:g.itens.reduce((s,x)=>s+(Number(x.valor)||0),0) }));
+  groupArr.sort((a,b)=>{ if(a.key===PESSOA_UNSET) return -1; if(b.key===PESSOA_UNSET) return 1; return b.total-a.total; });
+  const pessoasComGasto = groupArr.filter(g=>g.key!==PESSOA_UNSET).length;
+  const pessoaHtml = `
+    <details class="settings" open style="margin-top:10px">
+      <summary><span>👥 Compras por pessoa <small style="color:var(--muted);font-weight:400">· copiar pro Notion</small></span><span class="chev">▾</span></summary>
+      <p class="sub" style="font-size:12px;margin:10px 0">Cada pessoa e o que ela comprou. Ajuste <b>de quem é</b> cada compra (o app lembra no próximo mês) e toque em <b>Copiar</b> pra colar a listinha no seu Notion.</p>
+      <div class="form-row" style="margin-bottom:6px">
+        <div class="field" style="flex:2 1 170px;"><label for="pessoaNova">Adicionar pessoa (ex.: Mãe, Sogra, Irmão)</label><input type="text" id="pessoaNova" placeholder="nome" autocomplete="off"></div>
+        <button class="btn sm" id="pessoaAdd">Adicionar</button>
+      </div>
+      <div class="data-actions" style="margin-bottom:10px">
+        <button class="btn ghost sm" id="copyTudo">📋 Copiar tudo (com coluna Pessoa)</button>
+      </div>
+      ${groupArr.map((g,idx)=>`
+        <div class="person-group" style="${idx>0?'border-top:1px solid var(--line);':''}padding-top:12px;margin-top:12px">
+          <div class="cathead" style="align-items:center">
+            <span>${g.key===PESSOA_UNSET?'❓':'👤'} <b>${escapeHtml(g.nome)}</b> <small style="color:var(--muted)">· ${g.itens.length} ${g.itens.length===1?'compra':'compras'}</small></span>
+            <span style="display:flex;gap:8px;align-items:center">
+              <b style="font-family:'IBM Plex Mono',monospace">${fmtCents(g.total)}</b>
+              <button class="btn ghost sm" data-copy-pessoa="${escapeHtml(g.key)}">📋 Copiar</button>
+            </span>
+          </div>
+          <div class="entries" style="margin-top:8px">
+            ${g.itens.map(it=>`
+              <div class="entry" style="padding:9px 12px">
+                <div class="entry-head" style="gap:8px">
+                  <span style="flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${it.data?`<small style="color:var(--muted)">${escapeHtml(it.data)}</small> `:''}${escapeHtml(it.desc)}</span>
+                  <span class="entry-val" style="font-size:13px">${fmtCents(it.valor)}</span>
+                </div>
+                <select class="status-select" data-pessoa-item="${it.id}" style="width:100%;margin-top:6px">${personOpts(it.pessoa||'')}</select>
+              </div>`).join('')}
+          </div>
+        </div>`).join('')}
+    </details>`;
+
   box.innerHTML=`
     <div class="kpi" style="margin-top:14px">
       <div class="box"><div class="n">${fmt(cc.total)}</div><div class="l">Total da fatura</div></div>
       <div class="box"><div class="n">${cc.count||0}</div><div class="l">Lançamentos</div></div>
+      <div class="box"><div class="n">${pessoasComGasto}</div><div class="l">Pessoas</div></div>
     </div>
     <div style="margin-top:6px">${cats.map(([k,v])=>`<div class="catrow"><div class="cathead"><span>${CAT[k]?CAT[k].emoji+' '+CAT[k].nome:k}</span><b>${fmt(v)}</b></div><div class="catbar"><div class="fill ok" style="width:${Math.round(v/cc.total*100)}%"></div></div></div>`).join('')}</div>
+    ${pessoaHtml}
     ${lista?`<details class="settings" style="margin-top:10px"><summary><span>✏️ Ver / corrigir categorias (${itens.length})</span><span class="chev">▾</span></summary>
       <p class="sub" style="font-size:12px;margin:10px 0">Se o app classificou algo errado, escolha a categoria certa — o gráfico se ajusta na hora.</p>
       <div class="entries">${lista}</div>
     </details>`:''}`;
+
   box.querySelectorAll('[data-cat-item]').forEach(sel=> sel.onchange=()=>{
     const it=(state.custo.cartao.itens||[]).find(x=>x.id===sel.dataset.catItem);
-    if(it){ it.cat=sel.value; state.custo.cartao=recalcCartao(state.custo.cartao.itens); save(); renderCusto(); }
+    if(it){ it.cat=sel.value; state.custo.cartao=recalcCartao(state.custo.cartao.itens, state.custo.cartao); save(); renderCusto(); }
+  });
+  // reatribuir a pessoa de uma compra (e memorizar por estabelecimento)
+  box.querySelectorAll('[data-pessoa-item]').forEach(sel=> sel.onchange=()=>{
+    const cc2=state.custo.cartao; const it=(cc2.itens||[]).find(x=>x.id===sel.dataset.pessoaItem); if(!it) return;
+    const val=sel.value.trim(); it.pessoa=val;
+    if(!cc2.pessoaKW) cc2.pessoaKW={}; const key=normDesc(it.desc);
+    if(key){ if(val) cc2.pessoaKW[key]=val; else delete cc2.pessoaKW[key]; }
+    state.custo.cartao=recalcCartao(cc2.itens, cc2); save(); renderCusto();
+  });
+  // adicionar uma pessoa nova à lista
+  const addP=document.getElementById('pessoaAdd'), inP=document.getElementById('pessoaNova');
+  if(addP&&inP){ const doAdd=()=>{ const nome=normPessoa(inP.value); if(!nome) return;
+      const cc2=state.custo.cartao; if(!cc2.pessoas) cc2.pessoas=[];
+      if(!cc2.pessoas.some(p=>p.toLowerCase()===nome.toLowerCase())) cc2.pessoas.push(nome);
+      inP.value=''; state.custo.cartao=recalcCartao(cc2.itens, cc2); save(); renderCusto();
+    };
+    addP.onclick=doAdd; inP.onkeydown=(e)=>{ if(e.key==='Enter'){ e.preventDefault(); doAdd(); } };
+  }
+  // copiar tudo (com a coluna Pessoa) — na ordem dos grupos
+  const cAll=document.getElementById('copyTudo');
+  if(cAll) cAll.onclick=()=> copyText(cartaoTSV(groupArr.flatMap(g=>g.itens), true), 'copiado ✓ — cole no Notion');
+  // copiar a lista de uma pessoa
+  box.querySelectorAll('[data-copy-pessoa]').forEach(btn=> btn.onclick=()=>{
+    const key=btn.dataset.copyPessoa;
+    const its=(state.custo.cartao.itens||[]).filter(it=>(it.pessoa||PESSOA_UNSET)===key).sort((a,b)=>b.valor-a.valor);
+    copyText(cartaoTSV(its, false), 'copiado ✓ — cole no Notion');
   });
 }
 
@@ -2352,19 +2460,34 @@ function parseNum(v){
   else if(s.includes(',')) s=s.replace(',','.');
   return parseFloat(s);
 }
+/* ---- pessoas: normalização de nome e chave de memória por estabelecimento ---- */
+function titleCase(s){ return String(s||'').toLowerCase().replace(/(^|[\s'-])([a-zà-ú])/g, (m,p,c)=>p+c.toUpperCase()); }
+function normPessoa(raw){
+  let s=String(raw||'').replace(/\s+/g,' ').trim();
+  if(!s) return '';
+  if(/^[\d\s*.xX·•\-]+$/.test(s)) return '';   // só números/asteriscos = nº do cartão, não é nome
+  return titleCase(s.slice(0,40));
+}
+function normDesc(s){
+  return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-z0-9 ]/g,' ').replace(/\d+/g,' ').replace(/\s+/g,' ').trim();
+}
 function parseCartaoCSV(text){
+  const prev = (state.custo && state.custo.cartao) || {};
+  const kw = prev.pessoaKW || {};
   const lines=text.split(/\r?\n/).filter(l=>l.trim());
   if(!lines.length) return null;
   const delim = (lines[0].match(/;/g)||[]).length > (lines[0].match(/,/g)||[]).length ? ';' : ',';
   const split = (l)=> l.split(delim).map(x=>x.replace(/^"|"$/g,'').trim());
-  let start=0, di=-1, vi=-1, ni=-1;
+  let start=0, di=-1, vi=-1, ni=-1, pi=-1;
   const head=split(lines[0]).map(h=>h.toLowerCase());
-  const looksHeader = head.some(h=>/data|date|valor|amount|desc|title|lan|hist|estabel/.test(h));
+  const looksHeader = head.some(h=>/data|date|valor|amount|desc|title|lan|hist|estabel|portador|titular/.test(h));
   if(looksHeader){
     start=1;
     di=head.findIndex(h=>/data|date/.test(h));
     vi=head.findIndex(h=>/valor|amount|value/.test(h));
     ni=head.findIndex(h=>/desc|title|lan|hist|estabel/.test(h));
+    pi=head.findIndex(h=>/portador|titular|respons|depend|adicional|membro|pessoa|quem (comprou|gastou|usou)/.test(h));
   }
   const itens=[];
   for(let i=start;i<lines.length;i++){
@@ -2377,16 +2500,25 @@ function parseCartaoCSV(text){
     }
     if(isNaN(val)) continue;
     if(val<=0) continue; // ignora pagamentos/estornos
-    itens.push({ id:uid(), desc:(desc||'(sem descrição)').slice(0,60), valor:Math.round(val*100)/100, cat:catFromDesc(desc) });
+    desc = (desc||'(sem descrição)').slice(0,60);
+    let pessoa = pi>=0 ? normPessoa(cols[pi]) : '';           // 1) coluna portador/titular do CSV
+    if(!pessoa){ const m=kw[normDesc(desc)]; if(m) pessoa=m; } // 2) memória de atribuições anteriores
+    const data = di>=0 ? String(cols[di]||'').slice(0,20) : '';
+    itens.push({ id:uid(), desc, valor:Math.round(val*100)/100, cat:catFromDesc(desc), pessoa, data });
   }
   if(!itens.length) return null;
-  return recalcCartao(itens);
+  return recalcCartao(itens, prev);
 }
-function recalcCartao(itens){
+function recalcCartao(itens, prev){
+  prev = prev || {};
   const porCat={}; let total=0;
   itens.forEach(it=>{ const v=Number(it.valor)||0; total+=v; porCat[it.cat]=(porCat[it.cat]||0)+v; });
   const top=[...itens].sort((a,b)=>b.valor-a.valor).slice(0,8).map(t=>({desc:t.desc,valor:t.valor}));
-  return { itens, total:Math.round(total*100)/100, porCat, top, count:itens.length };
+  // lista de pessoas = as guardadas manualmente ∪ as que aparecem nos lançamentos
+  const set=new Set((prev.pessoas||[]).map(p=>String(p).trim()).filter(Boolean));
+  itens.forEach(it=>{ if(it.pessoa) set.add(it.pessoa); });
+  const pessoas=[...set].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  return { itens, total:Math.round(total*100)/100, porCat, top, count:itens.length, pessoas, pessoaKW: Object.assign({}, prev.pessoaKW||{}) };
 }
 
 /* eventos da aba custo */
@@ -2419,7 +2551,7 @@ document.getElementById('cartaoFile').onchange=(ev)=>{
   };
   reader.readAsText(file, 'utf-8');
 };
-document.getElementById('cartaoClear').onclick=()=>{ state.custo.cartao={ total:0, porCat:{}, top:[], count:0 }; document.getElementById('cartaoStatus').textContent=''; save(); renderCusto(); };
+document.getElementById('cartaoClear').onclick=()=>{ const cc=state.custo.cartao||{}; state.custo.cartao={ itens:[], total:0, porCat:{}, top:[], count:0, pessoas:cc.pessoas||[], pessoaKW:cc.pessoaKW||{} }; document.getElementById('cartaoStatus').textContent=''; save(); renderCusto(); };
 
 /* ================= MENU CENTRAL + TEMA ================= */
 const SECTIONS = [

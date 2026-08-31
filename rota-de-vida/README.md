@@ -129,6 +129,14 @@ Cada usuário começa no **próprio espaço**. Para o casal compartilhar:
    por categoria com **referências (regra 50/30/20)**, import da **planilha do
    cartão (CSV)** com auto-categorização, **onde economizar** automático e a
    **sobra vira o aporte** da Rota com um toque.
+   - **Transações & Fatura — compras por pessoa**: ao subir o CSV da fatura
+     (XP, Nubank, Itaú…), o app separa as compras **por pessoa**. Se o CSV
+     tiver a coluna de **portador/titular** (ex.: cartões adicionais da XP),
+     ele já identifica quem comprou; senão, você marca "de quem é" cada compra
+     — e o app **lembra a atribuição no mês seguinte** para o mesmo
+     estabelecimento. Dá para **adicionar familiares** (Mãe, Sogra, Irmão…) e,
+     em cada pessoa, tocar em **📋 Copiar** para colar a listinha pronta
+     (data, descrição, categoria, valor) direto numa tabela do **Notion**.
 3. **Mapa** — mapa mental interativo: nós arrastáveis e conectados, por tipo
    (Rota, Submeta, Obstáculo, Objeção, Estudo, Renda passiva, Tarefa, Ideia).
    Toque num nó para editar; arraste o fundo para mover; use +/− para zoom.

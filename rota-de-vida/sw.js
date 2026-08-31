@@ -3,7 +3,7 @@
    cai para o cache quando offline). Assim, tudo que você publica no GitHub
    aparece automaticamente no app instalado na próxima vez que ele abrir. */
 
-const CACHE = 'rota-vida-cache-v1';
+const CACHE = 'rota-vida-cache-v2';
 const ASSETS = [
   './',
   './index.html',
