@@ -28,7 +28,7 @@ diário de bordo, mentalidade, ambiente e metas. É um **PWA instalável** na te
 inicial do celular, funciona offline e **atualiza sozinho** quando o código muda.
 
 - 📂 Pasta: [`rota-de-vida`](./rota-de-vida/)
-- 🌐 No ar: https://moraesmattheus.github.io/apps-claude/rota-de-vida/
+- 🌐 No ar: https://moraesmattheus.github.io/Aplicativos/rota-de-vida/
 - 🛠️ PWA · HTML/JS · Service Worker · Web Manifest
 
 ---
