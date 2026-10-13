@@ -3,8 +3,8 @@
 - **O QUE:** Chaves reais de Adzuna e Jooble obtidas e inseridas no .env + EAS Secrets.
              APK standalone gerado (eas build preview) com as 4 chaves embutidas, para demo presencial.
 - **ONDE / MUDOU:**
-  - .env: EXPO_PUBLIC_ADZUNA_APP_ID=48401365, EXPO_PUBLIC_ADZUNA_APP_KEY=e25c77bcff411292c6e5863803944faa,
-            EXPO_PUBLIC_JOOBLE_KEY=41860bb7-aab7-4b37-818c-a8350085eacd — todos preenchidos.
+  - .env: EXPO_PUBLIC_ADZUNA_APP_ID=<removido>, EXPO_PUBLIC_ADZUNA_APP_KEY=<removido>,
+            EXPO_PUBLIC_JOOBLE_KEY=<removido> — todos preenchidos.
   - EAS Secrets (painel expo.dev, ambiente preview): 4 vars cadastradas como "Sensitive".
   - Metro reiniciado 2x com --clear para embutir as novas variáveis no bundle local.
   - APK gerado: build ID 01514efb-d060-4432-b2d3-b9b4ce38b92f (expo.dev).
