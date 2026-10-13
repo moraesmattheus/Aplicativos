@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Radar de Vagas</title>
+  <meta name="description" content="CRM pessoal de carreira: encontra vagas, calcula a compatibilidade com o seu currículo e organiza tudo num Kanban. Roda no navegador, sem instalar nada.">
+  <meta name="theme-color" content="#0E1116">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">&#127919;</span>
+      <div>
+        <h1>Radar de Vagas</h1>
+        <p class="brand-sub">CRM pessoal de carreira</p>
+      </div>
+    </div>
+  </header>
+
+  <main id="app">
+    <!-- ================= INICIO ================= -->
+    <section id="tab-inicio" class="tab" aria-labelledby="h-inicio">
+      <h2 id="h-inicio">Início</h2>
+      <p class="muted" id="inicio-saudacao"></p>
+      <div class="stats" id="stats"></div>
+      <div class="card">
+        <h3>Próximas entrevistas</h3>
+        <div id="proximas-entrevistas"></div>
+      </div>
+      <div class="card">
+        <h3>Ações pendentes</h3>
+        <div id="acoes-pendentes"></div>
+      </div>
+      <div class="card demo-card">
+        <h3>Modo demonstração</h3>
+        <p class="muted">Preenche o Kanban com candidaturas de exemplo (dados fictícios) para mostrar o app funcionando, por exemplo numa entrevista.</p>
+        <div class="row">
+          <button class="btn primary" id="btn-demo">Carregar dados de demonstração</button>
+          <button class="btn" id="btn-limpar-demo">Limpar candidaturas</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= VAGAS ================= -->
+    <section id="tab-vagas" class="tab" aria-labelledby="h-vagas" hidden>
+      <h2 id="h-vagas">Radar de vagas</h2>
+      <form id="form-busca" class="card">
+        <div class="grid2">
+          <label>Cargo ou palavra-chave
+            <input type="text" id="busca-termo" placeholder="ex.: analista de performance" autocomplete="off">
+          </label>
+          <label>Cidade (para vagas presenciais)
+            <input type="text" id="busca-cidade" placeholder="ex.: Florianópolis" autocomplete="off">
+          </label>
+        </div>
+        <label class="check"><input type="checkbox" id="busca-remoto"> Incluir vagas remotas</label>
+        <div class="row">
+          <button type="submit" class="btn primary" id="btn-buscar">Buscar vagas</button>
+          <button type="button" class="btn" id="btn-exemplos">Ver vagas de exemplo</button>
+        </div>
+        <p class="hint">Remoto vale para qualquer lugar. Presencial e híbrido só aparecem na cidade do seu perfil.</p>
+      </form>
+      <div id="fontes-status" class="fontes" aria-live="polite"></div>
+      <div id="vagas-resumo" class="muted" aria-live="polite"></div>
+      <div id="vagas-lista"></div>
+    </section>
+
+    <!-- ================= KANBAN ================= -->
+    <section id="tab-kanban" class="tab" aria-labelledby="h-kanban" hidden>
+      <h2 id="h-kanban">Kanban</h2>
+      <p class="muted">Acompanhe cada candidatura da etapa inicial até o resultado. Role para o lado para ver todas as colunas.</p>
+      <div id="kanban" class="kanban"></div>
+    </section>
+
+    <!-- ================= CURRICULO ================= -->
+    <section id="tab-curriculo" class="tab" aria-labelledby="h-curriculo" hidden>
+      <h2 id="h-curriculo">Currículo (ATS)</h2>
+      <p class="muted">Simula a leitura dos robôs de RH: dá uma nota de 0 a 100, mostra o que melhorar e pode preencher o seu perfil sozinho.</p>
+      <div class="card">
+        <label>Cole o texto do currículo
+          <textarea id="cv-texto" rows="9" placeholder="Cole aqui o texto do seu currículo..."></textarea>
+        </label>
+        <div class="row">
+          <label class="btn file-btn">Carregar arquivo (.txt ou .pdf)
+            <input type="file" id="cv-arquivo" accept=".txt,.pdf,text/plain,application/pdf" hidden>
+          </label>
+          <span class="muted" id="cv-arquivo-nome"></span>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="btn-analisar">Analisar (ATS local)</button>
+          <button class="btn" id="btn-analisar-ia">Analisar com IA</button>
+        </div>
+        <p class="hint">A análise local roda no seu navegador e nada sai do aparelho. A análise com IA envia o currículo ao backend (Gemini) configurado em Config. PDF só funciona com IA.</p>
+      </div>
+      <div id="cv-resultado" aria-live="polite"></div>
+    </section>
+
+    <!-- ================= PERFIL ================= -->
+    <section id="tab-perfil" class="tab" aria-labelledby="h-perfil" hidden>
+      <h2 id="h-perfil">Perfil</h2>
+      <form id="form-perfil" class="card">
+        <div class="grid2">
+          <label>Nome <input type="text" name="nome" autocomplete="name"></label>
+          <label>Cargo desejado <input type="text" name="titulo"></label>
+          <label>Senioridade
+            <select name="senioridade">
+              <option>Estágio</option><option>Júnior</option><option>Pleno</option><option>Sênior</option><option>Indefinido</option>
+            </select>
+          </label>
+          <label>Cidade (presencial) <input type="text" name="cidade"></label>
+        </div>
+        <label class="check"><input type="checkbox" name="aceitaRemoto"> Aceito vagas remotas</label>
+        <label>Competências (separadas por vírgula)
+          <textarea name="competencias" rows="3" placeholder="meta ads, google ads, ga4"></textarea>
+        </label>
+        <label>Palavras-chave de busca (separadas por vírgula)
+          <input type="text" name="palavrasChave" placeholder="analista de performance, growth">
+        </label>
+        <label>Resumo
+          <textarea name="resumo" rows="3"></textarea>
+        </label>
+        <div class="grid2">
+          <label>E-mail <input type="email" name="email" autocomplete="email"></label>
+          <label>Telefone <input type="tel" name="telefone" autocomplete="tel"></label>
+          <label>LinkedIn <input type="text" name="linkedin"></label>
+          <label>Portfólio <input type="text" name="portfolio"></label>
+          <label>Pretensão salarial <input type="text" name="pretensaoSalarial"></label>
+        </div>
+        <fieldset class="check-group">
+          <legend>Tipos de contratação aceitos</legend>
+          <label class="check"><input type="checkbox" name="tc" value="CLT"> CLT</label>
+          <label class="check"><input type="checkbox" name="tc" value="PJ"> PJ</label>
+          <label class="check"><input type="checkbox" name="tc" value="Estágio"> Estágio</label>
+          <label class="check"><input type="checkbox" name="tc" value="Freelance"> Freelance</label>
+        </fieldset>
+        <div class="row">
+          <button type="submit" class="btn primary">Salvar perfil</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ================= CONFIG ================= -->
+    <section id="tab-config" class="tab" aria-labelledby="h-config" hidden>
+      <h2 id="h-config">Configurações</h2>
+      <div class="card">
+        <h3>Backend de IA</h3>
+        <label>URL do backend
+          <input type="url" id="cfg-backend" placeholder="https://radar-vagas-backend.exemplo.workers.dev">
+        </label>
+        <div class="row">
+          <button class="btn" id="btn-salvar-backend">Salvar</button>
+          <button class="btn" id="btn-testar-backend">Testar conexão</button>
+        </div>
+        <p class="muted" id="cfg-backend-status"></p>
+      </div>
+      <div class="card">
+        <h3>Fontes de vagas</h3>
+        <label class="check"><input type="checkbox" id="cfg-exemplos"> Sempre misturar vagas de exemplo nos resultados</label>
+        <p class="hint">Fontes ativas: Remotive, RemoteOK, Arbeitnow e Gupy. Algumas podem bloquear o acesso direto do navegador. Quando isso acontece o app avisa e as demais seguem funcionando.</p>
+      </div>
+      <div class="card">
+        <h3>Seus dados</h3>
+        <p class="muted">Tudo fica salvo só neste navegador (localStorage). Nada é enviado a servidor, exceto a análise de currículo com IA quando você pedir.</p>
+        <div class="row">
+          <button class="btn" id="btn-exportar">Baixar backup (.json)</button>
+          <label class="btn file-btn">Restaurar backup
+            <input type="file" id="cfg-importar" accept=".json,application/json" hidden>
+          </label>
+          <button class="btn danger" id="btn-apagar-tudo">Apagar todos os dados</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottomnav" aria-label="Navegação principal">
+    <button data-tab="inicio" class="navbtn"><span aria-hidden="true">&#127968;</span><small>Início</small></button>
+    <button data-tab="vagas" class="navbtn"><span aria-hidden="true">&#128269;</span><small>Vagas</small></button>
+    <button data-tab="kanban" class="navbtn"><span aria-hidden="true">&#128203;</span><small>Kanban</small></button>
+    <button data-tab="curriculo" class="navbtn"><span aria-hidden="true">&#128196;</span><small>Currículo</small></button>
+    <button data-tab="perfil" class="navbtn"><span aria-hidden="true">&#128100;</span><small>Perfil</small></button>
+    <button data-tab="config" class="navbtn"><span aria-hidden="true">&#9881;&#65039;</span><small>Config</small></button>
+  </nav>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="./app.js"></script>
+  <script>
+    // Service worker: deixa o app instalável e funcionando offline.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('./sw.js').catch(function () {});
+      });
+    }
+  </script>
+</body>
+</html>

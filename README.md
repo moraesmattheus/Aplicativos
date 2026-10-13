@@ -18,6 +18,7 @@ organiza tudo num **Kanban** e agenda entrevistas no **Google Calendar**.
 → Priorização → Candidatura → Kanban → Follow-up → Entrevista → Google Calendar.
 
 - 📂 App: [`projeto-vagas-app`](./projeto-vagas-app/)
+- 🌐 **Versão web (sem Expo, abre no navegador):** [`radar-vagas-web`](./radar-vagas-web/) · https://moraesmattheus.github.io/Aplicativos/radar-vagas-web/
 - 🧠 Backend de IA: [`radar-vagas-backend`](./radar-vagas-backend/) — Cloudflare Workers + Google Gemini, lê currículo em **PDF/DOCX** (inclusive escaneado) e faz análise ATS. O app também roda **sem** o backend, com análise local.
 - 🛠️ React Native · Expo · TypeScript · Cloudflare Workers · Gemini
 
@@ -38,6 +39,7 @@ inicial do celular, funciona offline e **atualiza sozinho** quando o código mud
 ```
 Aplicativos/
 ├── projeto-vagas-app/     # Radar de Vagas — app Android (Expo/React Native)
+├── radar-vagas-web/       # Radar de Vagas em versão web (HTML/JS puro, sem Expo)
 ├── radar-vagas-backend/   # Backend de IA (Cloudflare Workers + Gemini)
 └── rota-de-vida/          # PWA de plano de vida (publicado no GitHub Pages)
 ```

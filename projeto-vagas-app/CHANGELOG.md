@@ -1,4 +1,17 @@
-﻿## [2026-10-13] — Claude (Sonnet 5.5) — Segurança: chaves removidas dos documentos + .env.example
+﻿## [2026-10-13] — Claude (Sonnet 5.5) — Nova versão web do Radar de Vagas (sem Expo)
+
+- **O QUE:** Criada uma versão web do Radar de Vagas que roda direto no navegador, sem Expo e sem build,
+             para demonstrar o app em entrevistas em qualquer aparelho.
+- **ONDE:** pasta NOVA `radar-vagas-web/` na raiz do repositório (index.html, style.css, app.js, sw.js,
+            manifest.webmanifest, icons/, README.md). README da raiz atualizado (link + estrutura).
+- **MUDOU:** nada neste app (`projeto-vagas-app`) foi alterado. Lógica de skills, matching e ATS portada de
+            `src/services/*.ts` para JavaScript puro. Fontes: Remotive, RemoteOK, Arbeitnow, Gupy (sem chave).
+- **POR QUÊ:** pedido do dono. O app Expo exige Metro/APK; a versão web abre por link.
+- **STATUS:** 33 testes de navegador (Chromium, APIs simuladas) passaram, sem erros de JS.
+- **OBS:** JSearch/Adzuna/Jooble ficaram de fora de propósito (chave em página web fica pública).
+           Algumas fontes podem bloquear o navegador (CORS); o app avisa e usa vagas de exemplo.
+
+## [2026-10-13] — Claude (Sonnet 5.5) — Segurança: chaves removidas dos documentos + .env.example
 
 - **O QUE:** Remover chaves de API (Jooble e Adzuna) que estavam escritas por extenso em arquivos de
              documentação de um repositório PÚBLICO, e criar um modelo de `.env` sem valores reais.
