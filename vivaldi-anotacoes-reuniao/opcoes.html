@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<title>Configurações — Anotações de Reunião</title>
+<link rel="stylesheet" href="estilo.css">
+<style>
+  main { max-width: 640px; margin: 0 auto; padding: 24px 16px 64px; }
+  label { display: block; margin-top: 14px; font-weight: 600; }
+  label small { font-weight: 400; color: var(--suave); display: block; }
+  .marcar { display: flex; gap: 8px; align-items: flex-start; font-weight: 600; }
+  .marcar input { margin-top: 5px; }
+  fieldset { border: 1px solid var(--borda); border-radius: 8px; margin-top: 16px; padding: 4px 16px 16px; }
+  #salvo, #resultadoMic { margin-left: 12px; }
+</style>
+<body>
+<main>
+  <h1>⚙️ Configurações</h1>
+
+  <h2>1. Microfone</h2>
+  <p class="suave">Para gravar a SUA voz (além do áudio da aba), o navegador precisa da sua permissão. Isso só precisa ser feito uma vez.</p>
+  <button id="permitirMic">🎤 Permitir microfone</button><span id="resultadoMic"></span>
+
+  <h2>2. Transcrição (Whisper, roda no seu PC)</h2>
+  <label for="modeloWhisper">Modelo
+    <small>Maior = mais preciso, porém mais lento e com download maior (feito uma vez só).</small></label>
+  <select id="modeloWhisper">
+    <option value="Xenova/whisper-tiny">Tiny (~40 MB) — rápido, erra mais</option>
+    <option value="Xenova/whisper-base">Base (~80 MB) — equilibrado</option>
+    <option value="Xenova/whisper-small">Small (~250 MB) — melhor para português, exige PC bom</option>
+  </select>
+  <label for="idioma">Idioma da reunião</label>
+  <select id="idioma">
+    <option value="portuguese">Português</option>
+    <option value="english">Inglês</option>
+    <option value="spanish">Espanhol</option>
+    <option value="auto">Detectar automaticamente</option>
+  </select>
+  <label class="marcar"><input type="checkbox" id="usarGpu"><span>Usar a placa de vídeo (WebGPU, experimental)<small>Se falhar, volta sozinho para o processador.</small></span></label>
+  <label class="marcar"><input type="checkbox" id="salvarAudio"><span>Guardar o áudio da reunião<small>Para ouvir/baixar depois. Fica só no seu navegador.</small></span></label>
+
+  <h2>3. Resumo</h2>
+  <label for="provedorResumo">Quem escreve o resumo?</label>
+  <select id="provedorResumo">
+    <option value="basico">Básico — sem IA, 100% offline (resumo simples)</option>
+    <option value="gemini">Google Gemini — chave grátis (resumo muito melhor)</option>
+    <option value="ollama">Ollama — IA rodando no seu PC (grátis e privado)</option>
+  </select>
+
+  <fieldset id="boxGemini">
+    <label for="geminiKey">Chave da API do Gemini<small>Crie grátis em <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. No plano grátis o Google pode usar o conteúdo enviado para melhorar produtos deles.</small></label>
+    <input type="password" id="geminiKey" autocomplete="off">
+    <label for="geminiModelo">Modelo</label>
+    <input type="text" id="geminiModelo">
+  </fieldset>
+
+  <fieldset id="boxOllama">
+    <label for="ollamaUrl">Endereço do Ollama<small>Instale em ollama.com e inicie com a variável <code>OLLAMA_ORIGINS=chrome-extension://*</code>.</small></label>
+    <input type="text" id="ollamaUrl">
+    <label for="ollamaModelo">Modelo (ex.: llama3.2, qwen2.5)</label>
+    <input type="text" id="ollamaModelo">
+  </fieldset>
+
+  <p><button class="principal" id="salvar">Salvar</button><span id="salvo" class="suave"></span></p>
+</main>
+<script type="module" src="opcoes.js"></script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "Anotações de Reunião (grátis e local)",
+  "version": "1.0.0",
+  "description": "Grava o áudio da aba + seu microfone, transcreve com Whisper rodando no seu computador e gera resumo e itens de ação. Sem pagar nada.",
+  "minimum_chrome_version": "116",
+
+  "permissions": ["tabCapture", "offscreen", "storage", "unlimitedStorage", "activeTab"],
+
+  "host_permissions": [
+    "https://huggingface.co/*",
+    "https://*.huggingface.co/*",
+    "https://*.hf.co/*",
+    "https://generativelanguage.googleapis.com/*",
+    "http://localhost:11434/*"
+  ],
+
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
+
+  "background": { "service_worker": "background.js", "type": "module" },
+
+  "action": {
+    "default_title": "Anotações de Reunião",
+    "default_popup": "popup.html"
+  },
+
+  "options_ui": { "page": "opcoes.html", "open_in_tab": true },
+
+  "icons": { "16": "icones/16.png", "48": "icones/48.png", "128": "icones/128.png" }
+}

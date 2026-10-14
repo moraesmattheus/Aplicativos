@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<title>Anotações de Reunião</title>
+<link rel="stylesheet" href="estilo.css">
+<style>
+  body { width: 340px; padding: 16px; }
+  #tela > * + * { margin-top: 10px; }
+  .linha { display: flex; gap: 8px; }
+  .linha > button { flex: 1; }
+  .tempo { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .ponto { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--perigo); margin-right: 8px; animation: piscar 1.2s infinite; }
+  @keyframes piscar { 50% { opacity: .25; } }
+  #trecho { font-size: 13px; max-height: 96px; overflow: auto; background: var(--superficie); border-radius: 8px; padding: 8px; }
+</style>
+<body>
+  <div id="tela"></div>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<title>Reuniões — Anotações de Reunião</title>
+<link rel="stylesheet" href="estilo.css">
+<style>
+  body { display: grid; grid-template-columns: 300px 1fr; min-height: 100vh; }
+  aside { border-right: 1px solid var(--borda); padding: 16px; background: var(--superficie); overflow: auto; }
+  aside button.item { display: block; width: 100%; text-align: left; margin-top: 8px; background: var(--fundo); }
+  aside button.item.ativo { border-color: var(--destaque); }
+  aside small { display: block; color: var(--suave); }
+  main { padding: 24px 32px 64px; max-width: 860px; }
+  .titulo { font-size: 22px; font-weight: 700; width: 100%; border: 1px solid transparent; background: transparent; padding: 4px 8px; margin-left: -8px; }
+  .titulo:hover, .titulo:focus { border-color: var(--borda); }
+  .acoes { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  ul { padding-left: 20px; margin: 4px 0; }
+  li.feito { text-decoration: line-through; color: var(--suave); }
+  .tag { display: inline-block; font-size: 12px; background: var(--superficie); border-radius: 10px; padding: 0 8px; color: var(--suave); }
+  pre { white-space: pre-wrap; background: var(--superficie); border-radius: 8px; padding: 12px; font: 13px/1.6 system-ui, sans-serif; }
+  audio { width: 100%; margin-top: 8px; }
+  @media (max-width: 720px) { body { grid-template-columns: 1fr; } aside { border-right: 0; border-bottom: 1px solid var(--borda); } }
+</style>
+<body>
+  <aside>
+    <h1>📄 Reuniões</h1>
+    <div id="lista"></div>
+  </aside>
+  <main id="detalhe"></main>
+  <script type="module" src="reunioes.js"></script>
+</body>
+</html>
