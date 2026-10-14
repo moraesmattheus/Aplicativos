@@ -4,6 +4,7 @@
 import { listarReunioes, obterReuniao, salvarReuniao, apagarReuniao, obterAudio } from './armazenamento.js';
 import { carregarConfig } from './config.js';
 import { gerarResumo } from './resumo.js';
+import { enviarAoNotion } from './notion.js';
 import { formatarTempo, textoTranscricao, reuniaoParaMarkdown } from './formatar.js';
 
 const listaEl = document.getElementById('lista');
@@ -78,6 +79,7 @@ const refazerResumo = async (reuniao) => {
   const config = await carregarConfig();
   try {
     reuniao.resumo = await gerarResumo(textoTranscricao(reuniao.segmentos), config);
+    reuniao.categoria ??= reuniao.resumo.categoria; // só define o tipo se você ainda não escolheu um
   } catch (erro) {
     alert(`O resumo falhou: ${erro.message}\nVerifique as Configurações.`);
     return;
@@ -86,7 +88,10 @@ const refazerResumo = async (reuniao) => {
   desenharDetalhe(reuniao);
 };
 
+const emAndamentoAgora = (reuniao) => ['gravando', 'processando'].includes(reuniao.status);
+
 const desenharDetalhe = async (reuniao) => {
+  const config = await carregarConfig();
   if (urlAudio) URL.revokeObjectURL(urlAudio);
   urlAudio = null;
   const { resumo } = reuniao;
@@ -100,8 +105,32 @@ const desenharDetalhe = async (reuniao) => {
     }
   });
 
+  const tipos = (config.destinos ?? []).map((d) => d.nome).filter(Boolean);
+  const seletorTipo = el('select', {
+    style: 'width:auto', ariaLabel: 'Tipo da reunião',
+    onchange: async () => {
+      reuniao.categoria = seletorTipo.value || null;
+      await salvarReuniao(reuniao);
+    }
+  }, el('option', { value: '', textContent: 'Sem tipo' }),
+    ...tipos.map((tipo) => el('option', { value: tipo, textContent: tipo, selected: tipo === reuniao.categoria })));
+
+  const enviarNotion = async (botao) => {
+    if (reuniao.notion && !confirm('Esta reunião já foi enviada. Criar outra página no Notion?')) return;
+    botao.disabled = true;
+    botao.textContent = 'Enviando...';
+    try {
+      reuniao.notion = await enviarAoNotion(reuniao, config);
+      await salvarReuniao(reuniao);
+    } catch (erro) {
+      alert(`Não consegui enviar ao Notion: ${erro.message}`);
+    }
+    desenharDetalhe(reuniao);
+  };
+
   const acoes = el('div', { className: 'acoes' },
     el('button', { textContent: '📋 Copiar (Markdown)', onclick: () => navigator.clipboard.writeText(reuniaoParaMarkdown(reuniao)) }),
+    el('button', { className: 'principal', textContent: '📤 Enviar ao Notion', disabled: !config.notionToken || emAndamentoAgora(reuniao), onclick: (e) => enviarNotion(e.target) }),
     el('button', { textContent: '⬇️ Baixar .md', onclick: () => baixarTexto(`${nomeArquivo(reuniao)}.md`, reuniaoParaMarkdown(reuniao)) }),
     el('button', { textContent: '🔄 Refazer resumo', disabled: !reuniao.segmentos.length, onclick: () => refazerResumo(reuniao) }),
     el('button', {
@@ -113,6 +142,10 @@ const desenharDetalhe = async (reuniao) => {
       }
     })
   );
+
+  const linhaNotion = reuniao.notion
+    ? [el('div', {}, '✅ No Notion: ', el('a', { href: reuniao.notion.url, target: '_blank', rel: 'noopener', textContent: `${reuniao.notion.destino} (${reuniao.notion.tipo})` }))]
+    : [];
 
   const avisos = reuniao.avisos.map((a) => el('div', { className: 'aviso', textContent: a }));
   const emAndamento = reuniao.status === 'gravando' || reuniao.status === 'processando';
@@ -148,7 +181,8 @@ const desenharDetalhe = async (reuniao) => {
   detalheEl.replaceChildren(
     titulo,
     el('div', { className: 'suave', textContent: `${new Date(reuniao.inicio).toLocaleString('pt-BR')} · ${formatarTempo(reuniao.duracaoSeg)} ${ROTULOS[reuniao.status] ?? ''}` }),
-    acoes, ...avisos, ...blocoResumo, transcricao, ...blocoAudio
+    el('div', {}, 'Tipo: ', seletorTipo),
+    acoes, ...linhaNotion, ...avisos, ...blocoResumo, transcricao, ...blocoAudio
   );
 };
 

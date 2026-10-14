@@ -10,6 +10,9 @@
   .marcar { display: flex; gap: 8px; align-items: flex-start; font-weight: 600; }
   .marcar input { margin-top: 5px; }
   fieldset { border: 1px solid var(--borda); border-radius: 8px; margin-top: 16px; padding: 4px 16px 16px; }
+  .destino { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 10px; margin-top: 8px; border: 1px solid var(--borda); border-radius: 8px; }
+  .destino .largo { grid-column: 1 / -1; }
+  .destino .rodape { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; }
   #salvo, #resultadoMic { margin-left: 12px; }
 </style>
 <body>
@@ -77,6 +80,20 @@
     <label for="ollamaModelo">Modelo (ex.: llama3.2, qwen2.5)</label>
     <input type="text" id="ollamaModelo">
   </fieldset>
+
+  <h2>4. Notion (enviar cada reunião para o lugar certo)</h2>
+  <p class="suave">Crie uma integração grátis em <a href="https://www.notion.so/profile/integrations" target="_blank" rel="noopener">notion.so/profile/integrations</a> (tipo <b>Interna</b>) e copie o token. Depois, em cada página ou banco de destino, clique em <b>••• › Conexões</b> e adicione a integração.</p>
+  <label for="notionToken">Token da integração<small>Fica guardado só neste navegador.</small></label>
+  <input type="password" id="notionToken" autocomplete="off" placeholder="ntn_...">
+  <label class="marcar"><input type="checkbox" id="notionAuto"><span>Enviar automaticamente ao terminar cada reunião<small>Senão, você envia com o botão “Enviar ao Notion” na página da reunião.</small></span></label>
+
+  <label>Tipos de reunião e seus destinos
+    <small>A IA escolhe o tipo pelo conteúdo. Escreva em “reconhecer” palavras que ajudem a identificar (ex.: nome da matéria, da empresa). O link pode ser de um <b>banco de dados</b> (cria uma linha) ou de uma <b>página</b> (cria uma subpágina).</small></label>
+  <div id="listaDestinos"></div>
+  <button id="novoDestino" type="button">＋ Adicionar tipo</button>
+
+  <label for="destinoPadrao">Destino padrão<small>Para onde vai quando nenhum tipo combina (opcional).</small></label>
+  <input type="text" id="destinoPadrao" placeholder="Link do Notion">
 
   <p><button class="principal" id="salvar">Salvar</button><span id="salvo" class="suave"></span></p>
 </main>

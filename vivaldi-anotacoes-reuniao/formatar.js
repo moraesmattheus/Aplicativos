@@ -22,7 +22,7 @@ const linhaAcao = (acao) => {
 // Monta o texto em Markdown (dá para colar direto numa página do Notion!).
 export const reuniaoParaMarkdown = (reuniao) => {
   const { resumo } = reuniao;
-  const partes = [`# ${reuniao.titulo}`, `${new Date(reuniao.inicio).toLocaleString('pt-BR')} · ${formatarTempo(reuniao.duracaoSeg)}`];
+  const partes = [`# ${reuniao.titulo}`, `${[new Date(reuniao.inicio).toLocaleString('pt-BR'), formatarTempo(reuniao.duracaoSeg), reuniao.categoria && `Tipo: ${reuniao.categoria}`].filter(Boolean).join(' · ')}`];
   if (resumo) {
     partes.push('## Resumo', resumo.resumo);
     if (resumo.topicos.length) partes.push('## Tópicos', lista(resumo.topicos));

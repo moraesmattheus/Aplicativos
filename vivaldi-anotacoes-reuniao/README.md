@@ -6,7 +6,8 @@ Faz o que as **Anotações IA do Notion** fazem, sem pagar nada:
 2. **Transcreve** com o **Whisper**: no seu navegador (privado) ou na nuvem do Groq (**bem mais rápido**, como o Notion).
 3. **Mostra quem falou**: "Você" (microfone) e os outros; com o Gemini, cada participante vira "Pessoa 1", "Pessoa 2"... e você renomeia com um clique.
 4. **Gera resumo, tópicos, decisões e itens de ação** (3 opções, veja abaixo).
-5. Guarda tudo numa página de reuniões, com botão para **copiar em Markdown** (cola direto no Notion) e **baixar o áudio**.
+5. **Envia para o Notion** no lugar certo: Entrevista → banco "Entrevistas", Aula → página da faculdade, e assim por diante.
+6. Guarda tudo numa página de reuniões, com botão para **copiar em Markdown** (cola direto no Notion) e **baixar o áudio**.
 
 > ⚖️ **Avise os participantes de que a reunião está sendo gravada.** Em muitos casos isso é exigido por lei (LGPD) e é questão de respeito. O Notion pede essa confirmação também.
 
@@ -43,6 +44,20 @@ Extensão "não empacotada" = uma pasta com o código, carregada direto no naveg
 
 Clique no nome de um falante na transcrição para **renomear** (ex.: "Pessoa 1" → "Maria"). Depois use **Refazer resumo** para os itens de ação saírem com o nome certo.
 
+## 📤 Enviando para o Notion, cada tipo no seu lugar
+
+1. Acesse [notion.so/profile/integrations](https://www.notion.so/profile/integrations) → **Nova integração** → tipo **Interna** → copie o token (`ntn_...`).
+2. No Notion, abra cada página/banco de destino → **•••** → **Conexões** → adicione a sua integração. (Sem isso o Notion responde "sem acesso".)
+3. Em **Configurações → 4. Notion**, cole o token e cadastre os **tipos**: nome (ex.: *Aula da faculdade*), palavras que ajudam a reconhecer (ex.: *aula, professor, matéria, prova*) e o **link** do destino. Use **Testar** para conferir.
+4. Marque **Enviar automaticamente** ou use o botão **📤 Enviar ao Notion** na página da reunião. Lá também dá para **trocar o tipo** antes de enviar.
+
+Como o tipo é escolhido: com resumo por **Gemini/Ollama**, a IA lê a conversa e escolhe entre os seus tipos. Com o resumo **básico**, conta quantas palavras-chave de cada tipo aparecem (se houver pouca evidência, usa o **destino padrão**).
+
+- Link de **banco de dados** → cria uma **linha** (usa a coluna de título, seja qual for o nome). Link de **página** → cria uma **subpágina**.
+- A página recebe resumo, tópicos, decisões, itens de ação (como caixas de marcar) e a transcrição completa com quem falou.
+- O token fica guardado só no seu navegador. Só a página da reunião vai ao Notion.
+- Colunas extras do banco (data, tags...) não são preenchidas: o dia e o tipo vão no topo da página.
+
 ## 🧠 Escolha quem escreve o resumo (Configurações)
 
 | Opção | Custo | Qualidade | Privacidade |
@@ -74,6 +89,7 @@ Popup ──clique──► Background (service worker) ──► Offscreen (pá
 | `pcm-worklet.js` | entrega o áudio bruto em blocos | *AudioWorklet* |
 | `resumo.js` | os 3 geradores de resumo | *prompt*, *fetch*, *API REST* |
 | `gemini.js` | chamada compartilhada ao Gemini (texto e áudio) | *API REST*, *JSON* |
+| `notion.js` | cria a página no Notion (banco ou página) | *API do Notion*, *blocos*, *rate limit* |
 | `falantes.js` | separa os participantes pelo áudio (Gemini) | *speaker diarization* |
 | `transcricao-nuvem.js` | transcrição pelo Groq (gera o .wav e envia) | *multipart/form-data*, *WAV* |
 | `armazenamento.js` | salva reuniões e áudio | *IndexedDB* |

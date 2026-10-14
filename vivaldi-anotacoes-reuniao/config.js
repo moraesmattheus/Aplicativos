@@ -30,7 +30,17 @@ export const CONFIG_PADRAO = {
   geminiKey: '',
   geminiModelo: 'gemini-2.5-flash',
   ollamaUrl: 'http://localhost:11434',
-  ollamaModelo: 'llama3.2'
+  ollamaModelo: 'llama3.2',
+
+  // Notion: token da integração, envio automático e os destinos por TIPO de reunião.
+  notionToken: '',
+  notionAuto: false,
+  destinoPadrao: '', // para onde vai quando nenhum tipo combina
+  destinos: [
+    { nome: 'Entrevista', descricao: 'entrevista, vaga, candidato, recrutador, currículo, empresa, processo seletivo', link: '' },
+    { nome: 'Aula da faculdade', descricao: 'aula, professor, matéria, disciplina, prova, trabalho, faculdade, engenharia de software', link: '' },
+    { nome: 'Reunião de trabalho', descricao: 'reunião, projeto, equipe, cliente, prazo, entrega, sprint', link: '' }
+  ]
 };
 
 export const carregarConfig = async () => {

@@ -4,14 +4,18 @@ import { chamarGemini, lerJson } from './gemini.js';
 // Todos os provedores devolvem o MESMO formato:
 //   { resumo: string, topicos: string[], decisoes: string[], acoes: [{ tarefa, responsavel, prazo }], origem }
 
-const PROMPT = (transcricao) => `Você é um assistente que escreve atas de reunião em português do Brasil.
+const PROMPT = (transcricao, destinos) => {
+  const pedeCategoria = destinos.length > 0;
+  const opcoes = destinos.map((d) => `"${d.nome}"${d.descricao ? ` (${d.descricao})` : ''}`).join(', ');
+  return `Você é um assistente que escreve atas de reunião em português do Brasil.
 Abaixo está a transcrição automática de uma reunião (pode ter erros de reconhecimento de voz).
 Responda SOMENTE com um JSON válido neste formato:
-{"resumo":"parágrafo curto com o essencial","topicos":["..."],"decisoes":["..."],"acoes":[{"tarefa":"...","responsavel":"nome ou null","prazo":"prazo ou null"}]}
-Regras: não invente nada que não foi dito; se não houver decisões ou ações, use listas vazias.
+{"resumo":"parágrafo curto com o essencial","topicos":["..."],"decisoes":["..."],"acoes":[{"tarefa":"...","responsavel":"nome ou null","prazo":"prazo ou null"}]${pedeCategoria ? ',"categoria":"..."' : ''}}
+Regras: não invente nada que não foi dito; se não houver decisões ou ações, use listas vazias.${pedeCategoria ? `\nEm "categoria", escolha o tipo que melhor descreve esta gravação: ${opcoes}, ou "Outro" se nenhum servir.` : ''}
 
 TRANSCRIÇÃO:
 ${transcricao}`;
+};
 
 // ---------- Provedor 1: resumo básico (sem IA, 100% offline) ----------
 
@@ -25,7 +29,20 @@ const REGEX_ACAO =
 const palavrasRelevantes = (frase) =>
   (frase.toLowerCase().match(/[a-zà-ú]{4,}/g) ?? []).filter((p) => !STOPWORDS.has(p));
 
-const resumoBasico = (transcricao) => {
+// Sem IA: conta quantas vezes as palavras-chave de cada tipo aparecem na conversa.
+const classificarPorPalavras = (texto, destinos) => {
+  const minusculo = texto.toLowerCase();
+  const pontuados = destinos.map((destino) => {
+    const palavras = `${destino.nome},${destino.descricao ?? ''}`
+      .toLowerCase().split(/[,;\n]+/).map((p) => p.trim()).filter((p) => p.length > 2);
+    const nota = palavras.reduce((soma, p) => soma + (minusculo.split(p).length - 1), 0);
+    return { nome: destino.nome, nota };
+  });
+  const melhor = pontuados.sort((a, b) => b.nota - a.nota)[0];
+  return melhor && melhor.nota >= 2 ? melhor.nome : null; // pouca evidência = sem tipo
+};
+
+const resumoBasico = (transcricao, destinos) => {
   const limpo = transcricao.replace(/\[\d+:\d{2}(:\d{2})?\]\s*(?:[\p{L}\p{N} ]{1,30}:\s)?/gu, '');
   const frases = limpo
     .split(/(?<=[.!?])\s+|\n+/)
@@ -60,17 +77,18 @@ const resumoBasico = (transcricao) => {
     topicos,
     decisoes: [],
     acoes,
+    categoria: classificarPorPalavras(transcricao, destinos),
     origem: 'basico'
   };
 };
 
 // ---------- Provedor 2: Google Gemini (chave grátis em aistudio.google.com) ----------
 
-const chamarGeminiResumo = (transcricao, config) => chamarGemini([{ text: PROMPT(transcricao) }], config);
+const chamarGeminiResumo = (transcricao, config, destinos) => chamarGemini([{ text: PROMPT(transcricao, destinos) }], config);
 
 // ---------- Provedor 3: Ollama (IA rodando no seu PC) ----------
 
-const chamarOllama = async (transcricao, config) => {
+const chamarOllama = async (transcricao, config, destinos) => {
   const resposta = await fetch(`${config.ollamaUrl}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -78,7 +96,7 @@ const chamarOllama = async (transcricao, config) => {
       model: config.ollamaModelo,
       stream: false,
       format: 'json',
-      messages: [{ role: 'user', content: PROMPT(transcricao) }]
+      messages: [{ role: 'user', content: PROMPT(transcricao, destinos) }]
     })
   });
   if (!resposta.ok) throw new Error(`Ollama respondeu ${resposta.status}`);
@@ -90,7 +108,7 @@ const chamarOllama = async (transcricao, config) => {
 
 const comoLista = (valor) => (Array.isArray(valor) ? valor.map(String) : []);
 
-const normalizar = (bruto, origem) => ({
+const normalizar = (bruto, origem, destinos) => ({
   resumo: String(bruto.resumo ?? ''),
   topicos: comoLista(bruto.topicos),
   decisoes: comoLista(bruto.decisoes),
@@ -99,11 +117,13 @@ const normalizar = (bruto, origem) => ({
     responsavel: a.responsavel && a.responsavel !== 'null' ? String(a.responsavel) : null,
     prazo: a.prazo && a.prazo !== 'null' ? String(a.prazo) : null
   })),
+  categoria: destinos.find((d) => d.nome.toLowerCase() === String(bruto.categoria ?? '').toLowerCase())?.nome ?? null,
   origem
 });
 
 export const gerarResumo = async (transcricao, config) => {
-  if (config.provedorResumo === 'gemini') return normalizar(lerJson(await chamarGeminiResumo(transcricao, config)), 'gemini');
-  if (config.provedorResumo === 'ollama') return normalizar(lerJson(await chamarOllama(transcricao, config)), 'ollama');
-  return resumoBasico(transcricao);
+  const destinos = (config.destinos ?? []).filter((d) => d.nome);
+  if (config.provedorResumo === 'gemini') return normalizar(lerJson(await chamarGeminiResumo(transcricao, config, destinos)), 'gemini', destinos);
+  if (config.provedorResumo === 'ollama') return normalizar(lerJson(await chamarOllama(transcricao, config, destinos)), 'ollama', destinos);
+  return resumoBasico(transcricao, destinos);
 };

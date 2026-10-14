@@ -13,6 +13,7 @@
     "https://*.hf.co/*",
     "https://generativelanguage.googleapis.com/*",
     "https://api.groq.com/*",
+    "https://api.notion.com/*",
     "http://localhost:11434/*"
   ],
 

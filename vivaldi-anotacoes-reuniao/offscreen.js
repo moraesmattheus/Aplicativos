@@ -18,6 +18,7 @@ import { salvarReuniao, salvarAudio } from './armazenamento.js';
 import { gerarResumo } from './resumo.js';
 import { identificarFalantes } from './falantes.js';
 import { transcreverGroq } from './transcricao-nuvem.js';
+import { enviarAoNotion } from './notion.js';
 import { textoTranscricao } from './formatar.js';
 
 // A biblioteca baixa por padrão os arquivos .wasm de um CDN, mas a extensão só aceita código
@@ -395,6 +396,17 @@ const finalizar = async () => {
       }
     } else {
       reuniao.avisos.push('Nenhuma fala foi reconhecida na gravação.');
+    }
+
+    reuniao.categoria = reuniao.resumo?.categoria ?? null; // tipo escolhido pela IA (Entrevista, Aula...)
+
+    if (config.notionAuto && config.notionToken) {
+      publicar({ etapa: 'Enviando ao Notion...' });
+      try {
+        reuniao.notion = await enviarAoNotion(reuniao, config);
+      } catch (erro) {
+        reuniao.avisos.push(`Não consegui enviar ao Notion (${erro.message}). Você pode tentar de novo na página da reunião.`);
+      }
     }
 
     if (config.salvarAudio && s.gravacaoMistura.pedacos.length) {
