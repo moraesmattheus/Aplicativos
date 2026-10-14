@@ -99,6 +99,47 @@ chrome.runtime.onMessage.addListener((mensagem, _remetente, responder) => {
   return true; // "vou responder de forma assíncrona"
 });
 
+// ---------- Começar/parar sem abrir o painel: atalho e menu do botão direito ----------
+// O navegador só deixa gravar o áudio de uma aba depois de um gesto seu NAQUELA aba (clicar no ícone,
+// usar o atalho ou o menu de contexto). Estes dois cobrem o caso em que o painel já estava aberto e
+// você trocou de aba.
+
+const avisarSimples = (id, titulo, mensagem) =>
+  chrome.notifications.create(id, { type: 'basic', iconUrl: 'icones/128.png', title: titulo, message: mensagem });
+
+const alternarGravacaoNaAba = async (aba) => {
+  const { estado } = await chrome.storage.session.get('estado');
+  if (estado?.fase === 'gravando') {
+    await enviarAoOffscreen({ tipo: 'parar' });
+    return;
+  }
+  if (!aba?.id || /^(chrome|vivaldi|edge|about|chrome-extension):/.test(aba.url ?? '')) {
+    avisarSimples('reuniao-aviso', 'Abra a aba da reunião', 'Páginas internas do navegador não podem ser gravadas.');
+    return;
+  }
+  try {
+    const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: aba.id });
+    await tratar({ tipo: 'iniciar', streamId, titulo: aba.title });
+  } catch (erro) {
+    avisarSimples('reuniao-aviso', 'Não consegui gravar esta aba', String(erro.message ?? erro));
+  }
+};
+
+chrome.commands.onCommand.addListener(async (comando, aba) => {
+  if (comando !== 'gravar-reuniao') return;
+  await alternarGravacaoNaAba(aba ?? (await chrome.tabs.query({ active: true, currentWindow: true }))[0]);
+});
+
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.removeAll(() =>
+    chrome.contextMenus.create({ id: 'gravar-reuniao', title: 'Gravar ou parar reunião (Omnivix)', contexts: ['page'] })
+  );
+});
+
+chrome.contextMenus.onClicked.addListener((info, aba) => {
+  if (info.menuItemId === 'gravar-reuniao') alternarGravacaoNaAba(aba);
+});
+
 // ---------- Detecção de reunião ----------
 
 const avisarReuniao = async (tabId, plataforma) => {

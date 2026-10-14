@@ -14,7 +14,8 @@
     "notifications",
     "sidePanel",
     "alarms",
-    "idle"
+    "idle",
+    "contextMenus"
   ],
   "host_permissions": [
     "https://huggingface.co/*",
@@ -59,6 +60,12 @@
       "description": "Abrir o painel",
       "suggested_key": {
         "default": "Alt+Shift+S"
+      }
+    },
+    "gravar-reuniao": {
+      "description": "Gravar ou parar a reunião da aba atual",
+      "suggested_key": {
+        "default": "Alt+Shift+G"
       }
     }
   }

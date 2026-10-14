@@ -36,7 +36,7 @@ const iniciarGravacao = async (titulo, mostrarErro) => {
     // O navegador só libera a aba em que você clicou no ícone da extensão (regra de segurança).
     const precisaClicar = /invoked|activeTab|permission/i.test(erro.message);
     mostrarErro(precisaClicar
-      ? 'Para gravar esta aba, clique uma vez no ícone do Omnivix na barra do navegador (com a aba da reunião aberta) e tente de novo.'
+      ? 'Para gravar esta aba, use Alt+Shift+G nela, ou clique com o botão direito na página e escolha "Gravar ou parar reunião", ou clique no ícone do Omnivix com ela aberta.'
       : `Não consegui iniciar: ${erro.message}`);
   }
 };

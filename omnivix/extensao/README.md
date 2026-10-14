@@ -9,6 +9,9 @@ Grava, transcreve e organiza suas reuniões, sem pagar nada:
 5. **Envia para o Notion** no lugar certo: Entrevista → banco "Entrevistas", Aula → página da faculdade, e assim por diante.
 6. Guarda tudo numa página de reuniões, com botão para **copiar em Markdown** (cola direto no Notion) e **baixar o áudio**.
 
+**Como começar a gravar:** o navegador só libera o áudio de uma aba depois de um gesto seu nela. Use **Alt+Shift+G** (liga e desliga),
+o menu do botão direito na página ("Gravar ou parar reunião") ou o ícone **Gravar** do painel (depois de clicar no ícone do Omnivix com a aba aberta).
+
 > ⚖️ **Avise os participantes de que a reunião está sendo gravada.** Em muitos casos isso é exigido por lei (LGPD) e é questão de respeito. 
 
 ---
