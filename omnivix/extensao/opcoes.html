@@ -33,7 +33,15 @@
   <select id="motorTranscricao">
     <option value="local">Local - Whisper no seu PC (privado)</option>
     <option value="groq">Groq (nuvem) - rápido, chave grátis</option>
+    <option value="assemblyai">AssemblyAI (nuvem) - separa quem falou, transcreve ao parar</option>
   </select>
+
+  <fieldset id="boxAssembly">
+    <label for="assemblyKey">Chave da API do AssemblyAI<small>Crie em <a href="https://www.assemblyai.com/dashboard/api-keys" target="_blank" rel="noopener">assemblyai.com/dashboard</a>. Confira no painel deles os créditos grátis e o preço por hora. O áudio inteiro é enviado a eles quando você para a gravação.</small></label>
+    <input type="password" id="assemblyKey" autocomplete="off">
+    <label for="assemblyModelo">Modelo<small>Se der erro de modelo, confira o nome atual na documentação do AssemblyAI.</small></label>
+    <input type="text" id="assemblyModelo">
+  </fieldset>
 
   <fieldset id="boxGroq">
     <label for="groqKey">Chave da API do Groq<small>Crie grátis em <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a> (sem cartão). O plano grátis tem limite diário de uso.</small></label>

@@ -21,6 +21,7 @@ import { salvarReuniao, salvarAudio } from './armazenamento.js';
 import { gerarResumo } from './resumo.js';
 import { identificarFalantes } from './falantes.js';
 import { transcreverGroq } from './transcricao-nuvem.js';
+import { transcreverAssemblyAI, respostaParaSegmentos } from './transcricao-assemblyai.js';
 import { enviarAoNotion } from './notion.js';
 import { textoTranscricao } from './formatar.js';
 
@@ -163,6 +164,7 @@ const processarTrecho = async (s, canal, audio, inicioSeg) => {
 // Os trechos dos dois canais entram na MESMA fila: o transcritor processa UM por vez.
 const enfileirar = (canal, audio, inicioSeg) => {
   const s = sessao;
+  if (s.config.motorTranscricao === 'assemblyai') return; // este motor transcreve tudo ao parar (veja finalizar)
   if (rms(audio) < LIMIAR_VAZIO) return; // só silêncio: o Whisper "alucinaria" texto
   s.pendentes++;
   publicar({ pendentes: s.pendentes });
@@ -265,6 +267,9 @@ export const iniciar = async ({ titulo, contexto = '', tituloGenerico = false, c
   if (config.motorTranscricao === 'groq' && !config.groqKey) {
     throw new Error('Falta a chave do Groq nas Configurações (ou troque para a transcrição local).');
   }
+  if (config.motorTranscricao === 'assemblyai' && !config.assemblyKey) {
+    throw new Error('Falta a chave do AssemblyAI nas Configurações (ou troque o motor de transcrição).');
+  }
 
   // 1) e 2) Áudio dos outros participantes + seu microfone (cada plataforma sabe como captar).
   const { fluxoAba, fluxoMic, avisos } = await adaptador.abrirFluxos(paramsDaPlataforma);
@@ -294,17 +299,24 @@ export const iniciar = async ({ titulo, contexto = '', tituloGenerico = false, c
 
     // 4) Grava os arquivos de áudio em paralelo.
     const gravacaoMistura = gravar(destinoMistura.stream, 32000);
-    let gravacaoAba = null; // só a aba: é o que o Gemini usa para separar os participantes
-    if (config.identificarFalantes && config.geminiKey) {
+    let gravacaoAba = null; // só a aba: é o que o Gemini e o AssemblyAI usam para separar os participantes
+    let gravacaoMic = null; // só o microfone: o AssemblyAI o transcreve à parte (tudo é "Você")
+    const usaAssemblyAI = config.motorTranscricao === 'assemblyai';
+    if ((config.identificarFalantes && config.geminiKey) || usaAssemblyAI) {
       const destinoAba = ctx.createMediaStreamDestination();
       fonteAba.connect(destinoAba);
       gravacaoAba = gravar(destinoAba.stream, 24000);
+    }
+    if (usaAssemblyAI && fluxoMic) {
+      const destinoMic = ctx.createMediaStreamDestination();
+      ctx.createMediaStreamSource(fluxoMic).connect(destinoMic);
+      gravacaoMic = gravar(destinoMic.stream, 24000);
     }
 
     const id = crypto.randomUUID();
     const inicio = Date.now();
     sessao = {
-      id, inicio, config, contexto, tituloGenerico, ctx, ctxSaida, gravacaoMistura, gravacaoAba,
+      id, inicio, config, contexto, tituloGenerico, ctx, ctxSaida, gravacaoMistura, gravacaoAba, gravacaoMic,
       fluxos: [fluxoAba, fluxoMic],
       duracao: duracaoDosTrechos(config.motorTranscricao),
       canais: [canalAba, canalMic],
@@ -328,7 +340,8 @@ export const iniciar = async ({ titulo, contexto = '', tituloGenerico = false, c
     }
 
     publicar({
-      fase: 'gravando', inicio, aviso: avisos[0] ?? null, ultimoTrecho: '', pendentes: 0,
+      fase: 'gravando', inicio, ultimoTrecho: '', pendentes: 0,
+      aviso: avisos[0] ?? (usaAssemblyAI ? 'AssemblyAI: o texto aparece quando você parar a gravação.' : null),
       modelo: { pronto: config.motorTranscricao !== 'local', pct: 0 }
     });
   } catch (erro) {
@@ -340,9 +353,33 @@ export const iniciar = async ({ titulo, contexto = '', tituloGenerico = false, c
 
 // ---------- Parar e finalizar ----------
 
+// Motor AssemblyAI: envia o áudio dos participantes (com separação de falantes) e o do microfone ("Você").
+const transcreverNoAssemblyAI = async (s) => {
+  const { reuniao, config } = s;
+  const fontes = [
+    { gravacao: s.gravacaoAba, rotulo: null, nome: 'dos participantes' },
+    { gravacao: s.gravacaoMic, rotulo: FALANTE_VOCE, nome: 'do seu microfone' }
+  ].filter((f) => f.gravacao?.pedacos.length);
+
+  const resultados = await Promise.allSettled(fontes.map(async (fonte) => {
+    publicar({ etapa: `Transcrevendo o áudio ${fonte.nome} (AssemblyAI)...` });
+    const audio = new Blob(fonte.gravacao.pedacos, { type: 'audio/webm' });
+    return respostaParaSegmentos(await transcreverAssemblyAI(audio, config), fonte.rotulo);
+  }));
+
+  resultados.forEach((resultado, i) => {
+    if (resultado.status === 'fulfilled') return reuniao.segmentos.push(...resultado.value);
+    // Um áudio sem nenhuma fala (ex.: microfone mudo) não é erro de verdade.
+    if (/spoken audio|no speech/i.test(String(resultado.reason?.message))) return;
+    reuniao.avisos.push(`Falha ao transcrever o áudio ${fontes[i].nome}: ${resultado.reason?.message ?? resultado.reason}`);
+  });
+  reuniao.segmentos.sort((a, b) => a.inicioSeg - b.inicioSeg);
+};
+
 // Troca a transcrição das vozes dos outros (rótulo genérico) pela versão do Gemini, com um nome por pessoa.
 const separarParticipantes = async (s) => {
   const { reuniao, config } = s;
+  if (config.motorTranscricao === 'assemblyai') return; // o AssemblyAI já separou os falantes
   if (!s.gravacaoAba?.pedacos.length) return;
   publicar({ etapa: 'Identificando quem falou (Gemini)...' });
   try {
@@ -365,11 +402,16 @@ export const finalizar = async () => {
   try {
     s.canais.forEach(cortarTrecho); // o que sobrou nos buffers vai para a fila
 
-    await Promise.all([pararGravador(s.gravacaoMistura.gravador), s.gravacaoAba && pararGravador(s.gravacaoAba.gravador)]);
+    await Promise.all([
+      pararGravador(s.gravacaoMistura.gravador),
+      s.gravacaoAba && pararGravador(s.gravacaoAba.gravador),
+      s.gravacaoMic && pararGravador(s.gravacaoMic.gravador)
+    ]);
     liberarFluxos(...s.fluxos);
     await Promise.allSettled([s.ctx.close(), s.ctxSaida.close()]);
 
     await s.fila; // espera o transcritor terminar tudo que está na fila
+    if (s.config.motorTranscricao === 'assemblyai') await transcreverNoAssemblyAI(s);
 
     const { reuniao, config } = s;
     reuniao.duracaoSeg = Math.round((Date.now() - s.inicio) / 1000);

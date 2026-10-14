@@ -5,7 +5,7 @@ import { descobrirDestino } from './notion.js';
 import { chamarGemini, listarModelosGemini } from './gemini.js';
 
 const $ = (id) => document.getElementById(id);
-const CAMPOS_TEXTO = ['motorTranscricao', 'groqKey', 'groqModelo', 'modeloWhisper', 'idioma', 'provedorResumo', 'geminiKey', 'geminiModelo', 'ollamaUrl', 'ollamaModelo', 'notionToken', 'destinoPadrao'];
+const CAMPOS_TEXTO = ['motorTranscricao', 'groqKey', 'groqModelo', 'assemblyKey', 'assemblyModelo', 'modeloWhisper', 'idioma', 'provedorResumo', 'geminiKey', 'geminiModelo', 'ollamaUrl', 'ollamaModelo', 'notionToken', 'destinoPadrao'];
 const CAMPOS_MARCAR = ['usarGpu', 'identificarFalantes', 'salvarAudio', 'notionAuto', 'avisarReuniao'];
 
 const el = (tag, props = {}, ...filhos) => {
@@ -44,6 +44,7 @@ const criarLinhaDestino = (destino) => {
 const mostrarCaixaDoMotor = () => {
   $('boxGroq').hidden = $('motorTranscricao').value !== 'groq';
   $('boxLocal').hidden = $('motorTranscricao').value !== 'local';
+  $('boxAssembly').hidden = $('motorTranscricao').value !== 'assemblyai';
 };
 
 const mostrarCaixaDoProvedor = () => {

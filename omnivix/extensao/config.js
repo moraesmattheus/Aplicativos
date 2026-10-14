@@ -14,10 +14,14 @@ export const CONFIG_PADRAO = {
   // Avisa (ícone + notificação) quando você entra numa reunião do Meet, Zoom, Teams etc.
   avisarReuniao: true,
 
-  // Quem transcreve: 'local' (Whisper no seu PC, privado) ou 'groq' (nuvem, MUITO mais rápido, chave grátis).
+  // Quem transcreve: 'local' (Whisper no seu PC, privado), 'groq' (nuvem, muito rápido) ou 'assemblyai' (nuvem, separa os falantes).
   motorTranscricao: 'local',
   groqKey: '',
   groqModelo: 'whisper-large-v3-turbo',
+
+  // AssemblyAI (nuvem): transcreve ao parar e já separa os falantes. Veja créditos grátis no painel deles.
+  assemblyKey: '',
+  assemblyModelo: 'universal-3-pro',
 
   // Usa a placa de vídeo (WebGPU) para transcrever mais rápido no modo local. Se falhar, volta para o processador.
   usarGpu: true,
