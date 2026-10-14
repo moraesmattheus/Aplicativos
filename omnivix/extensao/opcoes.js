@@ -2,6 +2,7 @@
 
 import { carregarConfig, salvarConfig } from './config.js';
 import { descobrirDestino } from './notion.js';
+import { chamarGemini, listarModelosGemini } from './gemini.js';
 
 const $ = (id) => document.getElementById(id);
 const CAMPOS_TEXTO = ['motorTranscricao', 'groqKey', 'groqModelo', 'modeloWhisper', 'idioma', 'provedorResumo', 'geminiKey', 'geminiModelo', 'ollamaUrl', 'ollamaModelo', 'notionToken', 'destinoPadrao'];
@@ -50,7 +51,20 @@ const mostrarCaixaDoProvedor = () => {
   $('boxOllama').hidden = $('provedorResumo').value !== 'ollama';
 };
 
+// Lista de reserva (usada até você clicar em "Buscar modelos"). Os nomes podem estar desatualizados.
+const MODELOS_RESERVA = ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-3-flash-preview', 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-pro']
+  .map((id) => ({ id, nome: id, previa: /preview|exp/i.test(id) }));
+
+// Preenche o seletor. O modelo já salvo sempre aparece, mesmo que a lista nova não o traga.
+const preencherModelos = (modelos, escolhido) => {
+  const lista = modelos.some((m) => m.id === escolhido) || !escolhido ? modelos : [{ id: escolhido, nome: escolhido, previa: false }, ...modelos];
+  $('geminiModelo').replaceChildren(...lista.map((m) =>
+    el('option', { value: m.id, textContent: `${m.nome === m.id ? m.id : `${m.nome} (${m.id})`}${m.previa ? ' - prévia' : ''}` })));
+  if (escolhido) $('geminiModelo').value = escolhido;
+};
+
 const config = await carregarConfig();
+preencherModelos(MODELOS_RESERVA, config.geminiModelo);
 CAMPOS_TEXTO.forEach((campo) => ($(campo).value = config[campo]));
 CAMPOS_MARCAR.forEach((campo) => ($(campo).checked = config[campo]));
 config.destinos.forEach((d) => $('listaDestinos').append(criarLinhaDestino(d)));
@@ -59,6 +73,32 @@ mostrarCaixaDoProvedor();
 mostrarCaixaDoMotor();
 $('motorTranscricao').addEventListener('change', mostrarCaixaDoMotor);
 $('provedorResumo').addEventListener('change', mostrarCaixaDoProvedor);
+
+$('buscarModelos').addEventListener('click', async () => {
+  const aviso = $('resultadoGemini');
+  aviso.textContent = 'Buscando...';
+  try {
+    const modelos = await listarModelosGemini($('geminiKey').value.trim());
+    if (!modelos.length) throw new Error('a chave não tem nenhum modelo disponível');
+    // Prefere manter o que estava escolhido; se ele não existe mais, escolhe o primeiro estável.
+    const atual = $('geminiModelo').value;
+    preencherModelos(modelos, modelos.some((m) => m.id === atual) ? atual : modelos[0].id);
+    aviso.textContent = `✅ ${modelos.length} modelos liberados para a sua chave`;
+  } catch (erro) {
+    aviso.textContent = `❌ ${erro.message}`;
+  }
+});
+
+$('testarModelo').addEventListener('click', async () => {
+  const aviso = $('resultadoGemini');
+  aviso.textContent = 'Testando...';
+  try {
+    await chamarGemini([{ text: 'Responda apenas com o JSON {"ok": true}' }], { geminiKey: $('geminiKey').value.trim(), geminiModelo: $('geminiModelo').value });
+    aviso.textContent = '✅ Funciona! Clique em Salvar.';
+  } catch (erro) {
+    aviso.textContent = `❌ ${erro.message}`;
+  }
+});
 
 $('salvar').addEventListener('click', async () => {
   const nova = {};
