@@ -1,6 +1,6 @@
 {
-  "name": "agente-reunioes",
-  "productName": "Agente de Reuniões",
+  "name": "ominivix-agente",
+  "productName": "Ominivix",
   "version": "1.0.0",
   "description": "Grava, transcreve e organiza reuniões e aulas sozinho, sem bot e sem precisar de cliques.",
   "main": "principal.js",
@@ -20,7 +20,7 @@
     "electron-builder": "^26.0.0"
   },
   "build": {
-    "appId": "br.mattheus.agente-reunioes",
+    "appId": "br.mattheus.ominivix",
     "files": ["principal.js", "preload.js", "detector.js", "agenda.js", "config-principal.js", "app/**/*", "assets/**/*"],
     "win": { "target": "nsis", "icon": "assets/icone.png" },
     "nsis": { "oneClick": true, "perMachine": false }

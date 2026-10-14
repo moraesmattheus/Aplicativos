@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Anotações de Reunião (grátis e local)",
+  "name": "Ominivix",
   "version": "1.0.0",
-  "description": "Grava o áudio da aba + seu microfone, transcreve com Whisper rodando no seu computador e gera resumo e itens de ação. Sem pagar nada.",
+  "description": "Grava, transcreve e organiza reuniões e aulas: resumo, quem falou e envio ao Notion. Grátis.",
   "minimum_chrome_version": "116",
 
   "permissions": ["tabCapture", "offscreen", "storage", "unlimitedStorage", "activeTab", "tabs", "notifications"],
@@ -27,7 +27,7 @@
   "background": { "service_worker": "background.js", "type": "module" },
 
   "action": {
-    "default_title": "Anotações de Reunião",
+    "default_title": "Ominivix",
     "default_popup": "popup.html"
   },
 

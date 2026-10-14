@@ -1,6 +1,6 @@
 node_modules/
 dist/
-# Copiados de ../vivaldi-anotacoes-reuniao por scripts/sincronizar.js (fonte única do "cérebro")
+# Copiados de ../extensao por scripts/sincronizar.js (fonte única do "cérebro")
 app/armazenamento.js
 app/formatar.js
 app/resumo.js

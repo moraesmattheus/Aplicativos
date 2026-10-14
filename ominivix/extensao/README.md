@@ -29,10 +29,10 @@ Quem quiser reunião gravada com o PC desligado precisa de um bot na nuvem (apar
 
 Extensão "não empacotada" = uma pasta com o código, carregada direto no navegador. Não precisa de loja nem de conta.
 
-1. Baixe/clone este repositório e localize a pasta `vivaldi-anotacoes-reuniao`.
+1. Baixe/clone este repositório e localize a pasta `extensao`.
 2. No Vivaldi, digite `vivaldi://extensions` na barra de endereço e tecle Enter.
 3. Ligue o **Modo desenvolvedor** (canto superior direito).
-4. Clique em **Carregar sem compactação** e escolha a pasta `vivaldi-anotacoes-reuniao` (a que contém o `manifest.json`).
+4. Clique em **Carregar sem compactação** e escolha a pasta `extensao` (a que contém o `manifest.json`).
 5. Clique no ícone de quebra-cabeça (barra de ferramentas) e **fixe** a extensão para o ícone ficar visível.
 6. Clique no ícone → **⚙️ Configurações** → **🎤 Permitir microfone** (só na primeira vez).
 

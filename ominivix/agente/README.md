@@ -18,8 +18,8 @@ Depois de gravar, ele faz tudo de uma vez: transcreve (**quem falou: "Você" e o
 ## 📦 Instalação (passo a passo)
 
 1. Instale o **Node.js LTS**: <https://nodejs.org> (botão verde "LTS").
-2. Baixe este repositório inteiro (botão verde **Code › Download ZIP** no GitHub) e extraia. As pastas `agente-reunioes` e `vivaldi-anotacoes-reuniao` precisam ficar **lado a lado**.
-3. Abra a pasta `agente-reunioes`, clique na barra de endereço do Explorer, digite `cmd` e Enter.
+2. Baixe este repositório inteiro (botão verde **Code › Download ZIP** no GitHub) e extraia. As pastas `agente` e `extensao` precisam ficar **lado a lado**.
+3. Abra a pasta `agente`, clique na barra de endereço do Explorer, digite `cmd` e Enter.
 4. No terminal que abriu, rode:
    ```
    npm install
@@ -62,7 +62,7 @@ As chaves ficam **criptografadas** com o cofre do Windows (só o seu usuário l�
 | `app/gravador.js` | captura o áudio do computador e o microfone | *WASAPI loopback, getDisplayMedia* |
 | `app/gravacao.js` | o "cérebro" (**compartilhado com a extensão**) | *Whisper, VAD, filas* |
 | `config-principal.js` | salva as configurações e criptografa as chaves | *DPAPI, safeStorage* |
-| `scripts/sincronizar.js` | copia o cérebro de `../vivaldi-anotacoes-reuniao` | *fonte única de verdade* |
+| `scripts/sincronizar.js` | copia o cérebro de `../extensao` | *fonte única de verdade* |
 
 Detalhe importante: o detector **não escuta o áudio** para saber se há chamada. Ele só olha o registro do Windows que diz "este programa está usando o microfone", o mesmo que acende o ícone de microfone na barra de tarefas.
 

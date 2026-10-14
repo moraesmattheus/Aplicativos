@@ -4,7 +4,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const ORIGEM = path.join(__dirname, '..', '..', 'vivaldi-anotacoes-reuniao');
+const ORIGEM = path.join(__dirname, '..', '..', 'extensao');
 const DESTINO = path.join(__dirname, '..', 'app');
 const ARQUIVOS = [
   'armazenamento.js', 'formatar.js', 'resumo.js', 'gemini.js', 'notion.js', 'falantes.js',
@@ -16,4 +16,4 @@ if (!fs.existsSync(ORIGEM)) {
   process.exit(1);
 }
 for (const arquivo of ARQUIVOS) fs.copyFileSync(path.join(ORIGEM, arquivo), path.join(DESTINO, arquivo));
-console.log(`Sincronizados ${ARQUIVOS.length} arquivos de vivaldi-anotacoes-reuniao.`);
+console.log(`Sincronizados ${ARQUIVOS.length} arquivos de ominivix/extensao.`);
