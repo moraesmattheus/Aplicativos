@@ -13,10 +13,19 @@ const avisarBackground = (tipo, extra = {}) =>
 
 const abrirFluxos = async ({ streamId }) => {
   // Áudio da aba (o streamId foi gerado pelo popup quando você clicou).
-  const fluxoAba = await navigator.mediaDevices.getUserMedia({
-    audio: { mandatory: { chromeMediaSource: 'tab', chromeMediaSourceId: streamId } },
-    video: false
-  });
+  let fluxoAba;
+  try {
+    fluxoAba = await navigator.mediaDevices.getUserMedia({
+      audio: { mandatory: { chromeMediaSource: 'tab', chromeMediaSourceId: streamId } },
+      video: false
+    });
+  } catch (erro) {
+    // Mostra o nome técnico do erro e o que tentar, em vez de só a mensagem do navegador.
+    throw new Error(
+      `${erro.name}: ${erro.message}. Não consegui capturar o áudio desta aba. Tente Alt+Shift+G com a aba da reunião ` +
+      'em primeiro plano; se continuar, feche e reabra a aba, ou veja se outra extensão está capturando a mesma aba.'
+    );
+  }
 
   // Microfone (opcional): precisa ter sido liberado antes na página de Configurações.
   const avisos = [];

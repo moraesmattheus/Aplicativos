@@ -29,7 +29,9 @@ const iniciarGravacao = async (titulo, mostrarErro) => {
     return mostrarErro('Abra a aba da reunião (Meet, Zoom web, Teams...) e clique de novo. Páginas internas do navegador não podem ser gravadas.');
   }
   try {
-    // Só funciona dentro do clique do usuário: é a "autorização" para gravar ESTA aba.
+    // 1) Deixa a página de gravação pronta; 2) só então pede a autorização (ela expira em poucos segundos).
+    await chrome.runtime.sendMessage({ para: 'background', tipo: 'preparar' });
+    // A autorização é para gravar ESTA aba.
     const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: aba.id });
     await chrome.runtime.sendMessage({ para: 'background', tipo: 'iniciar', streamId, titulo: titulo || tituloDaReuniao(aba) });
   } catch (erro) {

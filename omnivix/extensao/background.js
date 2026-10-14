@@ -44,6 +44,20 @@ const garantirOffscreen = async () => {
   });
 };
 
+// Espera a página de gravação terminar de carregar (ela importa o Whisper, que é pesado).
+// Ela só responde ao "ping" depois de registrar o seu ouvinte, então responder = pronta.
+const esperarOffscreenPronto = async () => {
+  for (let tentativa = 0; tentativa < 60; tentativa++) { // até ~15 s
+    try {
+      await chrome.runtime.sendMessage({ para: 'offscreen', tipo: 'ping' });
+      return;
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+  }
+  throw new Error('a página de gravação não carregou a tempo');
+};
+
 const enviarAoOffscreen = async (mensagem) => {
   try {
     await chrome.runtime.sendMessage({ para: 'offscreen', ...mensagem });
@@ -64,6 +78,13 @@ const encerrarOffscreen = async () => {
 
 const tratar = async (mensagem) => {
   switch (mensagem.tipo) {
+    // Passo 1 de gravar: deixa a página de gravação pronta ANTES de pedir a autorização da aba.
+    // A autorização (streamId) expira em poucos segundos; se a página ainda estivesse carregando,
+    // o navegador respondia "Error starting tab capture".
+    case 'preparar':
+      await garantirOffscreen();
+      await esperarOffscreenPronto();
+      return { ok: true };
     case 'iniciar': {
       await definirEstado({ fase: 'iniciando' });
       const config = await carregarConfig();
@@ -118,6 +139,7 @@ const alternarGravacaoNaAba = async (aba) => {
     return;
   }
   try {
+    await tratar({ tipo: 'preparar' });
     const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: aba.id });
     await tratar({ tipo: 'iniciar', streamId, titulo: tituloDaReuniao(aba) });
   } catch (erro) {
