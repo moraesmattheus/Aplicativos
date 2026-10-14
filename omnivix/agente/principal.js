@@ -11,7 +11,7 @@ const { app, BrowserWindow, Tray, Menu, Notification, globalShortcut, ipcMain, p
 const path = require('node:path');
 const fs = require('node:fs/promises');
 const { carregarConfig, salvarConfig, existe } = require('./config-principal');
-const { criarDetector, lerAplicativosEmUso } = require('./detector');
+const { criarDetector, lerAplicativosEmUso, processosDeReuniaoAtivos } = require('./detector');
 const { criarAgenda } = require('./agenda');
 
 // Pasta de dados alternativa (útil para testes ou para um "modo portátil").
@@ -163,7 +163,13 @@ const iniciarGatilhos = () => {
   const meuExecutavel = path.basename(process.execPath).toLowerCase();
   detector = criarDetector({
     // O próprio agente usa o microfone ao gravar: não pode contar como "outro programa".
-    lerAplicativos: async () => (await lerAplicativosEmUso()).filter((nome) => nome !== meuExecutavel),
+    // Dois sinais de reunião: algum programa usando o microfone, OU um programa de reunião aberto
+    // (cobre quem entra mutado, como numa aula).
+    lerAplicativos: async () => {
+      const { processosDeReuniao } = await carregarConfig();
+      const [usandoMicrofone, abertos] = await Promise.all([lerAplicativosEmUso(), processosDeReuniaoAtivos(processosDeReuniao)]);
+      return [...new Set([...usandoMicrofone, ...abertos])].filter((nome) => nome !== meuExecutavel);
+    },
     obterConfig: carregarConfig,
     aoIniciar: () => iniciarGravacao({ origem: 'microfone', titulo: `Reunião ${dataCurta()}`, tituloGenerico: true }),
     aoParar: () => estado.origem === 'microfone' && pararGravacao()

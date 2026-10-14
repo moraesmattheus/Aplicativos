@@ -12,6 +12,7 @@ const CONFIG_PADRAO = {
   segundosParaIniciar: 8, // microfone em uso por tanto tempo = é uma chamada
   segundosParaParar: 25, // microfone livre por tanto tempo = a chamada acabou
   ignorarApps: ['speechruntime.exe', 'searchhost.exe', 'searchapp.exe', 'audiodg.exe'], // não são chamadas
+  processosDeReuniao: ['cpthost.exe'], // programas abertos só durante reuniões (Zoom): valem mesmo com o microfone mudo
   avisarAoIniciar: true, // notificação "Gravando..." (para você e para não esquecer de avisar os participantes)
   iniciarComWindows: true,
   atalho: 'Control+Alt+R', // liga/desliga a gravação manualmente

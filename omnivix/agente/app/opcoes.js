@@ -51,6 +51,7 @@ const config = await carregarConfig();
 CAMPOS_TEXTO.forEach((campo) => ($(campo).value = config[campo]));
 CAMPOS_MARCAR.forEach((campo) => ($(campo).checked = config[campo]));
 $('ignorarApps').value = config.ignorarApps.join('\n');
+$('processosDeReuniao').value = (config.processosDeReuniao ?? []).join('\n');
 config.destinos.forEach((d) => $('listaDestinos').append(criarLinhaDestino(d)));
 $('novoDestino').addEventListener('click', () => $('listaDestinos').append(criarLinhaDestino({ nome: '' })));
 mostrarCaixaDoProvedor();
@@ -63,6 +64,7 @@ $('salvar').addEventListener('click', async () => {
   CAMPOS_TEXTO.forEach((campo) => (nova[campo] = $(campo).value.trim()));
   CAMPOS_MARCAR.forEach((campo) => (nova[campo] = $(campo).checked));
   nova.ignorarApps = $('ignorarApps').value.split('\n').map((l) => l.trim().toLowerCase()).filter(Boolean);
+  nova.processosDeReuniao = $('processosDeReuniao').value.split('\n').map((l) => l.trim().toLowerCase()).filter(Boolean);
   nova.segundosParaIniciar = config.segundosParaIniciar;
   nova.segundosParaParar = config.segundosParaParar;
   nova.destinos = [...$('listaDestinos').children].map((linha) => linha.ler()).filter((d) => d.nome);

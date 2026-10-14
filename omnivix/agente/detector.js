@@ -49,6 +49,26 @@ const lerNoWindows = async () => {
   return emUso.filter((a) => !a.nome.endsWith('.exe') || rodando.has(a.nome)).map((a) => a.nome);
 };
 
+// Programas que só ficam abertos DURANTE uma reunião. Servem de sinal mesmo com o microfone mudo
+// (o Windows só marca o microfone "em uso" quando o programa realmente o abre, e muitos não abrem
+// enquanto você está mutado). Ex.: o Zoom mantém o cptHost.exe aberto enquanto você está numa reunião.
+// Devolve só os da lista que estão rodando agora.
+const processosDeReuniaoAtivos = async (lista = []) => {
+  if (!lista.length) return [];
+  if (process.env.AGENTE_SIMULAR_PROCESSOS) {
+    // Modo de simulação para testes: um arquivo JSON com os processos rodando, ex.: ["cpthost.exe"]
+    try {
+      const simulados = JSON.parse(fs.readFileSync(process.env.AGENTE_SIMULAR_PROCESSOS, 'utf8'));
+      return lista.filter((nome) => simulados.includes(nome));
+    } catch {
+      return [];
+    }
+  }
+  if (process.platform !== 'win32') return [];
+  const rodando = await processosRodando();
+  return lista.filter((nome) => rodando.has(nome));
+};
+
 // Linux (útil para desenvolver): programas com gravação ativa no PulseAudio/PipeWire.
 const lerNoLinux = async () => {
   const { stdout } = await executar('pactl', ['list', 'source-outputs']).catch(() => ({ stdout: '' }));
@@ -118,4 +138,4 @@ const criarDetector = ({ lerAplicativos, obterConfig, aoIniciar, aoParar, interv
   };
 };
 
-module.exports = { parsearConsentStore, lerAplicativosEmUso, criarDetector };
+module.exports = { parsearConsentStore, lerAplicativosEmUso, processosDeReuniaoAtivos, criarDetector };
