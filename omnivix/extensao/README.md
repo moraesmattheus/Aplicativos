@@ -1,15 +1,15 @@
 # 🎙️ Anotações de Reunião (grátis e local) - extensão para Vivaldi / Chrome
 
-Faz o que as **Anotações IA do Notion** fazem, sem pagar nada:
+Grava, transcreve e organiza suas reuniões, sem pagar nada:
 
 1. **Grava** o áudio da aba (Google Meet, Zoom web, Teams, YouTube...) **+ o seu microfone**.
-2. **Transcreve** com o **Whisper**: no seu navegador (privado) ou na nuvem do Groq (**bem mais rápido**, como o Notion).
+2. **Transcreve** com o **Whisper**: no seu navegador (privado) ou na nuvem do Groq (**bem mais rápido**).
 3. **Mostra quem falou**: "Você" (microfone) e os outros; com o Gemini, cada participante vira "Pessoa 1", "Pessoa 2"... e você renomeia com um clique.
 4. **Gera resumo, tópicos, decisões e itens de ação** (3 opções, veja abaixo).
 5. **Envia para o Notion** no lugar certo: Entrevista → banco "Entrevistas", Aula → página da faculdade, e assim por diante.
 6. Guarda tudo numa página de reuniões, com botão para **copiar em Markdown** (cola direto no Notion) e **baixar o áudio**.
 
-> ⚖️ **Avise os participantes de que a reunião está sendo gravada.** Em muitos casos isso é exigido por lei (LGPD) e é questão de respeito. O Notion pede essa confirmação também.
+> ⚖️ **Avise os participantes de que a reunião está sendo gravada.** Em muitos casos isso é exigido por lei (LGPD) e é questão de respeito. 
 
 ---
 

@@ -22,10 +22,11 @@ organiza tudo num **Kanban** e agenda entrevistas no **Google Calendar**.
 - 🧠 Backend de IA: [`radar-vagas-backend`](./radar-vagas-backend/) — Cloudflare Workers + Google Gemini, lê currículo em **PDF/DOCX** (inclusive escaneado) e faz análise ATS. O app também roda **sem** o backend, com análise local.
 - 🛠️ React Native · Expo · TypeScript · Cloudflare Workers · Gemini
 
-## 🎙️ Anotações de Reunião - extensão grátis para Vivaldi/Chrome
+## 🎙️ Omnivix - extensão grátis para Vivaldi/Chrome
 
-Grava o áudio da aba + microfone, **transcreve localmente com Whisper** e gera
-resumo e itens de ação - uma alternativa gratuita às Anotações IA do Notion.
+Grava o áudio da aba + microfone, **transcreve localmente com Whisper**, gera
+resumo e itens de ação e envia ao Notion. No mesmo painel ficam tarefas por área de trabalho,
+relógio automático, Pomodoro, árvore de abas, estatísticas e briefing do dia.
 
 - 📂 Pasta: [`omnivix/extensao`](./omnivix/extensao/) (instruções de instalação no README da pasta)
 - 🛠️ JavaScript · Manifest V3 · Web Audio · Transformers.js (Whisper) · IndexedDB
