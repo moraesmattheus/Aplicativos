@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ajustes</title>
+    <link rel="icon" href="icons/ajustes.png" />
+    <script src="tema.js"></script>
+    <link rel="stylesheet" href="base.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Ajustes</h1>
+        <p class="rotulo">Tudo muda na hora e fica salvo</p>
+      </header>
+
+      <section class="bloco">
+        <h2>Gravação de reuniões</h2>
+        <p class="rotulo">Transcrição, resumo, Notion e microfone ficam numa página própria.</p>
+        <p><a href="../opcoes.html" target="_blank" rel="noopener">Abrir configurações de gravação</a></p>
+      </section>
+
+      <section class="bloco">
+        <h2>Cores</h2>
+        <label class="campo">Tema pronto
+          <select id="tema-pronto"></select>
+        </label>
+        <label class="campo cor">Fundo <input type="color" id="cor-fundo" /></label>
+        <label class="campo cor">Cartões e campos <input type="color" id="cor-superficie" /></label>
+        <label class="campo cor">Texto <input type="color" id="cor-texto" /></label>
+        <label class="campo cor">Botões (destaque) <input type="color" id="cor-destaque" /></label>
+        <label class="campo cor">Seleção (item ativo, marcações) <input type="color" id="cor-selecao" /></label>
+        <label class="campo cor">Neon (ícones em repouso e brilho) <input type="color" id="cor-neon" /></label>
+        <p id="aviso-contraste" class="suave" aria-live="polite"></p>
+      </section>
+
+      <section class="bloco">
+        <h2>Aparência</h2>
+        <label class="campo">Cantos de cartões, botões e campos <output id="saida-raio"></output>
+          <input type="range" id="raio" min="0" max="28" />
+        </label>
+        <label class="campo">Tamanho da letra <output id="saida-fonte"></output>
+          <input type="range" id="fonte" min="12" max="20" />
+        </label>
+        <label class="campo">Fonte
+          <select id="familia"></select>
+        </label>
+        <label class="campo" id="campo-familia-propria" hidden>Nome da fonte instalada no computador
+          <input type="text" id="familia-propria" maxlength="40" placeholder="Ex.: Calibri" autocomplete="off" />
+        </label>
+        <p class="exemplo" id="exemplo-fonte">Exemplo: o rato roeu a roupa do rei de Roma. 0123456789</p>
+        <label class="campo">Altura da linha <output id="saida-linha"></output>
+          <input type="range" id="linha" min="12" max="20" />
+        </label>
+        <label class="campo">Espaçamento <output id="saida-espaco"></output>
+          <input type="range" id="espaco" min="6" max="24" />
+        </label>
+        <label class="chave"><input type="checkbox" id="sem-movimento" /><span>Reduzir movimento e animações</span></label>
+      </section>
+
+      <section class="bloco">
+        <h2>Barra de ícones</h2>
+        <label class="campo">Onde fica a barra
+          <select id="posicao">
+            <option value="top">Em cima</option>
+            <option value="bottom">Embaixo</option>
+            <option value="left">À esquerda</option>
+            <option value="right">À direita</option>
+          </select>
+        </label>
+        <label class="campo">Tamanho dos ícones <output id="saida-tamanho"></output>
+          <input type="range" id="tamanho" min="20" max="48" />
+        </label>
+        <label class="campo">Formato do realce do ícone (quadrado a redondo) <output id="saida-forma"></output>
+          <input type="range" id="forma" min="0" max="50" />
+        </label>
+        <label class="chave"><input type="checkbox" id="rotulos" /><span>Mostrar o nome embaixo do ícone</span></label>
+        <label class="chave"><input type="checkbox" id="recolher" /><span>Esconder a barra e mostrar ao passar o mouse na borda</span></label>
+        <label class="campo">Espessura da zona invisível que abre a barra <output id="saida-faixa"></output>
+          <input type="range" id="faixa" min="2" max="16" />
+        </label>
+        <label class="campo">Desfoque ao abrir <output id="saida-desfoque"></output>
+          <input type="range" id="desfoque" min="0" max="30" />
+        </label>
+        <label class="campo">Duração do deslizar (maior = mais lento e suave) <output id="saida-animacao"></output>
+          <input type="range" id="animacao" min="0" max="1500" step="50" />
+        </label>
+        <label class="campo">Brilho do neon <output id="saida-brilho"></output>
+          <input type="range" id="brilho" min="0" max="100" />
+        </label>
+        <label class="campo">Espessura do traço do ícone
+          <select id="traco">
+            <option value="fino">Fino (delicado)</option>
+            <option value="medio">Médio</option>
+            <option value="grosso">Grosso</option>
+          </select>
+        </label>
+        <p class="suave">Quais ícones aparecem e em que ordem:</p>
+        <ul id="lista-funcoes" class="lista-funcoes"></ul>
+      </section>
+
+      <section class="bloco">
+        <h2>Automático</h2>
+        <label class="chave"><input type="checkbox" id="auto-detectar" /><span>Detectar o que estou fazendo e contar o tempo sozinho (pela área de trabalho e pelo site da aba)</span></label>
+        <label class="chave"><input type="checkbox" id="auto-seguir" /><span>A lista de tarefas acompanha a área de trabalho em que estou</span></label>
+        <label class="chave"><input type="checkbox" id="auto-dicas" /><span>Dicas e avisos de pausa pelo tempo da tarefa</span></label>
+        <p class="suave">Nada sai do seu computador. Só ficam salvos a categoria, a tarefa e o tempo, nunca os endereços.</p>
+      </section>
+
+      <section class="bloco">
+        <h2>Pomodoro</h2>
+        <label class="campo">Foco padrão
+          <select id="pomo-foco"></select>
+        </label>
+        <label class="campo">Pausa curta <output id="saida-pausa"></output>
+          <input type="range" id="pomo-pausa" min="1" max="30" />
+        </label>
+      </section>
+
+      <button id="btn-restaurar" class="secundario">Restaurar o padrão</button>
+    </main>
+    <script src="funcoes.js"></script>
+    <script src="ajustes.js"></script>
+  </body>
+</html>

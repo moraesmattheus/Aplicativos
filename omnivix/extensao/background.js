@@ -5,6 +5,7 @@
 // Importante: o service worker "dorme" quando fica ocioso, então NÃO guardamos estado em variáveis.
 // O estado vai para chrome.storage.session (some quando o navegador fecha), que o popup também lê.
 
+import './foco/fundo-foco.js'; // tarefas, tempo automático, Pomodoro, abas e abrir o painel
 import { carregarConfig } from './config.js';
 import { detectarReuniao } from './deteccao.js';
 
@@ -110,7 +111,7 @@ const avisarReuniao = async (tabId, plataforma) => {
     type: 'basic',
     iconUrl: 'icones/128.png',
     title: `Reunião detectada (${plataforma})`,
-    message: 'Clique no ícone da extensão para gravar e transcrever.',
+    message: 'Clique no ícone do Omnivix e depois em Gravar.',
     priority: 1
   });
 };

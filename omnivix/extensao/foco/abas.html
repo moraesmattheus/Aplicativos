@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Abas</title>
+    <link rel="icon" href="icons/abas.png" />
+    <script src="tema.js"></script>
+    <link rel="stylesheet" href="base.css" />
+  </head>
+  <body>
+    <main>
+      <div id="vista-arvore">
+        <input id="busca" type="search" placeholder="Buscar por título ou site" autocomplete="off" />
+        <p id="resumo" class="rotulo"></p>
+
+        <!-- Aparece so quando existem abas com o mesmo endereco -->
+        <section id="duplicadas" hidden>
+          <p id="duplicadas-texto"></p>
+          <button id="btn-duplicadas">Fechar as repetidas</button>
+        </section>
+
+        <!-- Abas que abriram outras abas -->
+        <ul id="arvore"></ul>
+
+        <!-- Abas soltas, agrupadas por site -->
+        <div id="por-site"></div>
+
+        <!-- Chave unica: reabrir abas sozinho (inicio do navegador ou area fechada) -->
+        <label id="chave-reabrir" class="chave">
+          <input type="checkbox" id="reabrir-auto" checked />
+          <span>Reabrir abas sozinho se uma área for fechada</span>
+        </label>
+      </div>
+    </main>
+    <script src="arvore.js"></script>
+  </body>
+</html>

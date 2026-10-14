@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Foco</title>
+    <link rel="icon" href="icons/foco.png" />
+    <script src="tema.js"></script>
+    <link rel="stylesheet" href="base.css" />
+  </head>
+  <body>
+    <main>
+      <!-- Lembrete so de leitura: no que voce esta trabalhando agora (vem da pagina Tarefas). -->
+      <section id="agora">
+        <p class="rotulo">Tarefa de agora</p>
+        <h1 id="tarefa-atual">Nada em foco</h1>
+      </section>
+
+      <!-- Pomodoro: foco com pausa curta automatica -->
+      <section id="pomodoro" aria-live="polite">
+        <p class="rotulo" id="pomo-fase">Pronto para começar</p>
+        <p id="pomo-tempo" class="tempo"></p>
+        <div class="linha">
+          <select id="pomo-duracao" aria-label="Duração do foco">
+            <option value="10">10 min</option>
+            <option value="15">15 min</option>
+            <option value="25" selected>25 min</option>
+            <option value="40">40 min</option>
+          </select>
+          <button id="pomo-iniciar">Iniciar foco</button>
+          <button id="pomo-parar" hidden>Parar</button>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="pomodoro.js"></script>
+  </body>
+</html>

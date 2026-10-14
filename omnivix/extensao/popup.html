@@ -3,8 +3,9 @@
 <meta charset="utf-8">
 <title>Omnivix</title>
 <link rel="stylesheet" href="estilo.css">
+<script src="foco/tema.js"></script>
 <style>
-  body { width: 340px; padding: 16px; }
+  body { width: min(340px, 100%); padding: 16px; } /* 340px no popup, ocupa o painel lateral */
   #tela > * + * { margin-top: 10px; }
   .linha { display: flex; gap: 8px; }
   .linha > button { flex: 1; }

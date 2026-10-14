@@ -1,12 +1,12 @@
 :root {
-  --fundo: #ffffff; --superficie: #f4f5f7; --borda: #dcdfe4; --texto: #1c1e21; --suave: #5f6670;
-  --destaque: #5b5bd6; --destaque-texto: #ffffff; --perigo: #d93025; --aviso-fundo: #fff4d6; --aviso-texto: #6b4b00;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --fundo: #17181b; --superficie: #232529; --borda: #34373d; --texto: #ececee; --suave: #9aa0aa;
-    --destaque: #8484f0; --destaque-texto: #101014; --perigo: #ff6b61; --aviso-fundo: #3a2f10; --aviso-texto: #ffd980;
-  }
+  color-scheme: dark;
+  /* Valores padrao (preto total). A pagina foco/tema.js troca estes valores pelas cores dos Ajustes. */
+  --fundo: #000; --superficie: #181616; --texto: #d0cdcd; --destaque: #dcdcdc; --sobre-destaque: #000;
+  --raio: 14px; --perigo: #ff6b61; --aviso-fundo: #3a2f10; --aviso-texto: #ffd980;
+  /* Derivadas: acompanham o texto e o fundo escolhidos. */
+  --suave: color-mix(in srgb, var(--texto) 55%, var(--fundo));
+  --borda: color-mix(in srgb, var(--texto) 20%, transparent);
+  --destaque-texto: var(--sobre-destaque);
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--fundo); color: var(--texto); font: 14px/1.5 system-ui, sans-serif; }
@@ -15,7 +15,7 @@ h1 { font-size: 20px; } h2 { font-size: 16px; margin-top: 24px; } h3 { font-size
 a { color: var(--destaque); }
 button, input, select {
   font: inherit; color: inherit; background: var(--superficie);
-  border: 1px solid var(--borda); border-radius: 8px; padding: 8px 12px;
+  border: 1px solid var(--borda); border-radius: var(--raio); padding: 8px 12px;
 }
 button { cursor: pointer; }
 button:hover { border-color: var(--destaque); }
@@ -24,6 +24,6 @@ button.perigo { background: var(--perigo); color: #fff; border-color: var(--peri
 button:disabled { opacity: .5; cursor: not-allowed; }
 input[type=text], input[type=password], select { width: 100%; }
 .suave { color: var(--suave); }
-.aviso { background: var(--aviso-fundo); color: var(--aviso-texto); padding: 8px 12px; border-radius: 8px; margin: 8px 0; }
+.aviso { background: var(--aviso-fundo); color: var(--aviso-texto); padding: 8px 12px; border-radius: var(--raio); margin: 8px 0; }
 .barra { height: 6px; border-radius: 3px; background: var(--borda); overflow: hidden; }
 .barra > div { height: 100%; background: var(--destaque); transition: width .3s; }

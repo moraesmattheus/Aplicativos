@@ -33,7 +33,11 @@ const iniciarGravacao = async (titulo, mostrarErro) => {
     const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: aba.id });
     await chrome.runtime.sendMessage({ para: 'background', tipo: 'iniciar', streamId, titulo: titulo || aba.title });
   } catch (erro) {
-    mostrarErro(`Não consegui iniciar: ${erro.message}`);
+    // O navegador só libera a aba em que você clicou no ícone da extensão (regra de segurança).
+    const precisaClicar = /invoked|activeTab|permission/i.test(erro.message);
+    mostrarErro(precisaClicar
+      ? 'Para gravar esta aba, clique uma vez no ícone do Omnivix na barra do navegador (com a aba da reunião aberta) e tente de novo.'
+      : `Não consegui iniciar: ${erro.message}`);
   }
 };
 
