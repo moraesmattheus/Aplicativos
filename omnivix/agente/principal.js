@@ -1,4 +1,4 @@
-// PROCESSO PRINCIPAL do Ominivix (app de bandeja): fica na bandeja do Windows, sem janela, e decide QUANDO gravar.
+// PROCESSO PRINCIPAL do Omnivix (app de bandeja): fica na bandeja do Windows, sem janela, e decide QUANDO gravar.
 //
 //   [detector.js]  um programa usou o microfone por alguns segundos ─┐
 //   [agenda.js]    chegou a hora de uma aula/entrevista da agenda ───┼─► iniciarGravacao()
@@ -63,7 +63,7 @@ const abrirJanela = (nome, hash = '') => {
     return;
   }
   const janela = new BrowserWindow({
-    width: nome === 'opcoes' ? 760 : 1100, height: 820, title: 'Ominivix', icon: icone('icone.png'), autoHideMenuBar: true,
+    width: nome === 'opcoes' ? 760 : 1100, height: 820, title: 'Omnivix', icon: icone('icone.png'), autoHideMenuBar: true,
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false }
   });
   janela.loadURL(`app://local/${nome}.html${hash ? `#${hash}` : ''}`);
@@ -122,7 +122,7 @@ const atualizarBandeja = () => {
   if (!bandeja) return;
   const gravando = estado.fase === 'gravando' || estado.fase === 'finalizando';
   bandeja.setImage(icone(gravando ? 'bandeja-gravando.png' : 'bandeja.png'));
-  const texto = { ocioso: 'Ominivix: pronto', iniciando: 'Iniciando...', gravando: 'Gravando reunião...', finalizando: 'Finalizando (transcrevendo e resumindo)...' }[estado.fase];
+  const texto = { ocioso: 'Omnivix: pronto', iniciando: 'Iniciando...', gravando: 'Gravando reunião...', finalizando: 'Finalizando (transcrevendo e resumindo)...' }[estado.fase];
   bandeja.setToolTip(texto);
   bandeja.setContextMenu(Menu.buildFromTemplate([
     { label: texto, enabled: false },
@@ -209,7 +209,7 @@ ipcMain.on('gravador:finalizado', (_e, reuniao) => {
 // ---------- Início do aplicativo ----------
 
 app.whenReady().then(async () => {
-  app.setAppUserModelId('br.mattheus.ominivix');
+  app.setAppUserModelId('br.mattheus.omnivix');
   const primeiraVez = !(await existe());
 
   protocol.handle('app', async (pedido) => {
@@ -248,7 +248,7 @@ app.whenReady().then(async () => {
 
   if (primeiraVez) {
     abrirJanela('opcoes');
-    avisar('Ominivix ativo', 'Fica na bandeja do Windows e grava sozinho quando você entra numa chamada.');
+    avisar('Omnivix ativo', 'Fica na bandeja do Windows e grava sozinho quando você entra numa chamada.');
   }
 });
 

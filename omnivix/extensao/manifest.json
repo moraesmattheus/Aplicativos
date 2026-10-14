@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Ominivix",
+  "name": "Omnivix",
   "version": "1.0.0",
   "description": "Grava, transcreve e organiza reuniões e aulas: resumo, quem falou e envio ao Notion. Grátis.",
   "minimum_chrome_version": "116",
@@ -27,7 +27,7 @@
   "background": { "service_worker": "background.js", "type": "module" },
 
   "action": {
-    "default_title": "Ominivix",
+    "default_title": "Omnivix",
     "default_popup": "popup.html"
   },
 

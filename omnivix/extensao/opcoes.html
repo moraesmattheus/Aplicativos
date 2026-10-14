@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR">
 <meta charset="utf-8">
-<title>Configurações · Ominivix</title>
+<title>Configurações · Omnivix</title>
 <link rel="stylesheet" href="estilo.css">
 <style>
   main { max-width: 640px; margin: 0 auto; padding: 24px 16px 64px; }
@@ -19,25 +19,13 @@
 <main>
   <h1>⚙️ Configurações</h1>
 
-  <h2>1. Gravação automática</h2>
-  <p class="suave">O agente fica na bandeja do Windows (perto do relógio) e grava sozinho. <b>Avise os participantes de que a reunião está sendo gravada.</b></p>
-  <label class="marcar"><input type="checkbox" id="autoDetectarChamadas"><span>Gravar sozinho quando eu entrar numa chamada<small>Detecta quando um programa (navegador, Zoom, Teams...) passa a usar o microfone e para quando ele é liberado.</small></span></label>
-  <label class="marcar"><input type="checkbox" id="avisarAoIniciar"><span>Mostrar notificação ao começar a gravar</span></label>
-  <label class="marcar"><input type="checkbox" id="iniciarComWindows"><span>Abrir junto com o Windows</span></label>
-  <label for="atalho">Atalho para ligar/desligar a gravação<small>Ex.: Control+Alt+R</small></label>
-  <input type="text" id="atalho">
-  <label for="ignorarApps">Programas que NÃO são chamadas<small>Um por linha (nome do .exe). Use para ditado por voz, gravadores etc.</small></label>
-  <textarea id="ignorarApps" rows="3" style="width:100%"></textarea>
+  <h2>1. Microfone</h2>
+  <p class="suave">Para gravar a SUA voz (além do áudio da aba), o navegador precisa da sua permissão. Isso só precisa ser feito uma vez.</p>
+  <button id="permitirMic">🎤 Permitir microfone</button><span id="resultadoMic"></span>
 
-  <h2>2. Agenda (aulas e entrevistas presenciais)</h2>
-  <p class="suave">Sem chamada não há sinal de que a conversa começou, então o agente usa o seu calendário. Cole o <b>endereço secreto no formato iCal</b> do Google Agenda (Configurações do calendário › Integrar agenda). Aulas que se repetem funcionam.</p>
-  <label for="agendaUrl">Endereço iCal (.ics)</label>
-  <input type="password" id="agendaUrl" autocomplete="off" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics">
-  <label for="agendaPalavras">Gravar eventos cujo título contenha<small>Separe por vírgula. Acentos e maiúsculas não importam.</small></label>
-  <input type="text" id="agendaPalavras">
-  <label class="marcar"><input type="checkbox" id="agendaTodos"><span>Gravar todos os eventos do calendário</span></label>
+  <label class="marcar"><input type="checkbox" id="avisarReuniao"><span>Avisar quando eu entrar numa reunião<small>Meet, Zoom, Teams, Webex e Jitsi: mostra um aviso no ícone e uma notificação. A gravação só começa quando VOCÊ clica.</small></span></label>
 
-  <h2>3. Transcrição</h2>
+  <h2>2. Transcrição</h2>
   <label for="motorTranscricao">Quem transcreve?
     <small>A nuvem do Groq é a opção mais RÁPIDA (como o Notion): o áudio de cada trecho é enviado a eles. O modo local é mais lento, mas nada sai do seu PC.</small></label>
   <select id="motorTranscricao">
@@ -73,7 +61,7 @@
   <label class="marcar"><input type="checkbox" id="identificarFalantes"><span>Separar cada participante (“Pessoa 1”, “Pessoa 2”...)<small>No fim da reunião, envia o ÁUDIO da aba ao Gemini (precisa da chave do Gemini abaixo, ~80 min no máximo). Seu microfone sempre aparece como “Você”, sem enviar nada.</small></span></label>
   <label class="marcar"><input type="checkbox" id="salvarAudio"><span>Guardar o áudio da reunião<small>Para ouvir/baixar depois. Fica só no seu navegador.</small></span></label>
 
-  <h2>4. Resumo</h2>
+  <h2>3. Resumo</h2>
   <label for="provedorResumo">Quem escreve o resumo?</label>
   <select id="provedorResumo">
     <option value="basico">Básico - sem IA, 100% offline (resumo simples)</option>
@@ -95,7 +83,7 @@
     <input type="text" id="ollamaModelo">
   </fieldset>
 
-  <h2>5. Notion (enviar cada reunião para o lugar certo)</h2>
+  <h2>4. Notion (enviar cada reunião para o lugar certo)</h2>
   <p class="suave">Crie uma integração grátis em <a href="https://www.notion.so/profile/integrations" target="_blank" rel="noopener">notion.so/profile/integrations</a> (tipo <b>Interna</b>) e copie o token. Depois, em cada página ou banco de destino, clique em <b>••• › Conexões</b> e adicione a integração.</p>
   <label for="notionToken">Token da integração<small>Fica guardado só neste navegador.</small></label>
   <input type="password" id="notionToken" autocomplete="off" placeholder="ntn_...">

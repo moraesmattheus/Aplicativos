@@ -42,7 +42,7 @@ const telaOciosa = (reuniao) => {
   const erro = el('div', { className: 'aviso', hidden: true });
   const mostrarErro = (texto) => Object.assign(erro, { textContent: texto, hidden: false });
   return [
-    el('h1', { textContent: '🎙️ Ominivix' }),
+    el('h1', { textContent: '🎙️ Omnivix' }),
     reuniao
       ? el('div', { className: 'aviso', textContent: `Reunião detectada: ${reuniao}. É só clicar em gravar.` })
       : el('p', { className: 'suave', textContent: 'Grava a aba atual + seu microfone, transcreve e gera o resumo.' }),

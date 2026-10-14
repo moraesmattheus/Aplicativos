@@ -16,4 +16,4 @@ if (!fs.existsSync(ORIGEM)) {
   process.exit(1);
 }
 for (const arquivo of ARQUIVOS) fs.copyFileSync(path.join(ORIGEM, arquivo), path.join(DESTINO, arquivo));
-console.log(`Sincronizados ${ARQUIVOS.length} arquivos de ominivix/extensao.`);
+console.log(`Sincronizados ${ARQUIVOS.length} arquivos de omnivix/extensao.`);

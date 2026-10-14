@@ -27,7 +27,7 @@ organiza tudo num **Kanban** e agenda entrevistas no **Google Calendar**.
 Grava o áudio da aba + microfone, **transcreve localmente com Whisper** e gera
 resumo e itens de ação - uma alternativa gratuita às Anotações IA do Notion.
 
-- 📂 Pasta: [`ominivix/extensao`](./ominivix/extensao/) (instruções de instalação no README da pasta)
+- 📂 Pasta: [`omnivix/extensao`](./omnivix/extensao/) (instruções de instalação no README da pasta)
 - 🛠️ JavaScript · Manifest V3 · Web Audio · Transformers.js (Whisper) · IndexedDB
 
 ## 🤖 Agente de Reuniões - grava sozinho (Windows)
@@ -36,7 +36,7 @@ Programa de bandeja que **detecta chamadas** (pelo uso do microfone) e **aulas/e
 grava o áudio do PC + microfone **sem bot na reunião**, transcreve, separa quem falou, resume e envia ao
 **Notion** no lugar certo. Compartilha o "cérebro" com a extensão.
 
-- 📂 Pasta: [`ominivix/agente`](./ominivix/agente/) (instalação passo a passo no README da pasta)
+- 📂 Pasta: [`omnivix/agente`](./omnivix/agente/) (instalação passo a passo no README da pasta)
 - 🛠️ Electron · Whisper (Transformers.js) · Notion API · iCalendar
 
 ## 🧭 Rota de Vida — plano de vida do casal (PWA)
