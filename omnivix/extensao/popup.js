@@ -3,7 +3,7 @@
 // a partir de chrome.storage.session (onde o background salva o estado da gravação).
 
 import { formatarTempo } from './formatar.js';
-import { detectarReuniao } from './deteccao.js';
+import { detectarReuniao, tituloDaReuniao } from './deteccao.js';
 
 const tela = document.getElementById('tela');
 let temporizador = null;
@@ -31,7 +31,7 @@ const iniciarGravacao = async (titulo, mostrarErro) => {
   try {
     // Só funciona dentro do clique do usuário: é a "autorização" para gravar ESTA aba.
     const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: aba.id });
-    await chrome.runtime.sendMessage({ para: 'background', tipo: 'iniciar', streamId, titulo: titulo || aba.title });
+    await chrome.runtime.sendMessage({ para: 'background', tipo: 'iniciar', streamId, titulo: titulo || tituloDaReuniao(aba) });
   } catch (erro) {
     // O navegador só libera a aba em que você clicou no ícone da extensão (regra de segurança).
     const precisaClicar = /invoked|activeTab|permission/i.test(erro.message);

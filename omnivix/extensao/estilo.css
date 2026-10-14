@@ -13,7 +13,7 @@ body { margin: 0; background: var(--fundo); color: var(--texto); font: 14px/1.5 
 h1, h2, h3 { margin: 0 0 8px; line-height: 1.25; }
 h1 { font-size: 20px; } h2 { font-size: 16px; margin-top: 24px; } h3 { font-size: 14px; }
 a { color: var(--destaque); }
-button, input, select {
+button, input, select, textarea {
   font: inherit; color: inherit; background: var(--superficie);
   border: 1px solid var(--borda); border-radius: var(--raio); padding: 8px 12px;
 }
@@ -22,7 +22,8 @@ button:hover { border-color: var(--destaque); }
 button.principal { background: var(--destaque); color: var(--destaque-texto); border-color: var(--destaque); font-weight: 600; }
 button.perigo { background: var(--perigo); color: #fff; border-color: var(--perigo); font-weight: 600; }
 button:disabled { opacity: .5; cursor: not-allowed; }
-input[type=text], input[type=password], select { width: 100%; }
+input[type=text], input[type=password], select, textarea { width: 100%; }
+textarea { resize: vertical; line-height: 1.4; }
 .suave { color: var(--suave); }
 .aviso { background: var(--aviso-fundo); color: var(--aviso-texto); padding: 8px 12px; border-radius: var(--raio); margin: 8px 0; }
 .barra { height: 6px; border-radius: 3px; background: var(--borda); overflow: hidden; }

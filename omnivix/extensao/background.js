@@ -7,7 +7,7 @@
 
 import './foco/fundo-foco.js'; // tarefas, tempo automático, Pomodoro, abas e abrir o painel
 import { carregarConfig } from './config.js';
-import { detectarReuniao } from './deteccao.js';
+import { detectarReuniao, tituloDaReuniao } from './deteccao.js';
 
 const OCIOSO = { fase: 'ocioso' };
 
@@ -119,7 +119,7 @@ const alternarGravacaoNaAba = async (aba) => {
   }
   try {
     const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: aba.id });
-    await tratar({ tipo: 'iniciar', streamId, titulo: aba.title });
+    await tratar({ tipo: 'iniciar', streamId, titulo: tituloDaReuniao(aba) });
   } catch (erro) {
     avisarSimples('reuniao-aviso', 'Não consegui gravar esta aba', String(erro.message ?? erro));
   }
