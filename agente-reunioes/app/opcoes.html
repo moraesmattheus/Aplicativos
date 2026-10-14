@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<title>Configurações · Agente de Reuniões</title>
+<link rel="stylesheet" href="estilo.css">
+<style>
+  main { max-width: 640px; margin: 0 auto; padding: 24px 16px 64px; }
+  label { display: block; margin-top: 14px; font-weight: 600; }
+  label small { font-weight: 400; color: var(--suave); display: block; }
+  .marcar { display: flex; gap: 8px; align-items: flex-start; font-weight: 600; }
+  .marcar input { margin-top: 5px; }
+  fieldset { border: 1px solid var(--borda); border-radius: 8px; margin-top: 16px; padding: 4px 16px 16px; }
+  .destino { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 10px; margin-top: 8px; border: 1px solid var(--borda); border-radius: 8px; }
+  .destino .largo { grid-column: 1 / -1; }
+  .destino .rodape { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; }
+  #salvo, #resultadoMic { margin-left: 12px; }
+</style>
+<body>
+<main>
+  <h1>⚙️ Configurações</h1>
+
+  <h2>1. Gravação automática</h2>
+  <p class="suave">O agente fica na bandeja do Windows (perto do relógio) e grava sozinho. <b>Avise os participantes de que a reunião está sendo gravada.</b></p>
+  <label class="marcar"><input type="checkbox" id="autoDetectarChamadas"><span>Gravar sozinho quando eu entrar numa chamada<small>Detecta quando um programa (navegador, Zoom, Teams...) passa a usar o microfone e para quando ele é liberado.</small></span></label>
+  <label class="marcar"><input type="checkbox" id="avisarAoIniciar"><span>Mostrar notificação ao começar a gravar</span></label>
+  <label class="marcar"><input type="checkbox" id="iniciarComWindows"><span>Abrir junto com o Windows</span></label>
+  <label for="atalho">Atalho para ligar/desligar a gravação<small>Ex.: Control+Alt+R</small></label>
+  <input type="text" id="atalho">
+  <label for="ignorarApps">Programas que NÃO são chamadas<small>Um por linha (nome do .exe). Use para ditado por voz, gravadores etc.</small></label>
+  <textarea id="ignorarApps" rows="3" style="width:100%"></textarea>
+
+  <h2>2. Agenda (aulas e entrevistas presenciais)</h2>
+  <p class="suave">Sem chamada não há sinal de que a conversa começou, então o agente usa o seu calendário. Cole o <b>endereço secreto no formato iCal</b> do Google Agenda (Configurações do calendário › Integrar agenda). Aulas que se repetem funcionam.</p>
+  <label for="agendaUrl">Endereço iCal (.ics)</label>
+  <input type="password" id="agendaUrl" autocomplete="off" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics">
+  <label for="agendaPalavras">Gravar eventos cujo título contenha<small>Separe por vírgula. Acentos e maiúsculas não importam.</small></label>
+  <input type="text" id="agendaPalavras">
+  <label class="marcar"><input type="checkbox" id="agendaTodos"><span>Gravar todos os eventos do calendário</span></label>
+
+  <h2>3. Transcrição</h2>
+  <label for="motorTranscricao">Quem transcreve?
+    <small>A nuvem do Groq é a opção mais RÁPIDA (como o Notion): o áudio de cada trecho é enviado a eles. O modo local é mais lento, mas nada sai do seu PC.</small></label>
+  <select id="motorTranscricao">
+    <option value="local">Local - Whisper no seu PC (privado)</option>
+    <option value="groq">Groq (nuvem) - rápido, chave grátis</option>
+  </select>
+
+  <fieldset id="boxGroq">
+    <label for="groqKey">Chave da API do Groq<small>Crie grátis em <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a> (sem cartão). O plano grátis tem limite diário de uso.</small></label>
+    <input type="password" id="groqKey" autocomplete="off">
+    <label for="groqModelo">Modelo</label>
+    <input type="text" id="groqModelo">
+  </fieldset>
+
+  <fieldset id="boxLocal">
+  <label for="modeloWhisper">Modelo local (Whisper)
+    <small>Maior = mais preciso, porém mais lento e com download maior (feito uma vez só).</small></label>
+  <select id="modeloWhisper">
+    <option value="Xenova/whisper-tiny">Tiny (~40 MB) - rápido, erra mais</option>
+    <option value="Xenova/whisper-base">Base (~80 MB) - equilibrado</option>
+    <option value="Xenova/whisper-small">Small (~250 MB) - melhor para português, exige PC bom</option>
+  </select>
+  <label class="marcar"><input type="checkbox" id="usarGpu"><span>Usar a placa de vídeo (WebGPU) - bem mais rápido<small>Se falhar, volta sozinho para o processador.</small></span></label>
+  </fieldset>
+
+  <label for="idioma">Idioma da reunião</label>
+  <select id="idioma">
+    <option value="portuguese">Português</option>
+    <option value="english">Inglês</option>
+    <option value="spanish">Espanhol</option>
+    <option value="auto">Detectar automaticamente</option>
+  </select>
+  <label class="marcar"><input type="checkbox" id="identificarFalantes"><span>Separar cada participante (“Pessoa 1”, “Pessoa 2”...)<small>No fim da reunião, envia o ÁUDIO da aba ao Gemini (precisa da chave do Gemini abaixo, ~80 min no máximo). Seu microfone sempre aparece como “Você”, sem enviar nada.</small></span></label>
+  <label class="marcar"><input type="checkbox" id="salvarAudio"><span>Guardar o áudio da reunião<small>Para ouvir/baixar depois. Fica só no seu navegador.</small></span></label>
+
+  <h2>4. Resumo</h2>
+  <label for="provedorResumo">Quem escreve o resumo?</label>
+  <select id="provedorResumo">
+    <option value="basico">Básico - sem IA, 100% offline (resumo simples)</option>
+    <option value="gemini">Google Gemini - chave grátis (resumo muito melhor)</option>
+    <option value="ollama">Ollama - IA rodando no seu PC (grátis e privado)</option>
+  </select>
+
+  <fieldset id="boxGemini">
+    <label for="geminiKey">Chave da API do Gemini<small>Crie grátis em <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. No plano grátis o Google pode usar o conteúdo enviado para melhorar produtos deles.</small></label>
+    <input type="password" id="geminiKey" autocomplete="off">
+    <label for="geminiModelo">Modelo</label>
+    <input type="text" id="geminiModelo">
+  </fieldset>
+
+  <fieldset id="boxOllama">
+    <label for="ollamaUrl">Endereço do Ollama<small>Instale em ollama.com e inicie com a variável <code>OLLAMA_ORIGINS=chrome-extension://*</code>.</small></label>
+    <input type="text" id="ollamaUrl">
+    <label for="ollamaModelo">Modelo (ex.: llama3.2, qwen2.5)</label>
+    <input type="text" id="ollamaModelo">
+  </fieldset>
+
+  <h2>5. Notion (enviar cada reunião para o lugar certo)</h2>
+  <p class="suave">Crie uma integração grátis em <a href="https://www.notion.so/profile/integrations" target="_blank" rel="noopener">notion.so/profile/integrations</a> (tipo <b>Interna</b>) e copie o token. Depois, em cada página ou banco de destino, clique em <b>••• › Conexões</b> e adicione a integração.</p>
+  <label for="notionToken">Token da integração<small>Fica guardado só neste navegador.</small></label>
+  <input type="password" id="notionToken" autocomplete="off" placeholder="ntn_...">
+  <label class="marcar"><input type="checkbox" id="notionAuto"><span>Enviar automaticamente ao terminar cada reunião<small>Senão, você envia com o botão “Enviar ao Notion” na página da reunião.</small></span></label>
+
+  <label>Tipos de reunião e seus destinos
+    <small>A IA escolhe o tipo pelo conteúdo. Escreva em “reconhecer” palavras que ajudem a identificar (ex.: nome da matéria, da empresa). O link pode ser de um <b>banco de dados</b> (cria uma linha) ou de uma <b>página</b> (cria uma subpágina).</small></label>
+  <div id="listaDestinos"></div>
+  <button id="novoDestino" type="button">＋ Adicionar tipo</button>
+
+  <label for="destinoPadrao">Destino padrão<small>Para onde vai quando nenhum tipo combina (opcional).</small></label>
+  <input type="text" id="destinoPadrao" placeholder="Link do Notion">
+
+  <p><button class="principal" id="salvar">Salvar</button><span id="salvo" class="suave"></span></p>
+</main>
+<script type="module" src="opcoes.js"></script>
+</body>
+</html>

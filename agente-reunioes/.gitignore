@@ -1,0 +1,15 @@
+node_modules/
+dist/
+# Copiados de ../vivaldi-anotacoes-reuniao por scripts/sincronizar.js (fonte única do "cérebro")
+app/armazenamento.js
+app/formatar.js
+app/resumo.js
+app/gemini.js
+app/notion.js
+app/falantes.js
+app/transcricao-nuvem.js
+app/pcm-worklet.js
+app/gravacao.js
+app/estilo.css
+app/reunioes.html
+app/reunioes.js

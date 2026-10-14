@@ -4,15 +4,16 @@ import { chamarGemini, lerJson } from './gemini.js';
 // Todos os provedores devolvem o MESMO formato:
 //   { resumo: string, topicos: string[], decisoes: string[], acoes: [{ tarefa, responsavel, prazo }], origem }
 
-const PROMPT = (transcricao, destinos) => {
+const PROMPT = (transcricao, destinos, contexto) => {
   const pedeCategoria = destinos.length > 0;
   const opcoes = destinos.map((d) => `"${d.nome}"${d.descricao ? ` (${d.descricao})` : ''}`).join(', ');
   return `Você é um assistente que escreve atas de reunião em português do Brasil.
 Abaixo está a transcrição automática de uma reunião (pode ter erros de reconhecimento de voz).
 Responda SOMENTE com um JSON válido neste formato:
-{"resumo":"parágrafo curto com o essencial","topicos":["..."],"decisoes":["..."],"acoes":[{"tarefa":"...","responsavel":"nome ou null","prazo":"prazo ou null"}]${pedeCategoria ? ',"categoria":"..."' : ''}}
+{"resumo":"parágrafo curto com o essencial","topicos":["..."],"decisoes":["..."],"acoes":[{"tarefa":"...","responsavel":"nome ou null","prazo":"prazo ou null"}],"titulo":"título curto de até 8 palavras"${pedeCategoria ? ',"categoria":"..."' : ''}}
 Regras: não invente nada que não foi dito; se não houver decisões ou ações, use listas vazias.${pedeCategoria ? `\nEm "categoria", escolha o tipo que melhor descreve esta gravação: ${opcoes}, ou "Outro" se nenhum servir.` : ''}
 
+${contexto ? `Contexto da gravação (título ou evento do calendário): ${contexto}\n` : ''}
 TRANSCRIÇÃO:
 ${transcricao}`;
 };
@@ -42,7 +43,7 @@ const classificarPorPalavras = (texto, destinos) => {
   return melhor && melhor.nota >= 2 ? melhor.nome : null; // pouca evidência = sem tipo
 };
 
-const resumoBasico = (transcricao, destinos) => {
+const resumoBasico = (transcricao, destinos, contexto) => {
   const limpo = transcricao.replace(/\[\d+:\d{2}(:\d{2})?\]\s*(?:[\p{L}\p{N} ]{1,30}:\s)?/gu, '');
   const frases = limpo
     .split(/(?<=[.!?])\s+|\n+/)
@@ -77,18 +78,19 @@ const resumoBasico = (transcricao, destinos) => {
     topicos,
     decisoes: [],
     acoes,
-    categoria: classificarPorPalavras(transcricao, destinos),
+    categoria: classificarPorPalavras(`${contexto}\n${transcricao}`, destinos),
+    titulo: null,
     origem: 'basico'
   };
 };
 
 // ---------- Provedor 2: Google Gemini (chave grátis em aistudio.google.com) ----------
 
-const chamarGeminiResumo = (transcricao, config, destinos) => chamarGemini([{ text: PROMPT(transcricao, destinos) }], config);
+const chamarGeminiResumo = (transcricao, config, destinos, contexto) => chamarGemini([{ text: PROMPT(transcricao, destinos, contexto) }], config);
 
 // ---------- Provedor 3: Ollama (IA rodando no seu PC) ----------
 
-const chamarOllama = async (transcricao, config, destinos) => {
+const chamarOllama = async (transcricao, config, destinos, contexto) => {
   const resposta = await fetch(`${config.ollamaUrl}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -96,7 +98,7 @@ const chamarOllama = async (transcricao, config, destinos) => {
       model: config.ollamaModelo,
       stream: false,
       format: 'json',
-      messages: [{ role: 'user', content: PROMPT(transcricao, destinos) }]
+      messages: [{ role: 'user', content: PROMPT(transcricao, destinos, contexto) }]
     })
   });
   if (!resposta.ok) throw new Error(`Ollama respondeu ${resposta.status}`);
@@ -117,13 +119,14 @@ const normalizar = (bruto, origem, destinos) => ({
     responsavel: a.responsavel && a.responsavel !== 'null' ? String(a.responsavel) : null,
     prazo: a.prazo && a.prazo !== 'null' ? String(a.prazo) : null
   })),
+  titulo: bruto.titulo ? String(bruto.titulo).trim().slice(0, 120) : null,
   categoria: destinos.find((d) => d.nome.toLowerCase() === String(bruto.categoria ?? '').toLowerCase())?.nome ?? null,
   origem
 });
 
-export const gerarResumo = async (transcricao, config) => {
+export const gerarResumo = async (transcricao, config, contexto = '') => {
   const destinos = (config.destinos ?? []).filter((d) => d.nome);
-  if (config.provedorResumo === 'gemini') return normalizar(lerJson(await chamarGeminiResumo(transcricao, config, destinos)), 'gemini', destinos);
-  if (config.provedorResumo === 'ollama') return normalizar(lerJson(await chamarOllama(transcricao, config, destinos)), 'ollama', destinos);
-  return resumoBasico(transcricao, destinos);
+  if (config.provedorResumo === 'gemini') return normalizar(lerJson(await chamarGeminiResumo(transcricao, config, destinos, contexto)), 'gemini', destinos);
+  if (config.provedorResumo === 'ollama') return normalizar(lerJson(await chamarOllama(transcricao, config, destinos, contexto)), 'ollama', destinos);
+  return resumoBasico(transcricao, destinos, contexto);
 };

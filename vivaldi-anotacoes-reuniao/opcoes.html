@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR">
 <meta charset="utf-8">
-<title>Configurações — Anotações de Reunião</title>
+<title>Configurações - Anotações de Reunião</title>
 <link rel="stylesheet" href="estilo.css">
 <style>
   main { max-width: 640px; margin: 0 auto; padding: 24px 16px 64px; }
@@ -29,8 +29,8 @@
   <label for="motorTranscricao">Quem transcreve?
     <small>A nuvem do Groq é a opção mais RÁPIDA (como o Notion): o áudio de cada trecho é enviado a eles. O modo local é mais lento, mas nada sai do seu PC.</small></label>
   <select id="motorTranscricao">
-    <option value="local">Local — Whisper no seu PC (privado)</option>
-    <option value="groq">Groq (nuvem) — rápido, chave grátis</option>
+    <option value="local">Local - Whisper no seu PC (privado)</option>
+    <option value="groq">Groq (nuvem) - rápido, chave grátis</option>
   </select>
 
   <fieldset id="boxGroq">
@@ -44,11 +44,11 @@
   <label for="modeloWhisper">Modelo local (Whisper)
     <small>Maior = mais preciso, porém mais lento e com download maior (feito uma vez só).</small></label>
   <select id="modeloWhisper">
-    <option value="Xenova/whisper-tiny">Tiny (~40 MB) — rápido, erra mais</option>
-    <option value="Xenova/whisper-base">Base (~80 MB) — equilibrado</option>
-    <option value="Xenova/whisper-small">Small (~250 MB) — melhor para português, exige PC bom</option>
+    <option value="Xenova/whisper-tiny">Tiny (~40 MB) - rápido, erra mais</option>
+    <option value="Xenova/whisper-base">Base (~80 MB) - equilibrado</option>
+    <option value="Xenova/whisper-small">Small (~250 MB) - melhor para português, exige PC bom</option>
   </select>
-  <label class="marcar"><input type="checkbox" id="usarGpu"><span>Usar a placa de vídeo (WebGPU) — bem mais rápido<small>Se falhar, volta sozinho para o processador.</small></span></label>
+  <label class="marcar"><input type="checkbox" id="usarGpu"><span>Usar a placa de vídeo (WebGPU) - bem mais rápido<small>Se falhar, volta sozinho para o processador.</small></span></label>
   </fieldset>
 
   <label for="idioma">Idioma da reunião</label>
@@ -64,9 +64,9 @@
   <h2>3. Resumo</h2>
   <label for="provedorResumo">Quem escreve o resumo?</label>
   <select id="provedorResumo">
-    <option value="basico">Básico — sem IA, 100% offline (resumo simples)</option>
-    <option value="gemini">Google Gemini — chave grátis (resumo muito melhor)</option>
-    <option value="ollama">Ollama — IA rodando no seu PC (grátis e privado)</option>
+    <option value="basico">Básico - sem IA, 100% offline (resumo simples)</option>
+    <option value="gemini">Google Gemini - chave grátis (resumo muito melhor)</option>
+    <option value="ollama">Ollama - IA rodando no seu PC (grátis e privado)</option>
   </select>
 
   <fieldset id="boxGemini">

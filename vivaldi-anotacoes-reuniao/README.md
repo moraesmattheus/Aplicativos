@@ -1,4 +1,4 @@
-# 🎙️ Anotações de Reunião (grátis e local) — extensão para Vivaldi / Chrome
+# 🎙️ Anotações de Reunião (grátis e local) - extensão para Vivaldi / Chrome
 
 Faz o que as **Anotações IA do Notion** fazem, sem pagar nada:
 
