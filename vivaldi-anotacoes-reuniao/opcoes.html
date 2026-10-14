@@ -20,14 +20,32 @@
   <p class="suave">Para gravar a SUA voz (além do áudio da aba), o navegador precisa da sua permissão. Isso só precisa ser feito uma vez.</p>
   <button id="permitirMic">🎤 Permitir microfone</button><span id="resultadoMic"></span>
 
-  <h2>2. Transcrição (Whisper, roda no seu PC)</h2>
-  <label for="modeloWhisper">Modelo
+  <h2>2. Transcrição</h2>
+  <label for="motorTranscricao">Quem transcreve?
+    <small>A nuvem do Groq é a opção mais RÁPIDA (como o Notion): o áudio de cada trecho é enviado a eles. O modo local é mais lento, mas nada sai do seu PC.</small></label>
+  <select id="motorTranscricao">
+    <option value="local">Local — Whisper no seu PC (privado)</option>
+    <option value="groq">Groq (nuvem) — rápido, chave grátis</option>
+  </select>
+
+  <fieldset id="boxGroq">
+    <label for="groqKey">Chave da API do Groq<small>Crie grátis em <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a> (sem cartão). O plano grátis tem limite diário de uso.</small></label>
+    <input type="password" id="groqKey" autocomplete="off">
+    <label for="groqModelo">Modelo</label>
+    <input type="text" id="groqModelo">
+  </fieldset>
+
+  <fieldset id="boxLocal">
+  <label for="modeloWhisper">Modelo local (Whisper)
     <small>Maior = mais preciso, porém mais lento e com download maior (feito uma vez só).</small></label>
   <select id="modeloWhisper">
     <option value="Xenova/whisper-tiny">Tiny (~40 MB) — rápido, erra mais</option>
     <option value="Xenova/whisper-base">Base (~80 MB) — equilibrado</option>
     <option value="Xenova/whisper-small">Small (~250 MB) — melhor para português, exige PC bom</option>
   </select>
+  <label class="marcar"><input type="checkbox" id="usarGpu"><span>Usar a placa de vídeo (WebGPU) — bem mais rápido<small>Se falhar, volta sozinho para o processador.</small></span></label>
+  </fieldset>
+
   <label for="idioma">Idioma da reunião</label>
   <select id="idioma">
     <option value="portuguese">Português</option>
@@ -35,7 +53,7 @@
     <option value="spanish">Espanhol</option>
     <option value="auto">Detectar automaticamente</option>
   </select>
-  <label class="marcar"><input type="checkbox" id="usarGpu"><span>Usar a placa de vídeo (WebGPU, experimental)<small>Se falhar, volta sozinho para o processador.</small></span></label>
+  <label class="marcar"><input type="checkbox" id="identificarFalantes"><span>Separar cada participante (“Pessoa 1”, “Pessoa 2”...)<small>No fim da reunião, envia o ÁUDIO da aba ao Gemini (precisa da chave do Gemini abaixo, ~80 min no máximo). Seu microfone sempre aparece como “Você”, sem enviar nada.</small></span></label>
   <label class="marcar"><input type="checkbox" id="salvarAudio"><span>Guardar o áudio da reunião<small>Para ouvir/baixar depois. Fica só no seu navegador.</small></span></label>
 
   <h2>3. Resumo</h2>

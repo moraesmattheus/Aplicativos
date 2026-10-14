@@ -1,4 +1,6 @@
 // Gera resumo, tópicos, decisões e itens de ação a partir da transcrição.
+import { chamarGemini, lerJson } from './gemini.js';
+
 // Todos os provedores devolvem o MESMO formato:
 //   { resumo: string, topicos: string[], decisoes: string[], acoes: [{ tarefa, responsavel, prazo }], origem }
 
@@ -24,7 +26,7 @@ const palavrasRelevantes = (frase) =>
   (frase.toLowerCase().match(/[a-zà-ú]{4,}/g) ?? []).filter((p) => !STOPWORDS.has(p));
 
 const resumoBasico = (transcricao) => {
-  const limpo = transcricao.replace(/\[\d+:\d{2}(:\d{2})?\]\s*/g, '');
+  const limpo = transcricao.replace(/\[\d+:\d{2}(:\d{2})?\]\s*(?:[\p{L}\p{N} ]{1,30}:\s)?/gu, '');
   const frases = limpo
     .split(/(?<=[.!?])\s+|\n+/)
     .map((f) => f.trim())
@@ -64,23 +66,7 @@ const resumoBasico = (transcricao) => {
 
 // ---------- Provedor 2: Google Gemini (chave grátis em aistudio.google.com) ----------
 
-const chamarGemini = async (transcricao, config) => {
-  if (!config.geminiKey) throw new Error('falta a chave do Gemini nas Configurações');
-  const resposta = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${config.geminiModelo}:generateContent`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': config.geminiKey },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: PROMPT(transcricao) }] }],
-        generationConfig: { temperature: 0.2, responseMimeType: 'application/json' }
-      })
-    }
-  );
-  if (!resposta.ok) throw new Error(`Gemini respondeu ${resposta.status}: ${(await resposta.text()).slice(0, 200)}`);
-  const dados = await resposta.json();
-  return dados.candidates?.[0]?.content?.parts?.map((p) => p.text).join('') ?? '';
-};
+const chamarGeminiResumo = (transcricao, config) => chamarGemini([{ text: PROMPT(transcricao) }], config);
 
 // ---------- Provedor 3: Ollama (IA rodando no seu PC) ----------
 
@@ -102,11 +88,6 @@ const chamarOllama = async (transcricao, config) => {
 
 // ---------- Utilidades ----------
 
-const lerJson = (texto) => {
-  const semCercas = texto.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
-  return JSON.parse(semCercas);
-};
-
 const comoLista = (valor) => (Array.isArray(valor) ? valor.map(String) : []);
 
 const normalizar = (bruto, origem) => ({
@@ -122,7 +103,7 @@ const normalizar = (bruto, origem) => ({
 });
 
 export const gerarResumo = async (transcricao, config) => {
-  if (config.provedorResumo === 'gemini') return normalizar(lerJson(await chamarGemini(transcricao, config)), 'gemini');
+  if (config.provedorResumo === 'gemini') return normalizar(lerJson(await chamarGeminiResumo(transcricao, config)), 'gemini');
   if (config.provedorResumo === 'ollama') return normalizar(lerJson(await chamarOllama(transcricao, config)), 'ollama');
   return resumoBasico(transcricao);
 };

@@ -8,7 +8,7 @@ export const formatarTempo = (segundosTotais) => {
 };
 
 export const textoTranscricao = (segmentos) =>
-  segmentos.map((s) => `[${formatarTempo(s.inicioSeg)}] ${s.texto}`).join('\n');
+  segmentos.map((s) => `[${formatarTempo(s.inicioSeg)}] ${s.falante ? `${s.falante}: ` : ''}${s.texto}`).join('\n');
 
 const lista = (itens) => itens.map((item) => `- ${item}`).join('\n');
 

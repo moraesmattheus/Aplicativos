@@ -3,8 +3,13 @@
 import { carregarConfig, salvarConfig } from './config.js';
 
 const $ = (id) => document.getElementById(id);
-const CAMPOS_TEXTO = ['modeloWhisper', 'idioma', 'provedorResumo', 'geminiKey', 'geminiModelo', 'ollamaUrl', 'ollamaModelo'];
-const CAMPOS_MARCAR = ['usarGpu', 'salvarAudio'];
+const CAMPOS_TEXTO = ['motorTranscricao', 'groqKey', 'groqModelo', 'modeloWhisper', 'idioma', 'provedorResumo', 'geminiKey', 'geminiModelo', 'ollamaUrl', 'ollamaModelo'];
+const CAMPOS_MARCAR = ['usarGpu', 'identificarFalantes', 'salvarAudio'];
+
+const mostrarCaixaDoMotor = () => {
+  $('boxGroq').hidden = $('motorTranscricao').value !== 'groq';
+  $('boxLocal').hidden = $('motorTranscricao').value !== 'local';
+};
 
 const mostrarCaixaDoProvedor = () => {
   $('boxGemini').hidden = $('provedorResumo').value !== 'gemini';
@@ -15,6 +20,8 @@ const config = await carregarConfig();
 CAMPOS_TEXTO.forEach((campo) => ($(campo).value = config[campo]));
 CAMPOS_MARCAR.forEach((campo) => ($(campo).checked = config[campo]));
 mostrarCaixaDoProvedor();
+mostrarCaixaDoMotor();
+$('motorTranscricao').addEventListener('change', mostrarCaixaDoMotor);
 $('provedorResumo').addEventListener('change', mostrarCaixaDoProvedor);
 
 $('salvar').addEventListener('click', async () => {

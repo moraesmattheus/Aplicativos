@@ -11,8 +11,16 @@ export const CONFIG_PADRAO = {
   // Idioma falado nas reuniões. 'auto' deixa o Whisper detectar sozinho.
   idioma: 'portuguese',
 
-  // Tenta usar a placa de vídeo (WebGPU) para transcrever mais rápido.
-  usarGpu: false,
+  // Quem transcreve: 'local' (Whisper no seu PC, privado) ou 'groq' (nuvem, MUITO mais rápido, chave grátis).
+  motorTranscricao: 'local',
+  groqKey: '',
+  groqModelo: 'whisper-large-v3-turbo',
+
+  // Usa a placa de vídeo (WebGPU) para transcrever mais rápido no modo local. Se falhar, volta para o processador.
+  usarGpu: true,
+
+  // No fim, o Gemini separa as vozes dos participantes ("Pessoa 1", "Pessoa 2"...). Envia o ÁUDIO da aba ao Google.
+  identificarFalantes: false,
 
   // Guarda o áudio da reunião para você ouvir/baixar depois.
   salvarAudio: true,

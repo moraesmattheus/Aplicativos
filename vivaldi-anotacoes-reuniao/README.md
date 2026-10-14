@@ -3,9 +3,10 @@
 Faz o que as **Anotações IA do Notion** fazem, sem pagar nada:
 
 1. **Grava** o áudio da aba (Google Meet, Zoom web, Teams, YouTube...) **+ o seu microfone**.
-2. **Transcreve** em tempo quase real com o **Whisper**, rodando **dentro do seu navegador** (nada de áudio sai do seu computador).
-3. **Gera resumo, tópicos, decisões e itens de ação** (3 opções, veja abaixo).
-4. Guarda tudo numa página de reuniões, com botão para **copiar em Markdown** (cola direto no Notion) e **baixar o áudio**.
+2. **Transcreve** com o **Whisper**: no seu navegador (privado) ou na nuvem do Groq (**bem mais rápido**, como o Notion).
+3. **Mostra quem falou**: "Você" (microfone) e os outros; com o Gemini, cada participante vira "Pessoa 1", "Pessoa 2"... e você renomeia com um clique.
+4. **Gera resumo, tópicos, decisões e itens de ação** (3 opções, veja abaixo).
+5. Guarda tudo numa página de reuniões, com botão para **copiar em Markdown** (cola direto no Notion) e **baixar o áudio**.
 
 > ⚖️ **Avise os participantes de que a reunião está sendo gravada.** Em muitos casos isso é exigido por lei (LGPD) e é questão de respeito. O Notion pede essa confirmação também.
 
@@ -31,6 +32,17 @@ Extensão "não empacotada" = uma pasta com o código, carregada direto no naveg
 
 💡 **Use fones de ouvido.** Sem fones, seu microfone capta o som das caixas e a fala dos outros sai duplicada.
 
+## ⚡ Deixando rápido e separando quem falou (Configurações)
+
+| Quero... | Ative | Custo | O que sai do seu PC |
+|---|---|---|---|
+| Texto aparecendo em poucos segundos | **Transcrição: Groq (nuvem)**, chave em [console.groq.com/keys](https://console.groq.com/keys) | grátis (sem cartão, com limite diário) | os trechos de áudio, durante a reunião |
+| Rápido **e** 100% local | **Local + placa de vídeo (WebGPU)** (já vem ligado; cai sozinho para o processador se falhar) | grátis | nada |
+| Separar "Você" × outros | nada: já é automático (microfone × aba) | grátis | nada |
+| Separar **cada participante** | **Separar cada participante** + chave do Gemini | grátis | o áudio da aba, só no fim da reunião |
+
+Clique no nome de um falante na transcrição para **renomear** (ex.: "Pessoa 1" → "Maria"). Depois use **Refazer resumo** para os itens de ação saírem com o nome certo.
+
 ## 🧠 Escolha quem escreve o resumo (Configurações)
 
 | Opção | Custo | Qualidade | Privacidade |
@@ -46,11 +58,11 @@ Extensão "não empacotada" = uma pasta com o código, carregada direto no naveg
 ```
 Popup ──clique──► Background (service worker) ──► Offscreen (página invisível)
                                                     │
-   áudio da aba ─┐                                  │
-                 ├─► mistura ─┬─► MediaRecorder ──► arquivo .webm  ─┐
-   microfone ────┘            └─► AudioWorklet ──► pedaços de ~20 s │
-                                                    └─► Whisper ──► texto ─► resumo ─► IndexedDB
-                                                                                       ▲
+   áudio da aba ──► canal "Participantes" ─┐
+                                            ├─► pedaços de fala ─► Whisper/Groq ─► texto + falante
+   seu microfone ─► canal "Você" ───────────┘                                          │
+        (aba + microfone também são misturados e gravados num .webm)                   ▼
+                                       fim: Gemini separa participantes ─► resumo ─► IndexedDB
                                                            Página "Reuniões" lê daqui ─┘
 ```
 
@@ -61,6 +73,9 @@ Popup ──clique──► Background (service worker) ──► Offscreen (pá
 | `offscreen.js` | grava, corta o áudio e chama o Whisper | *chrome.offscreen*, *tabCapture*, *Web Audio API* |
 | `pcm-worklet.js` | entrega o áudio bruto em blocos | *AudioWorklet* |
 | `resumo.js` | os 3 geradores de resumo | *prompt*, *fetch*, *API REST* |
+| `gemini.js` | chamada compartilhada ao Gemini (texto e áudio) | *API REST*, *JSON* |
+| `falantes.js` | separa os participantes pelo áudio (Gemini) | *speaker diarization* |
+| `transcricao-nuvem.js` | transcrição pelo Groq (gera o .wav e envia) | *multipart/form-data*, *WAV* |
 | `armazenamento.js` | salva reuniões e áudio | *IndexedDB* |
 | `popup.*`, `opcoes.*`, `reunioes.*` | as 3 telas | *DOM*, *módulos ES* |
 | `vendor/` | biblioteca Transformers.js + motor ONNX (WASM) | *WebAssembly*, *Whisper* |
@@ -69,13 +84,16 @@ Popup ──clique──► Background (service worker) ──► Offscreen (pá
 
 **Por que não usar o reconhecimento de voz embutido (Web Speech API)?** Ele só ouve o microfone (não o áudio da aba) e depende de servidores do Google, que no Vivaldi costumam falhar. O Whisper local funciona com qualquer áudio.
 
-**Como o áudio é cortado?** O Whisper lê no máximo 30 s por vez. A extensão acumula áudio e corta numa **pausa na fala** entre 15 s e 28 s (para não partir palavras). Cada trecho entra numa fila e é transcrito em ordem.
+**Como sabe quem é "Você"?** Microfone e aba entram em canais separados. Tudo que vem do microfone é "Você"; o que vem da aba são os outros. Não precisa de IA para isso.
+
+**Como o áudio é cortado?** Cada canal ignora o silêncio e corta numa **pausa na fala** (a partir de 8 s no modo local e 4 s na nuvem; no máximo 20 s e 15 s), para não partir palavras. Os trechos dos dois canais entram numa fila e voltam ordenados pelo horário.
 
 ## ⚠️ Limitações honestas
 
 - A **1ª gravação** baixa o modelo (precisa de internet nessa hora). Depois a transcrição funciona offline.
-- **Não separa quem falou** (o Notion identifica vozes; aqui não).
-- A transcrição acompanha com atraso de ~10–30 s e depende do seu PC. Se ficar lenta, use o modelo **Tiny**. Se quiser mais qualidade, o **Small**.
+- Separar **cada participante** depende do Gemini (nuvem); sem ele, todos os outros aparecem como "Participantes". Se duas pessoas falam juntas, a separação erra mais.
+- **Sem fones**, o microfone capta o som das caixas e a fala dos outros pode sair também como "Você".
+- No modo local a transcrição acompanha com atraso de ~10–25 s e depende do seu PC (use WebGPU ou o modelo **Tiny** se ficar lenta; o **Small** é mais preciso). Na nuvem (Groq) o atraso é de poucos segundos.
 - Não grava páginas internas do navegador (`vivaldi://...`).
 - O Whisper às vezes erra nomes próprios e termos técnicos. Revise a transcrição.
 

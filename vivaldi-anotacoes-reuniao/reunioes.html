@@ -16,6 +16,10 @@
   ul { padding-left: 20px; margin: 4px 0; }
   li.feito { text-decoration: line-through; color: var(--suave); }
   .tag { display: inline-block; font-size: 12px; background: var(--superficie); border-radius: 10px; padding: 0 8px; color: var(--suave); }
+  .fala { display: flex; gap: 8px; align-items: baseline; padding: 4px 0; }
+  .hora { color: var(--suave); font-variant-numeric: tabular-nums; font-size: 12px; flex: none; }
+  .falante { flex: none; border: 0; background: transparent; padding: 0; font-weight: 700; cursor: pointer; }
+  .falante:hover { text-decoration: underline; }
   pre { white-space: pre-wrap; background: var(--superficie); border-radius: 8px; padding: 12px; font: 13px/1.6 system-ui, sans-serif; }
   audio { width: 100%; margin-top: 8px; }
   @media (max-width: 720px) { body { grid-template-columns: 1fr; } aside { border-right: 0; border-bottom: 1px solid var(--borda); } }

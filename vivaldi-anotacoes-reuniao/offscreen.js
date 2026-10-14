@@ -2,9 +2,13 @@
 // Por que ele existe? O service worker (background.js) NÃO pode capturar áudio nem usar
 // AudioContext. Uma página invisível pode. Aqui acontece todo o trabalho pesado:
 //
-//   áudio da aba ─┐
-//                 ├─► [mistura] ─┬─► MediaRecorder  (arquivo .webm para você ouvir depois)
-//   microfone ────┘              └─► AudioWorklet ─► pedaços de ~20 s ─► Whisper ─► texto
+//   áudio da aba ──► [canal "Participantes"] ──┐
+//                                              ├─► pedaços de fala ─► fila ─► Whisper/Groq ─► texto com falante
+//   seu microfone ─► [canal "Você"] ───────────┘
+//   (as duas fontes também são misturadas e gravadas num arquivo .webm)
+//
+// Como as duas fontes entram SEPARADAS, sabemos quem falou sem nenhuma IA: o que vem do microfone é
+// "Você"; o que vem da aba são os outros. (Separar cada participante é feito depois, em falantes.js.)
 //
 // ATENÇÃO: documentos offscreen só têm chrome.runtime (sem chrome.storage).
 // Por isso o estado é enviado ao background por mensagem e as reuniões vão para o IndexedDB.
@@ -12,21 +16,27 @@
 import { pipeline, env } from './vendor/transformers.min.js';
 import { salvarReuniao, salvarAudio } from './armazenamento.js';
 import { gerarResumo } from './resumo.js';
+import { identificarFalantes } from './falantes.js';
+import { transcreverGroq } from './transcricao-nuvem.js';
 import { textoTranscricao } from './formatar.js';
 
 // A biblioteca baixa por padrão os arquivos .wasm de um CDN, mas a extensão só aceita código
 // da própria pasta (regra de segurança). Então apontamos para a nossa pasta vendor/.
 env.allowLocalModels = false;
 env.backends.onnx.wasm.wasmPaths = chrome.runtime.getURL('vendor/');
-env.backends.onnx.wasm.numThreads = 1; // mais threads exigem "cross-origin isolation"; 1 é o caminho simples
+// Várias threads só funcionam com "cross-origin isolation" (ligada no manifest.json).
+env.backends.onnx.wasm.numThreads = self.crossOriginIsolated ? Math.min(4, navigator.hardwareConcurrency || 2) : 1;
 
 const TAXA_WHISPER = 16000; // o Whisper só entende áudio a 16.000 amostras por segundo
-const MIN_TRECHO = 15 * TAXA_WHISPER; // só procuramos uma pausa para cortar depois de 15 s...
-const MAX_TRECHO = 28 * TAXA_WHISPER; // ...e cortamos à força aos 28 s (Whisper aceita até 30 s)
 const BLOCOS_DE_PAUSA = 2; // 2 blocos de ~0,25 s em silêncio = pausa na fala
 const LIMIAR_PAUSA = 0.01; // volume (RMS) abaixo disso = silêncio
-const LIMIAR_VAZIO = 0.004; // trecho inteiro abaixo disso nem vai para o Whisper
+const LIMIAR_VAZIO = 0.004; // trecho inteiro abaixo disso nem vai para o transcritor
 const ALUCINACOES = /legendas?\s+pel[ao]|amara\.org|obrigad[oa] por assistir|inscreva-se|www\./i;
+const FALANTE_VOCE = 'Você';
+const FALANTE_OUTROS = 'Participantes';
+
+// Trechos menores = texto aparece mais rápido. Na nuvem, o trecho pode ser curtinho porque é rápido.
+const duracaoDosTrechos = (motor) => (motor === 'groq' ? { min: 4, max: 15 } : { min: 8, max: 20 });
 
 let sessao = null; // tudo sobre a gravação em andamento (null = nada gravando)
 let estado = { fase: 'ocioso' };
@@ -60,9 +70,12 @@ const concatenar = (blocos, total) => {
   return saida;
 };
 
-// ---------- Modelo Whisper ----------
+// ---------- Modelo Whisper local ----------
 
-const carregarModelo = async (config) => {
+// Para a placa de vídeo usamos os repositórios "onnx-community", que têm as versões certas (encoder fp32 + decoder q4).
+const modeloParaGpu = (modelo) => modelo.replace('Xenova/', 'onnx-community/');
+
+const carregarModelo = async (config, usarGpu) => {
   const arquivos = {}; // progresso de download de cada arquivo do modelo
   let ultimaAtualizacao = 0;
 
@@ -77,22 +90,46 @@ const carregarModelo = async (config) => {
     publicar({ modelo: { pronto: false, pct: Math.round((100 * carregado) / total) } });
   };
 
-  const criar = (dispositivo) =>
-    pipeline('automatic-speech-recognition', config.modeloWhisper, {
-      device: dispositivo,
-      progress_callback: aoProgredir
-    });
-
-  let transcritor;
-  try {
-    transcritor = await criar(config.usarGpu ? 'webgpu' : 'wasm');
-  } catch (erro) {
-    if (!config.usarGpu) throw erro;
-    transcritor = await criar('wasm'); // GPU falhou: volta para o processador
-  }
+  const opcoes = usarGpu
+    ? { device: 'webgpu', dtype: { encoder_model: 'fp32', decoder_model_merged: 'q4' } }
+    : { device: 'wasm' };
+  const nome = usarGpu ? modeloParaGpu(config.modeloWhisper) : config.modeloWhisper;
+  const transcritor = await pipeline('automatic-speech-recognition', nome, { ...opcoes, progress_callback: aoProgredir });
   publicar({ modelo: { pronto: true, pct: 100 } });
   return transcritor;
 };
+
+// Tenta GPU; se algo der errado (sem WebGPU, modelo indisponível), cai para o processador.
+const carregarComFallback = async (s) => {
+  try {
+    return await carregarModelo(s.config, s.usandoGpu);
+  } catch (erro) {
+    if (!s.usandoGpu) throw erro;
+    s.usandoGpu = false;
+    return carregarModelo(s.config, false);
+  }
+};
+
+const transcreverLocal = async (s, audio) => {
+  const opcoes = { chunk_length_s: 30, return_timestamps: false, task: 'transcribe' };
+  if (s.config.idioma !== 'auto') opcoes.language = s.config.idioma;
+  const executar = async () => ((await (await s.modelo)(audio, opcoes)).text ?? '').trim();
+  try {
+    return await executar();
+  } catch (erro) {
+    if (!s.usandoGpu) throw erro;
+    // A GPU falhou no meio do caminho: recarrega no processador e tenta o mesmo trecho de novo.
+    s.usandoGpu = false;
+    s.modelo = carregarModelo(s.config, false);
+    await registrarAviso('A placa de vídeo falhou; voltei para o processador (mais lento).');
+    return executar();
+  }
+};
+
+const transcreverTexto = async (s, audio) =>
+  s.config.motorTranscricao === 'groq'
+    ? (await transcreverGroq(audio, TAXA_WHISPER, s.config)).trim()
+    : transcreverLocal(s, audio);
 
 // ---------- Fila de transcrição ----------
 
@@ -104,28 +141,25 @@ const registrarAviso = async (texto) => {
   publicar({ aviso: texto });
 };
 
-const transcreverTrecho = async (audio, inicioSeg) => {
-  const transcritor = await sessao.modelo;
-  const opcoes = { chunk_length_s: 30, return_timestamps: false, task: 'transcribe' };
-  if (sessao.config.idioma !== 'auto') opcoes.language = sessao.config.idioma;
-
-  const resultado = await transcritor(audio, opcoes);
-  const texto = (resultado.text ?? '').trim();
+const processarTrecho = async (s, canal, audio, inicioSeg) => {
+  const texto = await transcreverTexto(s, audio);
   if (!texto || (texto.length < 80 && ALUCINACOES.test(texto))) return;
 
-  sessao.reuniao.segmentos.push({ inicioSeg: Math.round(inicioSeg), texto });
-  await salvarReuniao(sessao.reuniao); // salva a cada trecho: se algo travar, nada se perde
-  publicar({ ultimoTrecho: texto });
+  const { segmentos } = s.reuniao;
+  segmentos.push({ inicioSeg: Math.round(inicioSeg), falante: canal.falante, texto });
+  segmentos.sort((a, b) => a.inicioSeg - b.inicioSeg); // dois canais terminam fora de ordem
+  await salvarReuniao(s.reuniao); // salva a cada trecho: se algo travar, nada se perde
+  publicar({ ultimoTrecho: `${canal.falante}: ${texto}` });
 };
 
-// Os trechos entram numa fila: o Whisper processa UM por vez, na ordem.
-const enfileirar = (audio, inicioSeg) => {
+// Os trechos dos dois canais entram na MESMA fila: o transcritor processa UM por vez.
+const enfileirar = (canal, audio, inicioSeg) => {
   const s = sessao;
   if (rms(audio) < LIMIAR_VAZIO) return; // só silêncio: o Whisper "alucinaria" texto
   s.pendentes++;
   publicar({ pendentes: s.pendentes });
   s.fila = s.fila
-    .then(() => transcreverTrecho(audio, inicioSeg))
+    .then(() => processarTrecho(s, canal, audio, inicioSeg))
     .catch((erro) => registrarAviso(`Falha ao transcrever: ${erro.message ?? erro}`))
     .finally(() => {
       s.pendentes--;
@@ -133,37 +167,96 @@ const enfileirar = (audio, inicioSeg) => {
     });
 };
 
-const cortarTrecho = () => {
-  const s = sessao;
-  if (!s.totalAmostras) return;
-  const audio = concatenar(s.blocos, s.totalAmostras);
-  const inicioSeg = s.amostrasJaCortadas / TAXA_WHISPER;
-  s.amostrasJaCortadas += audio.length;
-  s.blocos = [];
-  s.totalAmostras = 0;
-  s.blocosSilenciosSeguidos = 0;
-  enfileirar(audio, inicioSeg);
+// ---------- Canais (um por fonte de áudio) ----------
+
+const criarCanal = (falante) => ({
+  falante,
+  blocos: [],
+  total: 0,
+  silenciosSeguidos: 0,
+  amostrasJaCortadas: 0, // para saber em que segundo da reunião cada trecho começa
+  temFala: false
+});
+
+const cortarTrecho = (canal) => {
+  if (!canal.total) return;
+  const audio = concatenar(canal.blocos, canal.total);
+  const inicioSeg = canal.amostrasJaCortadas / TAXA_WHISPER;
+  canal.amostrasJaCortadas += audio.length;
+  canal.blocos = [];
+  canal.total = 0;
+  canal.silenciosSeguidos = 0;
+  canal.temFala = false;
+  enfileirar(canal, audio, inicioSeg);
 };
 
-// Chamada ~4 vezes por segundo com um bloco de áudio novo.
-const receberBloco = (bloco) => {
+// Chamada ~4 vezes por segundo, por canal, com um bloco de áudio novo.
+const receberBloco = (canal, bloco) => {
   const s = sessao;
   if (!s || s.finalizando) return;
-  s.blocos.push(bloco);
-  s.totalAmostras += bloco.length;
-  s.blocosSilenciosSeguidos = rms(bloco) < LIMIAR_PAUSA ? s.blocosSilenciosSeguidos + 1 : 0;
+  const comVoz = rms(bloco) >= LIMIAR_PAUSA;
 
-  // Cortar numa pausa evita partir uma palavra ao meio.
-  const achouPausa = s.blocosSilenciosSeguidos >= BLOCOS_DE_PAUSA && s.totalAmostras >= MIN_TRECHO;
-  if (achouPausa || s.totalAmostras >= MAX_TRECHO) cortarTrecho();
+  canal.blocos.push(bloco);
+  canal.total += bloco.length;
+
+  if (!canal.temFala) {
+    if (comVoz) {
+      canal.temFala = true;
+    } else {
+      // Ainda ninguém falou neste canal: não acumulamos silêncio, só guardamos os 2 últimos blocos
+      // (para não cortar o começo da primeira palavra). Isso faz o trecho começar NA fala.
+      while (canal.blocos.length > 2) {
+        const velho = canal.blocos.shift();
+        canal.total -= velho.length;
+        canal.amostrasJaCortadas += velho.length;
+      }
+      return;
+    }
+  }
+
+  canal.silenciosSeguidos = comVoz ? 0 : canal.silenciosSeguidos + 1;
+  const { min, max } = s.duracao;
+  // Cortar numa pausa evita partir uma palavra ao meio; aos "max" segundos cortamos à força.
+  const achouPausa = canal.silenciosSeguidos >= BLOCOS_DE_PAUSA && canal.total >= min * TAXA_WHISPER;
+  if (achouPausa || canal.total >= max * TAXA_WHISPER) cortarTrecho(canal);
 };
 
 // ---------- Iniciar ----------
 
 const liberarFluxos = (...fluxos) => fluxos.forEach((f) => f?.getTracks().forEach((t) => t.stop()));
 
+const gravar = (fluxo, bitsPorSegundo) => {
+  const pedacos = [];
+  const gravador = new MediaRecorder(fluxo, { mimeType: 'audio/webm;codecs=opus', audioBitsPerSecond: bitsPorSegundo });
+  gravador.ondataavailable = (evento) => evento.data.size && pedacos.push(evento.data);
+  gravador.start(5000);
+  return { gravador, pedacos };
+};
+
+const pararGravador = (gravador) =>
+  new Promise((resolve) => {
+    if (gravador.state === 'inactive') return resolve();
+    gravador.onstop = resolve;
+    gravador.stop();
+  });
+
+// Cria um "nó" que entrega o áudio bruto (ver pcm-worklet.js) e liga ao canal.
+const criarCaptura = async (ctx, fonte, canal) => {
+  const captura = new AudioWorkletNode(ctx, 'captura-pcm', {
+    channelCount: 1,
+    channelCountMode: 'explicit', // força mistura em mono
+    outputChannelCount: [1]
+  });
+  fonte.connect(captura);
+  captura.connect(ctx.destination); // saída é silêncio; só mantém o nó "ligado"
+  captura.port.onmessage = (evento) => receberBloco(canal, evento.data);
+};
+
 const iniciar = async ({ streamId, titulo, config }) => {
   if (sessao) throw new Error('Já existe uma gravação em andamento.');
+  if (config.motorTranscricao === 'groq' && !config.groqKey) {
+    throw new Error('Falta a chave do Groq nas Configurações (ou troque para a transcrição local).');
+  }
 
   // 1) Áudio da aba (o streamId foi gerado pelo popup quando você clicou).
   const fluxoAba = await navigator.mediaDevices.getUserMedia({
@@ -186,38 +279,43 @@ const iniciar = async ({ streamId, titulo, config }) => {
     // 3) Monta o "circuito" de áudio.
     const ctx = new AudioContext({ sampleRate: TAXA_WHISPER });
     await ctx.resume();
-    const mistura = ctx.createGain();
-    const destino = ctx.createMediaStreamDestination();
-    ctx.createMediaStreamSource(fluxoAba).connect(mistura);
-    if (fluxoMic) ctx.createMediaStreamSource(fluxoMic).connect(mistura);
-    mistura.connect(destino);
-
     await ctx.audioWorklet.addModule('pcm-worklet.js');
-    const captura = new AudioWorkletNode(ctx, 'captura-pcm', {
-      channelCount: 1,
-      channelCountMode: 'explicit', // força mistura em mono
-      outputChannelCount: [1]
-    });
-    mistura.connect(captura);
-    captura.connect(ctx.destination); // saída é silêncio; só mantém o nó "ligado"
+
+    const canalAba = criarCanal(FALANTE_OUTROS);
+    const canalMic = criarCanal(FALANTE_VOCE);
+    const fonteAba = ctx.createMediaStreamSource(fluxoAba);
+    const destinoMistura = ctx.createMediaStreamDestination(); // aba + microfone juntos (arquivo de áudio)
+    fonteAba.connect(destinoMistura);
+    await criarCaptura(ctx, fonteAba, canalAba);
+
+    if (fluxoMic) {
+      const fonteMic = ctx.createMediaStreamSource(fluxoMic);
+      fonteMic.connect(destinoMistura);
+      await criarCaptura(ctx, fonteMic, canalMic);
+    }
 
     // Ao capturar uma aba, o navegador a deixa MUDA. Reproduzimos o som para você continuar ouvindo.
     const ctxSaida = new AudioContext();
     ctxSaida.createMediaStreamSource(fluxoAba).connect(ctxSaida.destination);
 
-    // 4) Grava o arquivo de áudio em paralelo.
-    const gravador = new MediaRecorder(destino.stream, { mimeType: 'audio/webm;codecs=opus' });
-    const pedacos = [];
-    gravador.ondataavailable = (evento) => evento.data.size && pedacos.push(evento.data);
-    gravador.start(5000);
+    // 4) Grava os arquivos de áudio em paralelo.
+    const gravacaoMistura = gravar(destinoMistura.stream, 32000);
+    let gravacaoAba = null; // só a aba: é o que o Gemini usa para separar os participantes
+    if (config.identificarFalantes && config.geminiKey) {
+      const destinoAba = ctx.createMediaStreamDestination();
+      fonteAba.connect(destinoAba);
+      gravacaoAba = gravar(destinoAba.stream, 24000);
+    }
 
     const id = crypto.randomUUID();
     const inicio = Date.now();
     sessao = {
-      id, inicio, config, ctx, ctxSaida, gravador, pedacos,
+      id, inicio, config, ctx, ctxSaida, gravacaoMistura, gravacaoAba,
       fluxos: [fluxoAba, fluxoMic],
-      blocos: [], totalAmostras: 0, blocosSilenciosSeguidos: 0, amostrasJaCortadas: 0,
+      duracao: duracaoDosTrechos(config.motorTranscricao),
+      canais: [canalAba, canalMic],
       fila: Promise.resolve(), pendentes: 0, finalizando: false,
+      usandoGpu: config.motorTranscricao === 'local' && config.usarGpu && !!navigator.gpu,
       modelo: null,
       reuniao: {
         id, titulo: titulo || 'Reunião sem título', inicio, duracaoSeg: 0,
@@ -226,15 +324,19 @@ const iniciar = async ({ streamId, titulo, config }) => {
     };
     await salvarReuniao(sessao.reuniao);
 
-    captura.port.onmessage = (evento) => receberBloco(evento.data);
     // Se você fechar a aba gravada, o áudio acaba: finalizamos sozinhos.
     fluxoAba.getAudioTracks()[0].addEventListener('ended', () => finalizar());
 
-    // Começa a baixar/carregar o Whisper já agora (a gravação não espera por ele).
-    sessao.modelo = carregarModelo(config);
-    sessao.modelo.catch((erro) => registrarAviso(`Não consegui carregar o Whisper: ${erro.message ?? erro}`));
+    // Na nuvem não há modelo para baixar. No modo local, começa a carregar o Whisper já agora.
+    if (config.motorTranscricao === 'local') {
+      sessao.modelo = carregarComFallback(sessao);
+      sessao.modelo.catch((erro) => registrarAviso(`Não consegui carregar o Whisper: ${erro.message ?? erro}`));
+    }
 
-    publicar({ fase: 'gravando', inicio, aviso: avisos[0] ?? null, ultimoTrecho: '', pendentes: 0, modelo: { pronto: false, pct: 0 } });
+    publicar({
+      fase: 'gravando', inicio, aviso: avisos[0] ?? null, ultimoTrecho: '', pendentes: 0,
+      modelo: { pronto: config.motorTranscricao !== 'local', pct: 0 }
+    });
   } catch (erro) {
     liberarFluxos(fluxoAba, fluxoMic);
     sessao = null;
@@ -244,6 +346,22 @@ const iniciar = async ({ streamId, titulo, config }) => {
 
 // ---------- Parar e finalizar ----------
 
+// Troca a transcrição das vozes dos outros (rótulo genérico) pela versão do Gemini, com um nome por pessoa.
+const separarParticipantes = async (s) => {
+  const { reuniao, config } = s;
+  if (!s.gravacaoAba?.pedacos.length) return;
+  publicar({ etapa: 'Identificando quem falou (Gemini)...' });
+  try {
+    const audioAba = new Blob(s.gravacaoAba.pedacos, { type: 'audio/webm' });
+    const dosParticipantes = await identificarFalantes(audioAba, config);
+    if (!dosParticipantes.length) throw new Error('nenhuma fala encontrada');
+    const suaVoz = reuniao.segmentos.filter((seg) => seg.falante === FALANTE_VOCE);
+    reuniao.segmentos = [...suaVoz, ...dosParticipantes].sort((a, b) => a.inicioSeg - b.inicioSeg);
+  } catch (erro) {
+    reuniao.avisos.push(`Não consegui separar os participantes (${erro.message}). Mantive "${FALANTE_OUTROS}".`);
+  }
+};
+
 const finalizar = async () => {
   const s = sessao;
   if (!s || s.finalizando) return;
@@ -251,20 +369,20 @@ const finalizar = async () => {
   publicar({ fase: 'finalizando', etapa: 'Terminando a transcrição...' });
 
   try {
-    cortarTrecho(); // o que sobrou no buffer vai para a fila
+    s.canais.forEach(cortarTrecho); // o que sobrou nos buffers vai para a fila
 
-    const gravadorParou = new Promise((resolve) => (s.gravador.onstop = resolve));
-    if (s.gravador.state !== 'inactive') s.gravador.stop();
-    await gravadorParou;
+    await Promise.all([pararGravador(s.gravacaoMistura.gravador), s.gravacaoAba && pararGravador(s.gravacaoAba.gravador)]);
     liberarFluxos(...s.fluxos);
     await Promise.allSettled([s.ctx.close(), s.ctxSaida.close()]);
 
-    await s.fila; // espera o Whisper terminar tudo que está na fila
+    await s.fila; // espera o transcritor terminar tudo que está na fila
 
     const { reuniao, config } = s;
     reuniao.duracaoSeg = Math.round((Date.now() - s.inicio) / 1000);
     reuniao.status = 'processando';
     await salvarReuniao(reuniao);
+
+    await separarParticipantes(s);
 
     const transcricao = textoTranscricao(reuniao.segmentos);
     if (transcricao.trim()) {
@@ -279,8 +397,8 @@ const finalizar = async () => {
       reuniao.avisos.push('Nenhuma fala foi reconhecida na gravação.');
     }
 
-    if (config.salvarAudio && s.pedacos.length) {
-      await salvarAudio(s.id, new Blob(s.pedacos, { type: 'audio/webm' }));
+    if (config.salvarAudio && s.gravacaoMistura.pedacos.length) {
+      await salvarAudio(s.id, new Blob(s.gravacaoMistura.pedacos, { type: 'audio/webm' }));
       reuniao.temAudio = true;
     }
     reuniao.status = 'pronta';

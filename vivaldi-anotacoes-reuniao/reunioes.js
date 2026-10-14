@@ -10,6 +10,7 @@ const listaEl = document.getElementById('lista');
 const detalheEl = document.getElementById('detalhe');
 let urlAudio = null;
 let reuniaoAberta = null;
+let transcricaoAberta = null; // lembra se você abriu a transcrição (null = ainda não escolheu)
 
 const el = (tag, props = {}, ...filhos) => {
   const no = Object.assign(document.createElement(tag), props);
@@ -50,6 +51,28 @@ const itemAcao = (acao) => {
   if (acao.prazo) li.append(el('span', { className: 'tag', textContent: `📅 ${acao.prazo}` }));
   return li;
 };
+
+// Cada falante ganha uma cor fixa (a mesma pessoa sempre tem a mesma cor).
+const CORES = ['#5b5bd6', '#d6336c', '#2f9e44', '#e8590c', '#1c7ed6', '#9c36b5', '#0b7285'];
+const corDoFalante = (nome = '') => CORES[[...nome].reduce((soma, c) => soma + c.charCodeAt(0), 0) % CORES.length];
+
+// Clicar no nome renomeia o falante em TODA a reunião (ex.: "Pessoa 1" -> "Maria").
+const renomearFalante = async (reuniao, nomeAntigo) => {
+  const novo = prompt(`Novo nome para "${nomeAntigo}":`, nomeAntigo)?.trim();
+  if (!novo || novo === nomeAntigo) return;
+  reuniao.segmentos.forEach((seg) => seg.falante === nomeAntigo && (seg.falante = novo));
+  await salvarReuniao(reuniao);
+  desenharDetalhe(reuniao);
+};
+
+const linhaDeFala = (reuniao, seg) =>
+  el('div', { className: 'fala' },
+    el('span', { className: 'hora', textContent: formatarTempo(seg.inicioSeg) }),
+    seg.falante
+      ? el('button', { className: 'falante', textContent: seg.falante, title: 'Clique para renomear', style: `color:${corDoFalante(seg.falante)}`, onclick: () => renomearFalante(reuniao, seg.falante) })
+      : '',
+    el('span', { textContent: seg.texto })
+  );
 
 const refazerResumo = async (reuniao) => {
   const config = await carregarConfig();
@@ -104,9 +127,9 @@ const desenharDetalhe = async (reuniao) => {
       ]
     : [el('p', { className: 'suave', textContent: emAndamento ? 'O resumo aparece quando a reunião terminar.' : 'Sem resumo.' })];
 
-  const transcricao = el('details', { open: !resumo },
+  const transcricao = el('details', { open: transcricaoAberta ?? !resumo, ontoggle: (e) => (transcricaoAberta = e.target.open) },
     el('summary', { textContent: `Transcrição (${reuniao.segmentos.length} trechos)` }),
-    el('pre', { textContent: textoTranscricao(reuniao.segmentos) || '(vazia)' })
+    reuniao.segmentos.length ? el('div', { className: 'falas' }, ...reuniao.segmentos.map((seg) => linhaDeFala(reuniao, seg))) : el('p', { className: 'suave', textContent: '(vazia)' })
   );
 
   const blocoAudio = [];
@@ -131,6 +154,7 @@ const desenharDetalhe = async (reuniao) => {
 
 const abrirDoEndereco = async () => {
   const id = location.hash.slice(1);
+  if (id !== reuniaoAberta?.id) transcricaoAberta = null;
   reuniaoAberta = id ? await obterReuniao(id) : null;
   if (reuniaoAberta) await desenharDetalhe(reuniaoAberta);
   else detalheEl.replaceChildren(el('p', { className: 'suave', textContent: 'Escolha uma reunião na lista.' }));
