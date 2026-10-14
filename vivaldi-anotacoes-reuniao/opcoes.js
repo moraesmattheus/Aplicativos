@@ -5,7 +5,7 @@ import { descobrirDestino } from './notion.js';
 
 const $ = (id) => document.getElementById(id);
 const CAMPOS_TEXTO = ['motorTranscricao', 'groqKey', 'groqModelo', 'modeloWhisper', 'idioma', 'provedorResumo', 'geminiKey', 'geminiModelo', 'ollamaUrl', 'ollamaModelo', 'notionToken', 'destinoPadrao'];
-const CAMPOS_MARCAR = ['usarGpu', 'identificarFalantes', 'salvarAudio', 'notionAuto'];
+const CAMPOS_MARCAR = ['usarGpu', 'identificarFalantes', 'salvarAudio', 'notionAuto', 'avisarReuniao'];
 
 const el = (tag, props = {}, ...filhos) => {
   const no = Object.assign(document.createElement(tag), props);

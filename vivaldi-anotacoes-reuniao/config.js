@@ -11,6 +11,9 @@ export const CONFIG_PADRAO = {
   // Idioma falado nas reuniões. 'auto' deixa o Whisper detectar sozinho.
   idioma: 'portuguese',
 
+  // Avisa (ícone + notificação) quando você entra numa reunião do Meet, Zoom, Teams etc.
+  avisarReuniao: true,
+
   // Quem transcreve: 'local' (Whisper no seu PC, privado) ou 'groq' (nuvem, MUITO mais rápido, chave grátis).
   motorTranscricao: 'local',
   groqKey: '',

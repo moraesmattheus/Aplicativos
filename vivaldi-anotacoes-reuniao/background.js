@@ -6,10 +6,27 @@
 // O estado vai para chrome.storage.session (some quando o navegador fecha), que o popup também lê.
 
 import { carregarConfig } from './config.js';
+import { detectarReuniao } from './deteccao.js';
 
 const OCIOSO = { fase: 'ocioso' };
 
+// Abas em que já mostramos o aviso "reunião detectada" (guardado em storage.session porque o service worker dorme).
+const lerAvisadas = async () => (await chrome.storage.session.get('avisadas')).avisadas ?? [];
+
+// text: null = "tira o aviso desta aba e volta ao texto global" (por exemplo, REC).
+const limparAviso = async (tabId) => {
+  await chrome.action.setBadgeText({ tabId, text: null }).catch(() => {});
+  await chrome.notifications.clear(`reuniao-${tabId}`);
+};
+
+const limparTodosOsAvisos = async () => {
+  const avisadas = await lerAvisadas();
+  await Promise.all(avisadas.map(limparAviso));
+  await chrome.storage.session.set({ avisadas: [] });
+};
+
 const definirEstado = async (estado) => {
+  if (estado.fase !== 'ocioso') await limparTodosOsAvisos(); // começou a gravar: o aviso não faz mais sentido
   await chrome.storage.session.set({ estado });
   const texto = { gravando: 'REC', iniciando: '...', finalizando: '...' }[estado.fase] ?? '';
   await chrome.action.setBadgeText({ text: texto });
@@ -79,6 +96,46 @@ chrome.runtime.onMessage.addListener((mensagem, _remetente, responder) => {
     .then(responder)
     .catch((erro) => responder({ erro: String(erro) }));
   return true; // "vou responder de forma assíncrona"
+});
+
+// ---------- Detecção de reunião ----------
+
+const avisarReuniao = async (tabId, plataforma) => {
+  const avisadas = await lerAvisadas();
+  if (avisadas.includes(tabId)) return;
+  await chrome.storage.session.set({ avisadas: [...avisadas, tabId] });
+  await chrome.action.setBadgeBackgroundColor({ tabId, color: '#e8590c' });
+  await chrome.action.setBadgeText({ tabId, text: '?' });
+  await chrome.notifications.create(`reuniao-${tabId}`, {
+    type: 'basic',
+    iconUrl: 'icones/128.png',
+    title: `Reunião detectada (${plataforma})`,
+    message: 'Clique no ícone da extensão para gravar e transcrever.',
+    priority: 1
+  });
+};
+
+chrome.tabs.onUpdated.addListener(async (tabId, mudanca, aba) => {
+  if (!mudanca.url && mudanca.status !== 'complete') return;
+  const plataforma = detectarReuniao(aba.url);
+  const avisadas = await lerAvisadas();
+  if (!plataforma) {
+    // A aba saiu da reunião: remove o aviso, se havia.
+    if (avisadas.includes(tabId)) {
+      await limparAviso(tabId);
+      await chrome.storage.session.set({ avisadas: avisadas.filter((id) => id !== tabId) });
+    }
+    return;
+  }
+  const { config } = await chrome.storage.local.get('config');
+  const { estado } = await chrome.storage.session.get('estado');
+  if (config?.avisarReuniao === false || (estado && estado.fase !== 'ocioso')) return;
+  await avisarReuniao(tabId, plataforma);
+});
+
+chrome.tabs.onRemoved.addListener(async (tabId) => {
+  const avisadas = await lerAvisadas();
+  if (avisadas.includes(tabId)) await chrome.storage.session.set({ avisadas: avisadas.filter((id) => id !== tabId) });
 });
 
 // Ao abrir o navegador não há gravação nenhuma: zera o badge.

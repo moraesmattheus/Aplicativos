@@ -3,6 +3,7 @@
 // a partir de chrome.storage.session (onde o background salva o estado da gravação).
 
 import { formatarTempo } from './formatar.js';
+import { detectarReuniao } from './deteccao.js';
 
 const tela = document.getElementById('tela');
 let temporizador = null;
@@ -36,13 +37,15 @@ const iniciarGravacao = async (titulo, mostrarErro) => {
   }
 };
 
-const telaOciosa = () => {
+const telaOciosa = (reuniao) => {
   const titulo = el('input', { type: 'text', placeholder: 'Título da reunião (opcional)' });
   const erro = el('div', { className: 'aviso', hidden: true });
   const mostrarErro = (texto) => Object.assign(erro, { textContent: texto, hidden: false });
   return [
     el('h1', { textContent: '🎙️ Anotações de Reunião' }),
-    el('p', { className: 'suave', textContent: 'Grava a aba atual + seu microfone, transcreve no seu computador e gera o resumo.' }),
+    reuniao
+      ? el('div', { className: 'aviso', textContent: `Reunião detectada: ${reuniao}. É só clicar em gravar.` })
+      : el('p', { className: 'suave', textContent: 'Grava a aba atual + seu microfone, transcreve e gera o resumo.' }),
     titulo,
     el('button', { className: 'principal', textContent: '● Iniciar gravação desta aba', onclick: () => iniciarGravacao(titulo.value.trim(), mostrarErro) }),
     erro,
@@ -73,7 +76,7 @@ const telaGravando = (estado) => {
   ];
 };
 
-const desenhar = (estado = { fase: 'ocioso' }) => {
+const desenhar = (estado = { fase: 'ocioso' }, reuniao = null) => {
   clearInterval(temporizador);
   const { fase } = estado;
   let conteudo;
@@ -81,7 +84,7 @@ const desenhar = (estado = { fase: 'ocioso' }) => {
   else if (fase === 'iniciando') conteudo = [el('p', { textContent: 'Iniciando a gravação...' })];
   else if (fase === 'finalizando') conteudo = [el('h1', { textContent: '⏳ Finalizando' }), el('p', { className: 'suave', textContent: estado.etapa ?? 'Processando...' }), el('p', { className: 'suave', textContent: 'A página da reunião abre sozinha quando terminar.' })];
   else if (fase === 'erro') conteudo = [el('div', { className: 'aviso', textContent: `Erro: ${estado.mensagem}` }), el('button', { textContent: 'Tentar de novo', onclick: () => chrome.storage.session.set({ estado: { fase: 'ocioso' } }) })];
-  else conteudo = telaOciosa();
+  else conteudo = telaOciosa(reuniao);
   tela.replaceChildren(...conteudo.filter(Boolean));
 };
 
@@ -92,9 +95,11 @@ chrome.storage.onChanged.addListener((mudancas, area) => {
   const novo = mudancas.estado.newValue;
   if (novo?.fase === 'ocioso' && faseAtual === 'ocioso') return;
   faseAtual = novo?.fase;
-  desenhar(novo);
+  desenhar(novo, reuniaoDetectada);
 });
 
+const [abaAtiva] = await chrome.tabs.query({ active: true, currentWindow: true });
+const reuniaoDetectada = detectarReuniao(abaAtiva?.url);
 const { estado } = await chrome.storage.session.get('estado');
 faseAtual = estado?.fase ?? 'ocioso';
-desenhar(estado);
+desenhar(estado, reuniaoDetectada);

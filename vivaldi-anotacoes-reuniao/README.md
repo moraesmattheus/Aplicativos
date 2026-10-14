@@ -13,6 +13,18 @@ Faz o que as **Anotações IA do Notion** fazem, sem pagar nada:
 
 ---
 
+## 🤝 O que ela faz sozinha e o que nunca vai fazer sozinha
+
+| Pedido | Situação |
+|---|---|
+| Sem bot visível na reunião | ✅ Captura o áudio **no seu navegador**. Ninguém vê nada. |
+| Grátis, para qualquer pessoa usar | ✅ Tudo roda no aparelho de cada um (sem servidor para pagar). As chaves do Groq/Gemini/Notion são opcionais e gratuitas. |
+| Perceber que há uma reunião | ✅ Avisa no ícone e por notificação ao entrar no Meet, Zoom, Teams, Webex ou Jitsi. |
+| Começar a gravar sem eu clicar | ❌ O navegador **proíbe** capturar áudio de uma aba sem um clique seu. É regra de segurança. |
+| Funcionar com o PC desligado | ❌ Sem bot na reunião, o áudio só existe no aparelho de quem participa. O PC precisa estar ligado **durante** a reunião. |
+
+Quem quiser reunião gravada com o PC desligado precisa de um bot na nuvem (aparece na lista de participantes) ou da gravação do próprio Zoom/Meet/Teams (feita pelo anfitrião).
+
 ## 📦 Como instalar no Vivaldi (passo a passo)
 
 Extensão "não empacotada" = uma pasta com o código, carregada direto no navegador. Não precisa de loja nem de conta.

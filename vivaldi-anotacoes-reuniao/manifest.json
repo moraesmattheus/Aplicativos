@@ -5,7 +5,7 @@
   "description": "Grava o áudio da aba + seu microfone, transcreve com Whisper rodando no seu computador e gera resumo e itens de ação. Sem pagar nada.",
   "minimum_chrome_version": "116",
 
-  "permissions": ["tabCapture", "offscreen", "storage", "unlimitedStorage", "activeTab"],
+  "permissions": ["tabCapture", "offscreen", "storage", "unlimitedStorage", "activeTab", "tabs", "notifications"],
 
   "host_permissions": [
     "https://huggingface.co/*",
