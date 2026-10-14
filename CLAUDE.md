@@ -6,6 +6,14 @@
 - Não use travessão longo (—) em nenhuma resposta.
 - Uma instrução por vez, em blocos curtos (TDAH).
 
+## Regra de apps inspirados em apps existentes (OBRIGATÓRIA)
+
+Sempre que o Mattheus quiser criar, copiar a ideia ou melhorar um app que já existe, para uso próprio
+ou para vender (MRR), siga o guia abaixo ANTES de escrever código. Ele define o porteiro de perguntas,
+a lista para produto comercial, a segurança e as regras para não perder a conta do Claude.
+
+@docs/regra-apps-inspirados.md
+
 ## Regra do REA (Reverse Engineer Anything)
 
 Pasta local do REA: `C:\Users\matth\Documents\Github\REA Eng reversa`
