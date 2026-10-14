@@ -17,8 +17,8 @@
 
 ## 🔧 O que mudou hoje
 - **APK standalone gerado** (`eas build --profile preview`) com as 4 chaves embutidas — build ID `01514efb`. Pronto para instalar no celular e mostrar para a família.
-- **Chave Jooble obtida** (`41860bb7-aab7-4b37-818c-a8350085eacd`) → inserida no `.env` + EAS Secret (preview).
-- **Chave Adzuna obtida** (App ID `48401365` / Key `e25c77bcff...`) → inserida no `.env` + EAS Secret (preview).
+- **Chave Jooble obtida** (valor removido do repositório público) → inserida no `.env` + EAS Secret (preview).
+- **Chave Adzuna obtida** (App ID e Key removidos do repositório público) → inserida no `.env` + EAS Secret (preview).
 - **4 EAS Secrets cadastrados** no painel expo.dev (ambiente preview, visibilidade Sensitive): JSearch, Adzuna (ID+Key), Jooble.
 - Metro reiniciado 2x com `--clear` para embutir as novas vars no bundle local.
 - **Config enxuta:** removidos campos de chave (JSearch/Adzuna/Jooble) e campo do backend de IA da tela Config. Menos carga no front.

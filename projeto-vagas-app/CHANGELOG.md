@@ -1,10 +1,39 @@
-﻿## [2026-08-14] — Claude (Fable 5) — Chaves Adzuna/Jooble obtidas + APK rebuild para família
+﻿## [2026-10-13] — Claude (Sonnet 5.5) — Nova versão web do Radar de Vagas (sem Expo)
+
+- **O QUE:** Criada uma versão web do Radar de Vagas que roda direto no navegador, sem Expo e sem build,
+             para demonstrar o app em entrevistas em qualquer aparelho.
+- **ONDE:** pasta NOVA `radar-vagas-web/` na raiz do repositório (index.html, style.css, app.js, sw.js,
+            manifest.webmanifest, icons/, README.md). README da raiz atualizado (link + estrutura).
+- **MUDOU:** nada neste app (`projeto-vagas-app`) foi alterado. Lógica de skills, matching e ATS portada de
+            `src/services/*.ts` para JavaScript puro. Fontes: Remotive, RemoteOK, Arbeitnow, Gupy (sem chave).
+- **POR QUÊ:** pedido do dono. O app Expo exige Metro/APK; a versão web abre por link.
+- **STATUS:** 33 testes de navegador (Chromium, APIs simuladas) passaram, sem erros de JS.
+- **OBS:** JSearch/Adzuna/Jooble ficaram de fora de propósito (chave em página web fica pública).
+           Algumas fontes podem bloquear o navegador (CORS); o app avisa e usa vagas de exemplo.
+
+## [2026-10-13] — Claude (Sonnet 5.5) — Segurança: chaves removidas dos documentos + .env.example
+
+- **O QUE:** Remover chaves de API (Jooble e Adzuna) que estavam escritas por extenso em arquivos de
+             documentação de um repositório PÚBLICO, e criar um modelo de `.env` sem valores reais.
+- **ONDE / MUDOU:**
+  - `DASH_DIARIO.md` (linhas 20-21) e `CHANGELOG.md` (entrada de 2026-08-14): valores reais trocados
+    por "<removido>" / "removido do repositório público". Era só texto de documentação, sem efeito no código.
+  - `.env.example` (NOVO): lista os nomes das variáveis `EXPO_PUBLIC_*` com valores vazios e instruções.
+  - Código (`src/services/jobs.ts`) NÃO foi alterado: já lia `process.env.EXPO_PUBLIC_*`.
+- **POR QUÊ:** chaves em repo público são legíveis por qualquer pessoa. Os valores antigos continuam no
+               histórico do Git, então as chaves da Jooble e da Adzuna precisam ser REGENERADAS nos painéis
+               dos serviços e as novas colocadas só no `.env` (gitignored) e nos EAS Secrets.
+- **STATUS:** `.env` já está no `.gitignore` e não é rastreado pelo Git. `tsc` sem erros.
+- **OBS:** variáveis `EXPO_PUBLIC_*` ficam embutidas no bundle do app. Ficam fora do repositório, mas
+           não são secretas de verdade para quem extrair o APK. Para chave realmente privada, usar o Worker.
+
+## [2026-08-14] — Claude (Fable 5) — Chaves Adzuna/Jooble obtidas + APK rebuild para família
 
 - **O QUE:** Chaves reais de Adzuna e Jooble obtidas e inseridas no .env + EAS Secrets.
              APK standalone gerado (eas build preview) com as 4 chaves embutidas, para demo presencial.
 - **ONDE / MUDOU:**
-  - .env: EXPO_PUBLIC_ADZUNA_APP_ID=48401365, EXPO_PUBLIC_ADZUNA_APP_KEY=e25c77bcff411292c6e5863803944faa,
-            EXPO_PUBLIC_JOOBLE_KEY=41860bb7-aab7-4b37-818c-a8350085eacd — todos preenchidos.
+  - .env: EXPO_PUBLIC_ADZUNA_APP_ID=<removido>, EXPO_PUBLIC_ADZUNA_APP_KEY=<removido>,
+            EXPO_PUBLIC_JOOBLE_KEY=<removido> — todos preenchidos.
   - EAS Secrets (painel expo.dev, ambiente preview): 4 vars cadastradas como "Sensitive".
   - Metro reiniciado 2x com --clear para embutir as novas variáveis no bundle local.
   - APK gerado: build ID 01514efb-d060-4432-b2d3-b9b4ce38b92f (expo.dev).
