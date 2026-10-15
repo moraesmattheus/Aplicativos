@@ -29,6 +29,13 @@ export const CONFIG_PADRAO = {
   // No fim, o Gemini separa as vozes dos participantes ("Pessoa 1", "Pessoa 2"...). Envia o ÁUDIO da aba ao Google.
   identificarFalantes: false,
 
+  // false = não abre o seu microfone (só grava o áudio da aba). Útil em aulas em que você fica mudo e para
+  // não mexer no áudio do fone Bluetooth, que muda de qualidade quando um programa abre o microfone.
+  gravarMicrofone: true,
+
+  // true = só transcreve depois que a reunião acabar (não pesa no computador durante a chamada).
+  transcreverSoNoFim: false,
+
   // Guarda o áudio da reunião para você ouvir/baixar depois.
   salvarAudio: true,
 

@@ -29,6 +29,8 @@ const CONFIG_PADRAO = {
   groqKey: '',
   groqModelo: 'whisper-large-v3-turbo',
   usarGpu: true,
+  gravarMicrofone: true, // false = não abre o microfone (só o áudio do computador)
+  transcreverSoNoFim: true, // não pesa no computador durante a chamada; transcreve quando ela acaba
   identificarFalantes: false,
   salvarAudio: true,
   provedorResumo: 'basico',

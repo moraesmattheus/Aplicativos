@@ -11,7 +11,7 @@ import { configurar, iniciar, finalizar } from './gravacao.js';
 const avisarBackground = (tipo, extra = {}) =>
   chrome.runtime.sendMessage({ para: 'background', tipo, ...extra }).catch(() => {});
 
-const abrirFluxos = async ({ streamId }) => {
+const abrirFluxos = async ({ streamId, config }) => {
   // Áudio da aba (o streamId foi gerado pelo popup quando você clicou).
   let fluxoAba;
   try {
@@ -31,6 +31,7 @@ const abrirFluxos = async ({ streamId }) => {
   const avisos = [];
   let fluxoMic = null;
   try {
+    if (config?.gravarMicrofone === false) throw new Error('microfone desligado nas configurações');
     fluxoMic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
   } catch {
     avisos.push('Microfone não liberado: gravei só o áudio da aba. Em Configurações, clique em "Permitir microfone".');

@@ -166,6 +166,15 @@ const enfileirar = (canal, audio, inicioSeg) => {
   const s = sessao;
   if (s.config.motorTranscricao === 'assemblyai') return; // este motor transcreve tudo ao parar (veja finalizar)
   if (rms(audio) < LIMIAR_VAZIO) return; // só silêncio: o Whisper "alucinaria" texto
+  if (s.config.transcreverSoNoFim) { // não gasta processador durante a chamada: guarda o trecho para depois
+    s.adiados.push([canal, audio, inicioSeg]);
+    return;
+  }
+  colocarNaFila(canal, audio, inicioSeg);
+};
+
+const colocarNaFila = (canal, audio, inicioSeg) => {
+  const s = sessao;
   s.pendentes++;
   publicar({ pendentes: s.pendentes });
   s.fila = s.fila
@@ -272,7 +281,7 @@ export const iniciar = async ({ titulo, contexto = '', tituloGenerico = false, c
   }
 
   // 1) e 2) Áudio dos outros participantes + seu microfone (cada plataforma sabe como captar).
-  const { fluxoAba, fluxoMic, avisos } = await adaptador.abrirFluxos(paramsDaPlataforma);
+  const { fluxoAba, fluxoMic, avisos } = await adaptador.abrirFluxos({ ...paramsDaPlataforma, config });
 
   try {
     // 3) Monta o "circuito" de áudio.
@@ -320,7 +329,7 @@ export const iniciar = async ({ titulo, contexto = '', tituloGenerico = false, c
       fluxos: [fluxoAba, fluxoMic],
       duracao: duracaoDosTrechos(config.motorTranscricao),
       canais: [canalAba, canalMic],
-      fila: Promise.resolve(), pendentes: 0, finalizando: false,
+      fila: Promise.resolve(), pendentes: 0, adiados: [], finalizando: false,
       usandoGpu: config.motorTranscricao === 'local' && config.usarGpu && !!navigator.gpu,
       modelo: null,
       reuniao: {
@@ -334,7 +343,7 @@ export const iniciar = async ({ titulo, contexto = '', tituloGenerico = false, c
     fluxoAba.getAudioTracks()[0].addEventListener('ended', () => finalizar());
 
     // Na nuvem não há modelo para baixar. No modo local, começa a carregar o Whisper já agora.
-    if (config.motorTranscricao === 'local') {
+    if (config.motorTranscricao === 'local' && !config.transcreverSoNoFim) {
       sessao.modelo = carregarComFallback(sessao);
       sessao.modelo.catch((erro) => registrarAviso(`Não consegui carregar o Whisper: ${erro.message ?? erro}`));
     }
@@ -401,6 +410,14 @@ export const finalizar = async () => {
 
   try {
     s.canais.forEach(cortarTrecho); // o que sobrou nos buffers vai para a fila
+    if (s.adiados.length) { // transcrição adiada: agora que a chamada acabou, pode usar o processador à vontade
+      publicar({ etapa: 'Transcrevendo a reunião...' });
+      if (s.config.motorTranscricao === 'local') {
+        s.modelo = carregarComFallback(s);
+        s.modelo.catch((erro) => registrarAviso(`Não consegui carregar o Whisper: ${erro.message ?? erro}`));
+      }
+      s.adiados.forEach(([canal, audio, inicioSeg]) => colocarNaFila(canal, audio, inicioSeg));
+    }
 
     await Promise.all([
       pararGravador(s.gravacaoMistura.gravador),

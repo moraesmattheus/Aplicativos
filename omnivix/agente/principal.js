@@ -93,6 +93,7 @@ const iniciarGravacao = async ({ origem, titulo, contexto = '', tituloGenerico =
   try {
     await rodarNoGravador(`window.agenteIniciar(${JSON.stringify({ titulo, contexto, tituloGenerico, config })})`);
   } catch (erro) {
+    console.error('Falha ao iniciar a gravação:', erro);
     estado = { fase: 'ocioso', origem: null };
     atualizarBandeja();
     avisar('Não consegui gravar', String(erro.message ?? erro).replace(/^Error invoking.*?Error: /, ''));
@@ -168,10 +169,12 @@ const iniciarGatilhos = () => {
     lerAplicativos: async () => {
       const { processosDeReuniao } = await carregarConfig();
       const [usandoMicrofone, abertos] = await Promise.all([lerAplicativosEmUso(), processosDeReuniaoAtivos(processosDeReuniao)]);
-      return [...new Set([...usandoMicrofone, ...abertos])].filter((nome) => nome !== meuExecutavel);
+      const sinais = [...new Set([...usandoMicrofone, ...abertos])].filter((nome) => nome !== meuExecutavel);
+      if (process.env.AGENTE_DEBUG) console.log(new Date().toLocaleTimeString(), 'sinais:', sinais, '| fase:', estado.fase);
+      return sinais;
     },
     obterConfig: carregarConfig,
-    aoIniciar: () => iniciarGravacao({ origem: 'microfone', titulo: `Reunião ${dataCurta()}`, tituloGenerico: true }),
+    aoIniciar: () => (process.env.AGENTE_DEBUG && console.log('detector: reunião detectada, iniciando a gravação'), iniciarGravacao({ origem: 'microfone', titulo: `Reunião ${dataCurta()}`, tituloGenerico: true })),
     aoParar: () => estado.origem === 'microfone' && pararGravacao()
   });
   detector.iniciar();

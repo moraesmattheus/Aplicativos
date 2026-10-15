@@ -3,7 +3,7 @@
 
 import { configurar, iniciar, finalizar } from './gravacao.js';
 
-const abrirFluxos = async () => {
+const abrirFluxos = async ({ config } = {}) => {
   // Áudio do computador inteiro (a voz dos outros). O pedido exige vídeo, mas só queremos o som.
   const fluxoAba = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
   fluxoAba.getVideoTracks().forEach((faixa) => {
@@ -18,6 +18,7 @@ const abrirFluxos = async () => {
   const avisos = [];
   let fluxoMic = null;
   try {
+    if (config?.gravarMicrofone === false) throw new Error('microfone desligado nas configurações');
     fluxoMic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
   } catch {
     avisos.push('Não consegui acessar o microfone: gravei só o áudio do computador. No Windows, veja Configurações > Privacidade > Microfone.');
