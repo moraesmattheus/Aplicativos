@@ -30,7 +30,11 @@ const criarLinhaDestino = (destino) => {
         const alvo = await descobrirDestino(link.value, $('notionToken').value.trim());
         resultado.textContent = `✅ ${alvo.tipo === 'banco' ? 'Banco' : 'Página'} “${alvo.nome}”`;
       } catch (erro) {
-        resultado.textContent = `❌ ${erro.message}`;
+        console.error('Testar Notion falhou:', erro);
+        // "TypeError: Failed to fetch" = o navegador nem chegou ao Notion (permissão, rede ou bloqueio), não é problema do link.
+        resultado.textContent = erro.name === 'TypeError'
+          ? `❌ o navegador não conseguiu falar com o Notion (${erro.message}). Recarregue a extensão e veja se "api.notion.com" está permitido nos detalhes dela.`
+          : `❌ ${erro.message}`;
       }
     }
   });
