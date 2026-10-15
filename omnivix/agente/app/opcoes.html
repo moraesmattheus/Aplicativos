@@ -83,7 +83,8 @@
     <select id="microfoneId"><option value="">Padrão do Windows</option></select>
     <p><button type="button" id="testarMicrofone">Testar este microfone</button> <span id="nivelMicrofone" class="suave"></span></p>
 
-    <label for="entradaOutrosId">De onde vem o áudio dos outros participantes<small>"Áudio do computador" captura tudo que toca no PC. Se o seu som ficar estranho com isso (ex.: com FxSound), escolha uma entrada, como o Virtual Audio Cable, e mande o Zoom tocar nela.</small></label>
+    <label for="entradaOutrosId">De onde vem o áudio dos outros participantes<small>"Áudio do computador" captura a saída padrão do Windows. Se você usa o FxSound como saída padrão, é ele que está sendo capturado (antes dos efeitos), mesmo sem aparecer nesta lista, que mostra só entradas. Se o seu som ficar estranho, escolha uma entrada, como o Virtual Audio Cable, e mande o Zoom tocar nela.</small></label>
+    <p id="saidaCapturada" class="suave"></p>
     <select id="entradaOutrosId"><option value="">Áudio do computador (padrão)</option></select>
     <p><button type="button" id="testarOutros">Testar esta fonte</button> <span id="nivelOutros" class="suave"></span></p>
   </fieldset>

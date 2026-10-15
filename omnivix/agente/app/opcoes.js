@@ -104,8 +104,12 @@ $('carregarDispositivos').addEventListener('click', async () => {
       seletor.replaceChildren(el('option', { value: '', textContent: primeira }), ...entradas.map((d) => el('option', { value: d.deviceId, textContent: d.label || 'Entrada sem nome' })));
       seletor.value = entradas.some((d) => d.deviceId === escolhido) ? escolhido : '';
     };
+    // A saída padrão do Windows é a que o "Áudio do computador" captura (no seu caso, o FxSound Speakers).
+    const saidaPadrao = (await navigator.mediaDevices.enumerateDevices()).find((d) => d.kind === 'audiooutput' && d.deviceId === 'default');
+    const nomeSaida = (saidaPadrao?.label ?? '').replace(/^(Padrão|Default)\s*-\s*/i, '');
     preencher($('microfoneId'), 'Padrão do Windows', $('microfoneId').value);
-    preencher($('entradaOutrosId'), 'Áudio do computador (padrão)', $('entradaOutrosId').value);
+    preencher($('entradaOutrosId'), nomeSaida ? `Áudio do computador: ${nomeSaida} (saída padrão do Windows)` : 'Áudio do computador (padrão)', $('entradaOutrosId').value);
+    $('saidaCapturada').textContent = nomeSaida ? `Hoje o app captura a saída: ${nomeSaida}` : '';
     aviso.textContent = `${entradas.length} entradas encontradas`;
   } catch (erro) {
     aviso.textContent = `não consegui listar: ${erro.message}`;
