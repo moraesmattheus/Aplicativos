@@ -102,8 +102,12 @@
   <fieldset id="boxGemini">
     <label for="geminiKey">Chave da API do Gemini<small>Crie grátis em <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. No plano grátis o Google pode usar o conteúdo enviado para melhorar produtos deles.</small></label>
     <input type="password" id="geminiKey" autocomplete="off">
-    <label for="geminiModelo">Modelo</label>
-    <input type="text" id="geminiModelo">
+    <label for="geminiModelo">Modelo<small>Os modelos mudam e alguns deixam de valer para contas novas. "Buscar" lista os da sua conta e "Testar todos" mostra quais respondem de verdade.</small></label>
+    <select id="geminiModelo"></select>
+    <p><button type="button" id="buscarModelos">Buscar modelos da minha chave</button>
+       <button type="button" id="testarModelo">Testar este modelo</button>
+       <button type="button" id="testarTodosModelos">Testar todos</button>
+       <span id="resultadoGemini" class="suave"></span></p>
   </fieldset>
 
   <fieldset id="boxOllama">

@@ -101,6 +101,28 @@ $('testarModelo').addEventListener('click', async () => {
   }
 });
 
+// Testa cada modelo da lista com um pedido mínimo e marca: ✅ funciona, ⚠️ sem cota ou ocupado agora, ❌ não existe para a sua conta.
+// A lista do Google inclui modelos que na prática não respondem, por isso o teste real é o que vale.
+$('testarTodosModelos').addEventListener('click', async () => {
+  const aviso = $('resultadoGemini');
+  const chave = $('geminiKey').value.trim();
+  if (!chave) { aviso.textContent = '❌ cole a chave do Gemini primeiro'; return; }
+  const opcoes = [...$('geminiModelo').options].slice(0, 14); // os primeiros (estáveis vêm antes)
+  let funcionam = 0;
+  for (const [i, opcao] of opcoes.entries()) {
+    aviso.textContent = `Testando ${i + 1} de ${opcoes.length}: ${opcao.value}...`;
+    const nome = opcao.textContent.replace(/^(✅|⚠️|❌) /, '');
+    try {
+      await chamarGemini([{ text: 'Responda apenas com o JSON {"ok": true}' }], { geminiKey: chave, geminiModelo: opcao.value });
+      opcao.textContent = `✅ ${nome}`;
+      funcionam++;
+    } catch (erro) {
+      opcao.textContent = `${/ (429|503)/.test(String(erro.message)) ? '⚠️' : '❌'} ${nome}`;
+    }
+  }
+  aviso.textContent = `${funcionam} de ${opcoes.length} funcionam agora. ✅ funciona · ⚠️ sem cota ou ocupado no momento · ❌ não existe para a sua conta. Escolha um ✅ e salve.`;
+});
+
 $('salvar').addEventListener('click', async () => {
   const nova = {};
   CAMPOS_TEXTO.forEach((campo) => (nova[campo] = $(campo).value.trim()));

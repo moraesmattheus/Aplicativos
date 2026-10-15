@@ -2,6 +2,7 @@
 
 import { carregarConfig, salvarConfig } from './config.js';
 import { descobrirDestino } from './notion.js';
+import { chamarGemini, listarModelosGemini } from './gemini.js';
 
 const $ = (id) => document.getElementById(id);
 const CAMPOS_TEXTO = ['motorTranscricao', 'groqKey', 'groqModelo', 'modeloWhisper', 'idioma', 'provedorResumo', 'geminiKey', 'geminiModelo', 'ollamaUrl', 'ollamaModelo', 'notionToken', 'destinoPadrao', 'atalho', 'agendaUrl', 'agendaPalavras'];
@@ -126,7 +127,67 @@ $('testarOutros').addEventListener('click', () => testar($('testarOutros'), $('n
   return fluxo;
 }));
 
+// Lista de reserva (até você clicar em "Buscar modelos"). Os nomes podem estar desatualizados.
+const MODELOS_RESERVA = ['gemini-flash-latest', 'gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-2.5-flash']
+  .map((id) => ({ id, nome: id, previa: /preview|exp/i.test(id) }));
+
+// Preenche o seletor. O modelo já salvo sempre aparece, mesmo que a lista nova não o traga.
+const preencherModelos = (modelos, escolhido) => {
+  const lista = modelos.some((m) => m.id === escolhido) || !escolhido ? modelos : [{ id: escolhido, nome: escolhido, previa: false }, ...modelos];
+  $('geminiModelo').replaceChildren(...lista.map((m) =>
+    el('option', { value: m.id, textContent: `${m.nome === m.id ? m.id : `${m.nome} (${m.id})`}${m.previa ? ' - prévia' : ''}` })));
+  if (escolhido) $('geminiModelo').value = escolhido;
+};
+
+$('buscarModelos').addEventListener('click', async () => {
+  const aviso = $('resultadoGemini');
+  aviso.textContent = 'Buscando...';
+  try {
+    const modelos = await listarModelosGemini($('geminiKey').value.trim());
+    if (!modelos.length) throw new Error('a chave não tem nenhum modelo disponível');
+    const atual = $('geminiModelo').value;
+    preencherModelos(modelos, modelos.some((m) => m.id === atual) ? atual : modelos[0].id);
+    aviso.textContent = `✅ ${modelos.length} modelos na sua conta. Clique em "Testar todos" para ver quais respondem.`;
+  } catch (erro) {
+    aviso.textContent = `❌ ${erro.message}`;
+  }
+});
+
+$('testarModelo').addEventListener('click', async () => {
+  const aviso = $('resultadoGemini');
+  aviso.textContent = 'Testando...';
+  try {
+    await chamarGemini([{ text: 'Responda apenas com o JSON {"ok": true}' }], { geminiKey: $('geminiKey').value.trim(), geminiModelo: $('geminiModelo').value });
+    aviso.textContent = '✅ Funciona! Clique em Salvar.';
+  } catch (erro) {
+    aviso.textContent = `❌ ${erro.message}`;
+  }
+});
+
+// Testa cada modelo da lista com um pedido mínimo e marca: ✅ funciona, ⚠️ sem cota ou ocupado agora, ❌ não existe para a sua conta.
+// A lista do Google inclui modelos que na prática não respondem, por isso o teste real é o que vale.
+$('testarTodosModelos').addEventListener('click', async () => {
+  const aviso = $('resultadoGemini');
+  const chave = $('geminiKey').value.trim();
+  if (!chave) { aviso.textContent = '❌ cole a chave do Gemini primeiro'; return; }
+  const opcoes = [...$('geminiModelo').options].slice(0, 14); // os primeiros (estáveis vêm antes)
+  let funcionam = 0;
+  for (const [i, opcao] of opcoes.entries()) {
+    aviso.textContent = `Testando ${i + 1} de ${opcoes.length}: ${opcao.value}...`;
+    const nome = opcao.textContent.replace(/^(✅|⚠️|❌) /, '');
+    try {
+      await chamarGemini([{ text: 'Responda apenas com o JSON {"ok": true}' }], { geminiKey: chave, geminiModelo: opcao.value });
+      opcao.textContent = `✅ ${nome}`;
+      funcionam++;
+    } catch (erro) {
+      opcao.textContent = `${/ (429|503)/.test(String(erro.message)) ? '⚠️' : '❌'} ${nome}`;
+    }
+  }
+  aviso.textContent = `${funcionam} de ${opcoes.length} funcionam agora. ✅ funciona · ⚠️ sem cota ou ocupado no momento · ❌ não existe para a sua conta. Escolha um ✅ e salve.`;
+});
+
 const config = await carregarConfig();
+preencherModelos(MODELOS_RESERVA, config.geminiModelo);
 opcaoSalva($('microfoneId'), config.microfoneId, config.microfoneNome);
 opcaoSalva($('entradaOutrosId'), config.entradaOutrosId, config.entradaOutrosNome);
 CAMPOS_TEXTO.forEach((campo) => ($(campo).value = config[campo]));
