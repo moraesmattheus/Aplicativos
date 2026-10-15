@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Omnivix",
-  "version": "1.1.1",
+  "version": "1.1.0",
   "description": "Foco, tarefas, abas e reuniões num só lugar: grava, transcreve e resume reuniões, e organiza seu dia. Grátis.",
   "minimum_chrome_version": "116",
   "permissions": [
@@ -28,6 +28,12 @@
     "http://localhost:11434/*",
     "http://127.0.0.1:8787/*"
   ],
+  "cross_origin_embedder_policy": {
+    "value": "require-corp"
+  },
+  "cross_origin_opener_policy": {
+    "value": "same-origin"
+  },
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
   },
