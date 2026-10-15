@@ -16,6 +16,8 @@
 //   tocarDeVolta         (opcional, padrão true) true quando a captura deixa a fonte MUDA e precisamos tocar o som de volta
 //                        (aba do navegador). Deve ser false se a captura é do áudio do computador inteiro (loopback):
 //                        tocar de volta seria capturar o próprio som de novo, e isso cria eco.
+//   semSaida             (opcional, padrão false) true = não abre nenhuma saída de áudio (nem uma silenciosa) no fone/caixas.
+//                        Abrir uma saída pode mexer na qualidade do som com placas virtuais (ex.: equalizadores).
 //   publicar(estado)     recebe o estado da gravação (para mostrar no ícone, popup etc.)
 //   concluir(resumo)     chamado quando a reunião terminou de ser processada
 
@@ -274,6 +276,19 @@ const criarCaptura = async (ctx, fonte, canal) => {
   captura.port.onmessage = (evento) => receberBloco(canal, evento.data);
 };
 
+// Contexto de áudio do circuito de captura (16 kHz, o que o Whisper entende).
+// Com "semSaida", pede um contexto sem dispositivo de saída (sinkId "none"); se o navegador não souber, volta ao normal.
+const criarContexto = () => {
+  if (adaptador.semSaida) {
+    try {
+      return new AudioContext({ sampleRate: TAXA_WHISPER, sinkId: { type: 'none' } });
+    } catch {
+      /* sem suporte: usa o contexto comum abaixo */
+    }
+  }
+  return new AudioContext({ sampleRate: TAXA_WHISPER });
+};
+
 export const iniciar = async ({ titulo, contexto = '', tituloGenerico = false, config, ...paramsDaPlataforma }) => {
   if (sessao) throw new Error('Já existe uma gravação em andamento.');
   if (config.motorTranscricao === 'groq' && !config.groqKey) {
@@ -288,7 +303,7 @@ export const iniciar = async ({ titulo, contexto = '', tituloGenerico = false, c
 
   try {
     // 3) Monta o "circuito" de áudio.
-    const ctx = new AudioContext({ sampleRate: TAXA_WHISPER });
+    const ctx = criarContexto();
     await ctx.resume();
     await ctx.audioWorklet.addModule('pcm-worklet.js');
 
@@ -307,8 +322,8 @@ export const iniciar = async ({ titulo, contexto = '', tituloGenerico = false, c
 
     // Ao capturar uma aba, o navegador a deixa MUDA. Reproduzimos o som para você continuar ouvindo.
     // (No app de bandeja a captura é do computador inteiro e NÃO muda o som: tocar de volta criaria eco.)
-    const ctxSaida = new AudioContext();
-    if (adaptador.tocarDeVolta !== false) ctxSaida.createMediaStreamSource(fluxoAba).connect(ctxSaida.destination);
+    const ctxSaida = adaptador.tocarDeVolta !== false ? new AudioContext() : null; // sem eco e sem abrir saída à toa
+    ctxSaida?.createMediaStreamSource(fluxoAba).connect(ctxSaida.destination);
 
     // 4) Grava os arquivos de áudio em paralelo.
     const gravacaoMistura = gravar(destinoMistura.stream, 32000);
@@ -429,7 +444,7 @@ export const finalizar = async () => {
       s.gravacaoMic && pararGravador(s.gravacaoMic.gravador)
     ]);
     liberarFluxos(...s.fluxos);
-    await Promise.allSettled([s.ctx.close(), s.ctxSaida.close()]);
+    await Promise.allSettled([s.ctx.close(), s.ctxSaida?.close()]);
 
     await s.fila; // espera o transcritor terminar tudo que está na fila
     if (s.config.motorTranscricao === 'assemblyai') await transcreverNoAssemblyAI(s);
