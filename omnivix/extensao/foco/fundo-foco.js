@@ -98,7 +98,7 @@ async function registrarSessao(estado, minutos) {
 // Notificação calma, sem urgência. O catch evita erro se o navegador bloquear.
 function avisar(titulo, mensagem) {
   chrome.notifications
-    .create({ type: "basic", iconUrl: "icons/icon-128.png", title: titulo, message: mensagem })
+    .create({ type: "basic", iconUrl: "icones/128.png", title: titulo, message: mensagem })
     .catch((erro) => console.error("Notificação não exibida:", erro));
 }
 
