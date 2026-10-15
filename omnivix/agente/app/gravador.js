@@ -55,6 +55,7 @@ const abrirFluxos = async ({ config } = {}) => {
 configurar({
   urlVendor: new URL('./vendor/', location.href).href,
   abrirFluxos,
+  saudeAoVivo: true, // publica o volume e os alertas de "sem som" para o indicador na tela
   semSaida: true, // o app só ouve: não abre saída de áudio no fone (evita mexer na qualidade com FxSound e similares)
   tocarDeVolta: false, // a captura é do áudio do computador (loopback): tocar de volta cria eco de caverna
   publicar: (estado) => window.agente.estadoGravacao(estado),

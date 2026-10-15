@@ -6,7 +6,7 @@ import { chamarGemini, listarModelosGemini } from './gemini.js';
 
 const $ = (id) => document.getElementById(id);
 const CAMPOS_TEXTO = ['motorTranscricao', 'groqKey', 'groqModelo', 'modeloWhisper', 'idioma', 'provedorResumo', 'geminiKey', 'geminiModelo', 'ollamaUrl', 'ollamaModelo', 'notionToken', 'destinoPadrao', 'atalho', 'agendaUrl', 'agendaPalavras'];
-const CAMPOS_MARCAR = ['gravarMicrofone', 'transcreverSoNoFim', 'usarGpu', 'identificarFalantes', 'salvarAudio', 'notionAuto', 'autoDetectarChamadas', 'avisarAoIniciar', 'iniciarComWindows', 'agendaTodos'];
+const CAMPOS_MARCAR = ['mostrarIndicador', 'gravarMicrofone', 'transcreverSoNoFim', 'usarGpu', 'identificarFalantes', 'salvarAudio', 'notionAuto', 'autoDetectarChamadas', 'avisarAoIniciar', 'iniciarComWindows', 'agendaTodos'];
 
 const el = (tag, props = {}, ...filhos) => {
   const no = Object.assign(document.createElement(tag), props);
@@ -206,6 +206,10 @@ const preencherTela = (c) => {
   mostrarCaixaDoMotor();
   editado = false;
   $('avisoMudou').hidden = true;
+  // Aviso claro se alguma chave está guardada mas o Windows não deixou o app lê-la.
+  const ilegiveis = c.segredosIlegiveis ?? [];
+  $('avisoChaves').hidden = ilegiveis.length === 0;
+  $('chavesIlegiveis').textContent = ilegiveis.join(', ');
 };
 preencherTela(config);
 

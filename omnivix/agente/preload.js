@@ -9,6 +9,9 @@ contextBridge.exposeInMainWorld('agente', {
   abrir: (nome, hash) => ipcRenderer.invoke('janela:abrir', nome, hash),
   alternarGravacao: () => ipcRenderer.invoke('gravacao:alternar'),
   estado: () => ipcRenderer.invoke('gravacao:estado'),
+  // usados pela janelinha flutuante "REC" (indicador.html)
+  estadoIndicador: () => ipcRenderer.invoke('indicador:estado'),
+  aoMudarIndicador: (funcao) => ipcRenderer.on('indicador:estado', (_evento, estado) => funcao(estado)),
   // chamado quando o arquivo de configuração muda (por esta ou por outra janela, ou por fora do app)
   aoMudarConfig: (funcao) => ipcRenderer.on('config:mudou', () => funcao()),
   // usados só pela janela invisível que grava:

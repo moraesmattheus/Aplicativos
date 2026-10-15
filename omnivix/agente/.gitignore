@@ -9,6 +9,7 @@ app/notion.js
 app/falantes.js
 app/transcricao-nuvem.js
 app/transcricao-assemblyai.js
+app/saude-audio.js
 app/pcm-worklet.js
 app/gravacao.js
 app/estilo.css

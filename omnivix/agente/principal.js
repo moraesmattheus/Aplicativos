@@ -7,7 +7,7 @@
 //                          janela invisível (app/gravador.js) captura o áudio do computador + microfone,
 //                          transcreve, separa os falantes, resume e envia ao Notion (app/gravacao.js)
 
-const { app, BrowserWindow, Tray, Menu, Notification, globalShortcut, ipcMain, protocol, session, desktopCapturer, nativeImage, net } = require('electron');
+const { app, BrowserWindow, Tray, Menu, Notification, globalShortcut, ipcMain, protocol, session, desktopCapturer, nativeImage, net, screen } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs/promises');
 const { carregarConfig, salvarConfig, existe, arquivoDeConfig } = require('./config-principal');
@@ -32,9 +32,11 @@ if (!app.requestSingleInstanceLock()) app.quit(); // só uma cópia do agente po
 // Desenho mais fluido: rasterização e cópia de imagens pela placa de vídeo. O Chromium já acompanha a taxa de
 // atualização do monitor (60, 120, 144 Hz...), então não existe um "limite de 60" para tirar: o que importa é
 // cada quadro ser barato de desenhar, e por isso as animações usam só transform e opacity.
-app.commandLine.appendSwitch('enable-gpu-rasterization');
-app.commandLine.appendSwitch('ignore-gpu-blocklist');
-app.commandLine.appendSwitch('enable-zero-copy');
+if (!process.env.AGENTE_SEM_GPU) { // (interruptor de diagnóstico: AGENTE_SEM_GPU=1 desliga estas opções)
+  app.commandLine.appendSwitch('enable-gpu-rasterization');
+  app.commandLine.appendSwitch('ignore-gpu-blocklist');
+  app.commandLine.appendSwitch('enable-zero-copy');
+}
 
 let estado = { fase: 'ocioso', origem: null }; // fase: ocioso | iniciando | gravando | finalizando
 let bandeja = null;
@@ -42,6 +44,10 @@ let janelaGravador = null;
 const janelas = {};
 let detector = null;
 let agenda = null;
+let indicador = null; // janelinha flutuante "REC": o jeito mais seguro de saber, de relance, que está gravando
+let mostrarIndicador = true;
+let ultimoSinalGravador = 0; // quando o gravador falou pela última vez (se ficar mudo, ele travou)
+let ultimoAlertaAvisado = null; // para avisar de cada problema uma vez só
 
 // ---------- Utilidades ----------
 
@@ -89,6 +95,16 @@ const criarJanelaGravador = () => {
     }
   });
   janelaGravador.loadURL('app://local/gravador.html');
+  janelaGravador.webContents.on('render-process-gone', (_evento, detalhes) => {
+    // O gravador caiu no meio de uma gravação: avisa claramente e prepara um novo, em vez de seguir "gravando" de mentira.
+    if (estado.fase !== 'ocioso') {
+      estado = { fase: 'ocioso', origem: null, falha: { mensagem: `O gravador fechou inesperadamente (${detalhes.reason}). Esta gravação foi perdida.`, ate: Date.now() + 30000 } };
+      avisar('A gravação parou', 'O gravador fechou inesperadamente.');
+    }
+    criarJanelaGravador();
+    atualizarBandeja();
+    atualizarIndicador();
+  });
 };
 
 // ---------- Gravação ----------
@@ -96,17 +112,34 @@ const criarJanelaGravador = () => {
 const rodarNoGravador = (codigo) => janelaGravador.webContents.executeJavaScript(codigo, true); // true = "como se fosse um clique"
 
 const iniciarGravacao = async ({ origem, titulo, contexto = '', tituloGenerico = false }) => {
+  if (estado.fase === 'finalizando') {
+    // Ainda processando a reunião anterior (pode levar minutos). Quem pediu automaticamente tenta de novo sozinho,
+    // e a tela mostra por que ainda não começou, em vez de ficar parecendo que nada aconteceu.
+    estado = { ...estado, esperando: { mensagem: origem === 'manual' ? 'Ainda terminando a reunião anterior. Tente de novo em instantes.' : 'Terminando a reunião anterior; a nova começa em seguida.', ate: Date.now() + 8000 } };
+    atualizarIndicador();
+    return false;
+  }
   if (estado.fase !== 'ocioso') return false;
   estado = { fase: 'iniciando', origem };
+  ultimoAlertaAvisado = null;
   atualizarBandeja();
+  atualizarIndicador();
   const config = await carregarConfig();
+  if (process.env.AGENTE_DEBUG) console.log('config lida pelo app: groq', Boolean(config.groqKey), '| gemini', Boolean(config.geminiKey), '| notion', Boolean(config.notionToken), '| motor', config.motorTranscricao, '| criptografia', require('electron').safeStorage.isEncryptionAvailable(), '| pasta', app.getPath('userData'));
   try {
     await rodarNoGravador(`window.agenteIniciar(${JSON.stringify({ titulo, contexto, tituloGenerico, config })})`);
   } catch (erro) {
     console.error('Falha ao iniciar a gravação:', erro);
-    estado = { fase: 'ocioso', origem: null };
+    const ilegiveis = config.segredosIlegiveis ?? [];
+    const motivo = ilegiveis.length
+      ? `Não consegui ler as chaves salvas (${ilegiveis.join(', ')}). Abra as Configurações e cole-as de novo.`
+      : String(erro.message ?? erro).replace(/^Error invoking.*?Error: /, '');
+    // A falha fica VISÍVEL por 20 s (pílula vermelha e ícone de alerta na bandeja), além da notificação, que o Windows pode esconder.
+    estado = { fase: 'ocioso', origem: null, falha: { mensagem: motivo, ate: Date.now() + 20000 } };
     atualizarBandeja();
-    avisar('Não consegui gravar', String(erro.message ?? erro).replace(/^Error invoking.*?Error: /, ''));
+    atualizarIndicador();
+    setTimeout(() => { atualizarBandeja(); atualizarIndicador(); }, 20500);
+    avisar('Não consegui gravar', motivo);
     return false;
   }
   if (config.avisarAoIniciar) {
@@ -119,6 +152,7 @@ const pararGravacao = async () => {
   if (estado.fase !== 'gravando') return;
   estado = { ...estado, fase: 'finalizando' };
   atualizarBandeja();
+  atualizarIndicador();
   await rodarNoGravador('window.agentePararGravacao()').catch(() => {});
 };
 
@@ -129,12 +163,59 @@ const alternarGravacao = () =>
 
 // ---------- Bandeja ----------
 
+// ---------- O que mostrar ao usuário (a verdade sobre a gravação) ----------
+
+const falhaAtiva = () => (estado.falha && Date.now() < estado.falha.ate ? estado.falha.mensagem : null);
+const esperandoAtivo = () => (estado.esperando && Date.now() < estado.esperando.ate ? estado.esperando.mensagem : null);
+
+// Problema "ao vivo": o gravador parou de responder, ou a reunião ficou sem som por muito tempo.
+const alertaAtual = () => {
+  if (estado.fase !== 'gravando') return null;
+  if (ultimoSinalGravador && Date.now() - ultimoSinalGravador > 10000) {
+    return { tipo: 'gravador-parado', mensagem: 'O gravador parou de responder: a gravação pode estar parada.' };
+  }
+  return estado.saude?.alerta ?? null;
+};
+
+const formatarDuracao = (ms) => {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const dois = (n) => String(n).padStart(2, '0');
+  const h = Math.floor(total / 3600);
+  return `${h ? `${h}:` : ''}${dois(Math.floor((total % 3600) / 60))}:${dois(total % 60)}`;
+};
+
+const textoDoEstado = () => {
+  const falha = falhaAtiva();
+  if (falha) return `NÃO está gravando: ${falha}`;
+  const alerta = alertaAtual();
+  if (alerta) return `ATENÇÃO: ${alerta.mensagem}`;
+  const espera = esperandoAtivo();
+  if (espera) return espera;
+  if (estado.fase === 'gravando') return `Gravando há ${formatarDuracao(Date.now() - (estado.inicioMs ?? Date.now()))}`;
+  return { ocioso: 'Omnivix: pronto', iniciando: 'Iniciando...', finalizando: 'Finalizando (transcrevendo e resumindo)...' }[estado.fase];
+};
+
+// Avisa de cada problema uma vez (notificação). O indicador e a bandeja continuam mostrando enquanto durar.
+const verificarAlerta = () => {
+  const alerta = alertaAtual();
+  if (!alerta) {
+    ultimoAlertaAvisado = null;
+    return;
+  }
+  if (alerta.tipo === ultimoAlertaAvisado) return;
+  ultimoAlertaAvisado = alerta.tipo;
+  avisar('Atenção: a gravação tem um problema', alerta.mensagem, () => abrirJanela('reunioes'));
+};
+
+// ---------- Bandeja ----------
+
 const atualizarBandeja = () => {
   if (!bandeja) return;
   const gravando = estado.fase === 'gravando' || estado.fase === 'finalizando';
-  bandeja.setImage(icone(gravando ? 'bandeja-gravando.png' : 'bandeja.png'));
-  const texto = { ocioso: 'Omnivix: pronto', iniciando: 'Iniciando...', gravando: 'Gravando reunião...', finalizando: 'Finalizando (transcrevendo e resumindo)...' }[estado.fase];
-  bandeja.setToolTip(texto);
+  const problema = Boolean(falhaAtiva() || alertaAtual());
+  bandeja.setImage(icone(problema ? 'bandeja-alerta.png' : gravando ? 'bandeja-gravando.png' : 'bandeja.png'));
+  const texto = textoDoEstado();
+  bandeja.setToolTip(texto.slice(0, 120)); // o Windows corta dicas muito longas
   bandeja.setContextMenu(Menu.buildFromTemplate([
     { label: texto, enabled: false },
     { type: 'separator' },
@@ -155,6 +236,46 @@ const criarBandeja = () => {
     console.error('Sem bandeja do sistema:', erro.message);
   }
 };
+
+// ---------- Indicador flutuante "REC" ----------
+
+const LARGURA_INDICADOR = 330;
+const ALTURA_INDICADOR = 72;
+
+const criarIndicador = () => {
+  const area = screen.getPrimaryDisplay().workArea;
+  indicador = new BrowserWindow({
+    width: LARGURA_INDICADOR, height: ALTURA_INDICADOR,
+    x: area.x + area.width - LARGURA_INDICADOR - 16, y: area.y + area.height - ALTURA_INDICADOR - 16,
+    frame: false, transparent: true, resizable: false, hasShadow: false, skipTaskbar: true, show: false,
+    focusable: false, // nunca rouba o foco do Zoom/Teams
+    alwaysOnTop: true,
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, backgroundThrottling: false }
+  });
+  indicador.setAlwaysOnTop(true, 'screen-saver'); // fica acima até de janelas em tela cheia
+  indicador.setContentProtection(true); // some de compartilhamentos de tela e capturas (os participantes não veem)
+  indicador.loadURL('app://local/indicador.html');
+};
+
+const dadosDoIndicador = () => ({
+  fase: estado.fase, origem: estado.origem, inicioMs: estado.inicioMs ?? null, saude: estado.saude ?? null,
+  alerta: alertaAtual(), falha: falhaAtiva(), esperando: esperandoAtivo()
+});
+
+// Mostra, esconde e atualiza a pílula conforme o estado real da gravação.
+const atualizarIndicador = () => {
+  if (!indicador || indicador.isDestroyed()) return;
+  const visivel = mostrarIndicador && (estado.fase !== 'ocioso' || falhaAtiva() || esperandoAtivo());
+  if (process.env.AGENTE_DEBUG) console.log('indicador:', visivel ? 'visível' : 'oculto', '| fase:', estado.fase, '| alerta:', alertaAtual()?.tipo ?? '-', '| nível reunião:', estado.saude?.nivelAba?.toFixed(2) ?? '-', '| sem som há:', estado.saude?.semSomAbaSeg ?? '-', 's');
+  if (!visivel) {
+    if (indicador.isVisible()) indicador.hide();
+    return;
+  }
+  if (!indicador.isVisible()) indicador.showInactive(); // aparece sem tirar o foco de quem está na reunião
+  indicador.webContents.send('indicador:estado', dadosDoIndicador());
+};
+
+ipcMain.handle('indicador:estado', () => dadosDoIndicador());
 
 // ---------- Gatilhos automáticos ----------
 
@@ -183,6 +304,8 @@ const aplicarConfig = async () => {
     openAtLogin: config.iniciarComWindows, openAsHidden: true, path: process.execPath,
     args: app.isPackaged ? [] : [app.getAppPath()]
   });
+  mostrarIndicador = config.mostrarIndicador !== false;
+  atualizarIndicador();
   globalShortcut.unregisterAll();
   if (config.atalho && !globalShortcut.register(config.atalho, alternarGravacao)) {
     console.error('Não consegui registrar o atalho', config.atalho);
@@ -233,13 +356,19 @@ ipcMain.handle('gravacao:alternar', () => alternarGravacao());
 ipcMain.handle('gravacao:estado', () => estado);
 
 ipcMain.on('gravador:estado', (_e, novo) => {
-  if (novo.fase === 'gravando' && estado.fase === 'iniciando') estado = { ...estado, fase: 'gravando' };
+  ultimoSinalGravador = Date.now(); // o gravador está vivo
+  if (novo.fase === 'gravando' && estado.fase === 'iniciando') estado = { ...estado, fase: 'gravando', inicioMs: Date.now(), falha: null, esperando: null };
+  if ('saude' in novo && estado.fase !== 'ocioso') estado = { ...estado, saude: novo.saude };
+  verificarAlerta();
   atualizarBandeja();
+  atualizarIndicador();
 });
 
 ipcMain.on('gravador:finalizado', (_e, reuniao) => {
   estado = { fase: 'ocioso', origem: null };
+  ultimoAlertaAvisado = null;
   atualizarBandeja();
+  atualizarIndicador();
   const extra = [reuniao.categoria && `Tipo: ${reuniao.categoria}`, reuniao.notion && 'enviada ao Notion'].filter(Boolean).join(' · ');
   avisar('Reunião salva', `${reuniao.titulo}${extra ? ` (${extra})` : ''}`, () => abrirJanela('reunioes', reuniao.id));
 });
@@ -282,7 +411,15 @@ app.whenReady().then(async () => {
 
   criarJanelaGravador();
   criarBandeja();
+  criarIndicador();
   await aplicarConfig();
+  // Vigia a cada 2 s: atualiza o tempo na bandeja, percebe um gravador travado e mantém o indicador em dia.
+  setInterval(() => {
+    if (estado.fase === 'ocioso' && !falhaAtiva() && !esperandoAtivo()) return;
+    verificarAlerta();
+    atualizarBandeja();
+    atualizarIndicador();
+  }, 2000);
   vigiarConfig();
   iniciarGatilhos();
 

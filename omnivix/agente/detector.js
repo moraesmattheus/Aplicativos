@@ -97,6 +97,7 @@ const criarDetector = ({ lerAplicativos, obterConfig, aoIniciar, aoParar, interv
   let emUsoDesde = null;
   let livreDesde = null;
   let temporizador = null;
+  let iniciando = false; // true enquanto um pedido de início está em andamento (evita pedir duas vezes)
 
   const verificar = async () => {
     const config = await obterConfig();
@@ -111,9 +112,17 @@ const criarDetector = ({ lerAplicativos, obterConfig, aoIniciar, aoParar, interv
     if (apps.length) {
       livreDesde = null;
       emUsoDesde ??= t;
-      if (!ativo && t - emUsoDesde >= config.segundosParaIniciar * 1000) {
-        ativo = true;
-        aoIniciar(apps);
+      if (!ativo && !iniciando && t - emUsoDesde >= config.segundosParaIniciar * 1000) {
+        // Só consideramos "em chamada" se a gravação REALMENTE começou. Se o app recusar (ex.: ainda terminando a
+        // reunião anterior) ou falhar, tentamos de novo no próximo ciclo, em vez de desistir para sempre.
+        iniciando = true;
+        try {
+          ativo = (await aoIniciar(apps)) !== false; // aoIniciar que não devolve nada conta como "começou"
+        } catch {
+          ativo = false;
+        } finally {
+          iniciando = false;
+        }
       }
     } else {
       emUsoDesde = null;

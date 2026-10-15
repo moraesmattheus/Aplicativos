@@ -16,6 +16,8 @@
 //   tocarDeVolta         (opcional, padrão true) true quando a captura deixa a fonte MUDA e precisamos tocar o som de volta
 //                        (aba do navegador). Deve ser false se a captura é do áudio do computador inteiro (loopback):
 //                        tocar de volta seria capturar o próprio som de novo, e isso cria eco.
+//   saudeAoVivo          (opcional, padrão false) true = publica a cada segundo a "saúde" do som (volume dos dois canais e
+//                        alerta se a reunião ficar muda). O app de bandeja usa isso para o indicador na tela.
 //   semSaida             (opcional, padrão false) true = não abre nenhuma saída de áudio (nem uma silenciosa) no fone/caixas.
 //                        Abrir uma saída pode mexer na qualidade do som com placas virtuais (ex.: equalizadores).
 //   publicar(estado)     recebe o estado da gravação (para mostrar no ícone, popup etc.)
@@ -27,6 +29,7 @@ import { gerarResumo } from './resumo.js';
 import { identificarFalantes } from './falantes.js';
 import { transcreverGroq } from './transcricao-nuvem.js';
 import { transcreverAssemblyAI, respostaParaSegmentos } from './transcricao-assemblyai.js';
+import { criarMedidor, avaliarSaude } from './saude-audio.js';
 import { enviarAoNotion } from './notion.js';
 import { textoTranscricao } from './formatar.js';
 
@@ -199,7 +202,8 @@ const criarCanal = (falante) => ({
   total: 0,
   silenciosSeguidos: 0,
   amostrasJaCortadas: 0, // para saber em que segundo da reunião cada trecho começa
-  temFala: false
+  temFala: false,
+  medidor: criarMedidor() // mede se há som de verdade neste canal
 });
 
 const cortarTrecho = (canal) => {
@@ -218,7 +222,9 @@ const cortarTrecho = (canal) => {
 const receberBloco = (canal, bloco) => {
   const s = sessao;
   if (!s || s.finalizando) return;
-  const comVoz = rms(bloco) >= LIMIAR_PAUSA;
+  const nivelDoBloco = rms(bloco);
+  canal.medidor.registrar(nivelDoBloco);
+  const comVoz = nivelDoBloco >= LIMIAR_PAUSA;
 
   canal.blocos.push(bloco);
   canal.total += bloco.length;
@@ -368,6 +374,12 @@ export const iniciar = async ({ titulo, contexto = '', tituloGenerico = false, c
       sessao.reuniao.atualizadaEm = Date.now();
       salvarReuniao(sessao.reuniao).catch(() => {});
     }, 15000);
+    // Uma vez por segundo, diz à tela se há som de verdade (e avisa se a reunião ficou muda).
+    if (adaptador.saudeAoVivo) {
+      sessao.painel = setInterval(() => {
+        publicar({ saude: avaliarSaude({ aba: canalAba.medidor.ler(), mic: canalMic.medidor.ler(), microfone: Boolean(fluxoMic) }) });
+      }, 1000);
+    }
 
     // Se você fechar a aba gravada, o áudio acaba: finalizamos sozinhos.
     fluxoAba.getAudioTracks()[0].addEventListener('ended', () => finalizar());
@@ -437,6 +449,8 @@ export const finalizar = async () => {
   if (!s || s.finalizando) return;
   s.finalizando = true;
   clearInterval(s.batimento);
+  clearInterval(s.painel);
+  publicar({ saude: null });
   publicar({ fase: 'finalizando', etapa: 'Terminando a transcrição...' });
 
   try {
@@ -463,6 +477,10 @@ export const finalizar = async () => {
 
     const { reuniao, config } = s;
     reuniao.duracaoSeg = Math.round((Date.now() - s.inicio) / 1000);
+    // Se o áudio da reunião ficou mudo do começo ao fim, diz isso claramente (em vez de uma reunião "vazia" sem explicação).
+    if (reuniao.duracaoSeg >= 20 && s.canais[0].medidor.ler().semSomSeg >= reuniao.duracaoSeg - 5) {
+      reuniao.avisos.push('Nenhum som da reunião foi captado nesta gravação. Confira por qual dispositivo de saída o Zoom toca e a fonte de áudio escolhida nas Configurações.');
+    }
     reuniao.status = 'processando';
     reuniao.atualizadaEm = Date.now();
     await salvarReuniao(reuniao);

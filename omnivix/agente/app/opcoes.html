@@ -19,6 +19,7 @@
 </style>
 <body>
 <main>
+  <div id="avisoChaves" class="aviso" hidden><b>Não consegui ler as chaves salvas</b> (<span id="chavesIlegiveis"></span>). O Windows negou a leitura, o que acontece quando o app é aberto de outro jeito. As chaves guardadas <b>não foram apagadas</b>. Cole-as de novo e clique em Salvar, ou abra o app pelo atalho normal.</div>
   <div id="avisoMudou" class="aviso" hidden>A configuração mudou fora desta janela. <button type="button" id="recarregarConfig">Atualizar agora</button> <span class="suave">(o que você digitou e ainda não salvou será perdido)</span></div>
   <h1>⚙️ Configurações</h1>
 
@@ -77,6 +78,7 @@
     <option value="auto">Detectar automaticamente</option>
   </select>
   <label class="marcar"><input type="checkbox" id="identificarFalantes"><span>Separar cada participante (“Pessoa 1”, “Pessoa 2”...)<small>No fim da reunião, envia o ÁUDIO da aba ao Gemini (precisa da chave do Gemini abaixo, ~80 min no máximo). Seu microfone sempre aparece como “Você”, sem enviar nada.</small></span></label>
+  <label class="marcar"><input type="checkbox" id="mostrarIndicador"><span>Mostrar o indicador "REC" na tela enquanto grava<small>Uma pílula pequena, sempre por cima, com o tempo, o volume e alertas se a gravação ficar sem som. Você pode arrastá-la. Ela não aparece quando você compartilha a tela.</small></span></label>
   <label class="marcar"><input type="checkbox" id="gravarMicrofone"><span>Gravar também o meu microfone<small>Desligue em aulas em que você fica mudo. Assim o programa não abre o microfone e o áudio do seu fone Bluetooth não muda de qualidade.</small></span></label>
   <fieldset id="boxDispositivos">
     <label>Dispositivos de áudio (só para este app)<small>Não muda o padrão do Windows nem o som que você ouve. Clique em "Carregar dispositivos" para listar o que existe no seu computador (isso abre o microfone por um instante).</small></label>

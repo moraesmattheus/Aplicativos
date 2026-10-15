@@ -29,6 +29,7 @@ const CONFIG_PADRAO = {
   groqKey: '',
   groqModelo: 'whisper-large-v3-turbo',
   usarGpu: true,
+  mostrarIndicador: true, // janelinha "REC" sempre visível enquanto grava (escondida de compartilhamento de tela)
   gravarMicrofone: true, // false = não abre o microfone (só o áudio do computador)
   // Dispositivos só para este app (não mudam o padrão do Windows). Vazio = padrão.
   microfoneId: '', microfoneNome: '', // qual microfone grava a SUA voz
@@ -63,8 +64,9 @@ const revelar = (valor) => {
   if (typeof valor !== 'string' || !valor.startsWith(PREFIXO)) return valor;
   try {
     return safeStorage.decryptString(Buffer.from(valor.slice(PREFIXO.length), 'base64'));
-  } catch {
-    return ''; // veio de outro usuário/computador: não dá para ler
+  } catch (erro) {
+    if (process.env.AGENTE_DEBUG) console.log('não consegui decifrar um segredo:', erro.message);
+    return null; // não deu para ler (outro usuário/computador, ou o Windows negou a chave): NÃO é o mesmo que "vazio"
   }
 };
 
@@ -77,13 +79,34 @@ const carregarConfig = async () => {
   } catch {
     /* primeira execução: usa os padrões */
   }
-  for (const chave of SEGREDOS) if (salvo[chave]) salvo[chave] = revelar(salvo[chave]);
-  return { ...CONFIG_PADRAO, ...salvo };
+  // Se uma chave está guardada mas não dá para ler, o campo vem vazio, MAS o nome dela vai em "segredosIlegiveis":
+  // a tela avisa o usuário e o salvar não apaga o que está guardado.
+  const segredosIlegiveis = [];
+  for (const chave of SEGREDOS) {
+    if (!salvo[chave]) continue;
+    const aberto = revelar(salvo[chave]);
+    if (aberto === null) segredosIlegiveis.push(chave);
+    salvo[chave] = aberto ?? '';
+  }
+  return { ...CONFIG_PADRAO, ...salvo, segredosIlegiveis };
 };
 
 const salvarConfig = async (config) => {
   const paraDisco = { ...config };
-  for (const chave of SEGREDOS) paraDisco[chave] = proteger(paraDisco[chave]);
+  delete paraDisco.segredosIlegiveis; // só serve para a tela; não vai para o arquivo
+  let noDisco = {};
+  try {
+    noDisco = JSON.parse(await fs.readFile(arquivoDeConfig(), 'utf8'));
+  } catch {
+    /* ainda não existe arquivo */
+  }
+  for (const chave of SEGREDOS) {
+    const guardado = noDisco[chave];
+    const ilegivel = typeof guardado === 'string' && guardado.startsWith(PREFIXO) && revelar(guardado) === null;
+    // Campo vazio + chave guardada que não conseguimos ler = a tela só não conseguiu mostrá-la: mantém como está.
+    // (Se você digitar uma chave nova, ela substitui normalmente.)
+    paraDisco[chave] = !paraDisco[chave] && ilegivel ? guardado : proteger(paraDisco[chave]);
+  }
   await fs.mkdir(path.dirname(arquivoDeConfig()), { recursive: true });
   await fs.writeFile(arquivoDeConfig(), JSON.stringify(paraDisco, null, 2));
 };
