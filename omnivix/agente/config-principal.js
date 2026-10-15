@@ -88,4 +88,4 @@ const salvarConfig = async (config) => {
   await fs.writeFile(arquivoDeConfig(), JSON.stringify(paraDisco, null, 2));
 };
 
-module.exports = { CONFIG_PADRAO, carregarConfig, salvarConfig, existe };
+module.exports = { CONFIG_PADRAO, carregarConfig, salvarConfig, existe, arquivoDeConfig };

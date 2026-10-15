@@ -186,23 +186,44 @@ $('testarTodosModelos').addEventListener('click', async () => {
   aviso.textContent = `${funcionam} de ${opcoes.length} funcionam agora. ✅ funciona · ⚠️ sem cota ou ocupado no momento · ❌ não existe para a sua conta. Escolha um ✅ e salve.`;
 });
 
-const config = await carregarConfig();
-preencherModelos(MODELOS_RESERVA, config.geminiModelo);
-opcaoSalva($('microfoneId'), config.microfoneId, config.microfoneNome);
-opcaoSalva($('entradaOutrosId'), config.entradaOutrosId, config.entradaOutrosNome);
-CAMPOS_TEXTO.forEach((campo) => ($(campo).value = config[campo]));
-CAMPOS_MARCAR.forEach((campo) => ($(campo).checked = config[campo]));
-$('ignorarApps').value = config.ignorarApps.join('\n');
-$('processosDeReuniao').value = (config.processosDeReuniao ?? []).join('\n');
-config.destinos.forEach((d) => $('listaDestinos').append(criarLinhaDestino(d)));
+let config = await carregarConfig();
+let editado = false; // true = há campos mexidos que ainda não foram salvos
+
+// Põe a configuração nos campos da tela. Usada ao abrir e sempre que a configuração mudar por fora.
+const preencherTela = (c) => {
+  config = c;
+  preencherModelos(MODELOS_RESERVA, c.geminiModelo);
+  opcaoSalva($('microfoneId'), c.microfoneId, c.microfoneNome);
+  opcaoSalva($('entradaOutrosId'), c.entradaOutrosId, c.entradaOutrosNome);
+  CAMPOS_TEXTO.forEach((campo) => ($(campo).value = c[campo]));
+  CAMPOS_MARCAR.forEach((campo) => ($(campo).checked = c[campo]));
+  $('ignorarApps').value = c.ignorarApps.join('\n');
+  $('processosDeReuniao').value = (c.processosDeReuniao ?? []).join('\n');
+  $('listaDestinos').replaceChildren(...c.destinos.map(criarLinhaDestino));
+  mostrarCaixaDoProvedor();
+  mostrarCaixaDoMotor();
+  editado = false;
+  $('avisoMudou').hidden = true;
+};
+preencherTela(config);
+
+// Qualquer digitação marca a tela como "editada" (para não apagar o que você está escrevendo).
+document.addEventListener('input', () => (editado = true));
+document.addEventListener('change', () => (editado = true));
+
+// Se a configuração mudar por fora: atualiza sozinho, ou só avisa se você estiver no meio de uma edição.
+$('recarregarConfig').addEventListener('click', async () => preencherTela(await carregarConfig()));
+window.agente.aoMudarConfig(async () => {
+  if (editado) $('avisoMudou').hidden = false;
+  else preencherTela(await carregarConfig());
+});
+
 $('novoDestino').addEventListener('click', () => $('listaDestinos').append(criarLinhaDestino({ nome: '' })));
-mostrarCaixaDoProvedor();
-mostrarCaixaDoMotor();
 $('motorTranscricao').addEventListener('change', mostrarCaixaDoMotor);
 $('provedorResumo').addEventListener('change', mostrarCaixaDoProvedor);
 
 $('salvar').addEventListener('click', async () => {
-  const nova = {};
+  const nova = { ...config }; // parte do que já existe, para não perder campos que esta tela não mostra
   CAMPOS_TEXTO.forEach((campo) => (nova[campo] = $(campo).value.trim()));
   CAMPOS_MARCAR.forEach((campo) => (nova[campo] = $(campo).checked));
   nova.ignorarApps = $('ignorarApps').value.split('\n').map((l) => l.trim().toLowerCase()).filter(Boolean);
@@ -216,6 +237,7 @@ $('salvar').addEventListener('click', async () => {
   nova.segundosParaParar = config.segundosParaParar;
   nova.destinos = [...$('listaDestinos').children].map((linha) => linha.ler()).filter((d) => d.nome);
   await salvarConfig(nova);
+  editado = false;
   $('salvo').textContent = '✔ Salvo!';
   setTimeout(() => ($('salvo').textContent = ''), 2500);
 });

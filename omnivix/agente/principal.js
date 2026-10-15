@@ -10,7 +10,7 @@
 const { app, BrowserWindow, Tray, Menu, Notification, globalShortcut, ipcMain, protocol, session, desktopCapturer, nativeImage, net } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs/promises');
-const { carregarConfig, salvarConfig, existe } = require('./config-principal');
+const { carregarConfig, salvarConfig, existe, arquivoDeConfig } = require('./config-principal');
 const { criarDetector, lerAplicativosEmUso, processosDeReuniaoAtivos } = require('./detector');
 const { criarAgenda } = require('./agenda');
 
@@ -148,6 +148,25 @@ const criarBandeja = () => {
 
 // ---------- Gatilhos automáticos ----------
 
+// Vigia o arquivo de configuração: quando ele muda (salvo numa janela ou alterado por fora), avisa todas as janelas.
+// O atraso de 400 ms junta várias gravações seguidas num aviso só.
+const vigiarConfig = () => {
+  let espera = null;
+  try {
+    require('node:fs').watch(path.dirname(arquivoDeConfig()), (_evento, nome) => {
+      if (nome !== 'config.json') return;
+      clearTimeout(espera);
+      espera = setTimeout(() => {
+        const janelasAbertas = BrowserWindow.getAllWindows().filter((j) => !j.isDestroyed());
+        if (process.env.AGENTE_DEBUG) console.log('config mudou: avisando', janelasAbertas.length, 'janelas');
+        janelasAbertas.forEach((j) => j.webContents.send('config:mudou'));
+      }, 400);
+    });
+  } catch (erro) {
+    console.error('Não consegui vigiar o arquivo de configuração:', erro.message);
+  }
+};
+
 const aplicarConfig = async () => {
   const config = await carregarConfig();
   app.setLoginItemSettings({
@@ -253,6 +272,7 @@ app.whenReady().then(async () => {
   criarJanelaGravador();
   criarBandeja();
   await aplicarConfig();
+  vigiarConfig();
   iniciarGatilhos();
 
   if (primeiraVez) {
