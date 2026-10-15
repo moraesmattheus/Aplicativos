@@ -13,6 +13,9 @@
 // O adaptador precisa fornecer:
 //   urlVendor            endereço da pasta vendor/ (arquivos .wasm do motor do Whisper)
 //   abrirFluxos(params)  devolve { fluxoAba, fluxoMic, avisos }: o áudio dos OUTROS e o seu microfone
+//   tocarDeVolta         (opcional, padrão true) true quando a captura deixa a fonte MUDA e precisamos tocar o som de volta
+//                        (aba do navegador). Deve ser false se a captura é do áudio do computador inteiro (loopback):
+//                        tocar de volta seria capturar o próprio som de novo, e isso cria eco.
 //   publicar(estado)     recebe o estado da gravação (para mostrar no ícone, popup etc.)
 //   concluir(resumo)     chamado quando a reunião terminou de ser processada
 
@@ -303,8 +306,9 @@ export const iniciar = async ({ titulo, contexto = '', tituloGenerico = false, c
     }
 
     // Ao capturar uma aba, o navegador a deixa MUDA. Reproduzimos o som para você continuar ouvindo.
+    // (No app de bandeja a captura é do computador inteiro e NÃO muda o som: tocar de volta criaria eco.)
     const ctxSaida = new AudioContext();
-    ctxSaida.createMediaStreamSource(fluxoAba).connect(ctxSaida.destination);
+    if (adaptador.tocarDeVolta !== false) ctxSaida.createMediaStreamSource(fluxoAba).connect(ctxSaida.destination);
 
     // 4) Grava os arquivos de áudio em paralelo.
     const gravacaoMistura = gravar(destinoMistura.stream, 32000);
