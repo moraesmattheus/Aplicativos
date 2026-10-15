@@ -28,7 +28,15 @@ const baixarTexto = (nome, texto, tipo = 'text/markdown') => {
 const nomeArquivo = (reuniao) =>
   `${reuniao.titulo.replace(/[^\p{L}\p{N}]+/gu, '-').slice(0, 60)}-${new Date(reuniao.inicio).toISOString().slice(0, 10)}`;
 
-const ROTULOS = { gravando: '🔴 gravando', processando: '⏳ processando', erro: '⚠️ erro', pronta: '' };
+const ROTULOS = { gravando: '🔴 gravando', processando: '⏳ processando', erro: '⚠️ erro', interrompida: '⚠️ interrompida', pronta: '' };
+
+// Gravação "fantasma": diz que está gravando, mas o gravador parou de dar sinal de vida (o app foi fechado no meio).
+// O sinal é renovado a cada 15 s; gravações antigas, sem sinal, só valem como fantasmas depois de 10 min.
+const estaInterrompida = (r) =>
+  r.status === 'gravando' && Date.now() - (r.atualizadaEm ?? r.inicio) > (r.atualizadaEm ? 90_000 : 600_000);
+
+// O que mostrar no lugar do status: "interrompida" no lugar de "gravando" quando não há mais sinal.
+const statusDe = (r) => (estaInterrompida(r) ? 'interrompida' : r.status);
 
 const desenharLista = async () => {
   const reunioes = await listarReunioes();
@@ -36,7 +44,7 @@ const desenharLista = async () => {
     el('button', {
       className: `item${r.id === reuniaoAberta?.id ? ' ativo' : ''}`,
       onclick: () => (location.hash = r.id)
-    }, r.titulo, el('small', { textContent: `${new Date(r.inicio).toLocaleString('pt-BR')} ${ROTULOS[r.status] ?? ''}` }))
+    }, r.titulo, el('small', { textContent: `${new Date(r.inicio).toLocaleString('pt-BR')} ${ROTULOS[statusDe(r)] ?? ''}` }))
   );
   listaEl.replaceChildren(...(itens.length ? itens : [el('p', { className: 'suave', textContent: 'Nenhuma reunião ainda. Grave a primeira pelo ícone da extensão!' })]));
 };
@@ -88,7 +96,71 @@ const refazerResumo = async (reuniao) => {
   desenharDetalhe(reuniao);
 };
 
-const emAndamentoAgora = (reuniao) => ['gravando', 'processando'].includes(reuniao.status);
+const emAndamentoAgora = (reuniao) => ['gravando', 'processando'].includes(reuniao.status) && !estaInterrompida(reuniao);
+
+// ---------- Painel "ao vivo" (enquanto grava ou processa) ----------
+
+let cacheAoVivo = { id: null, trechos: -1, topicos: [] };
+
+// Assuntos até agora: as palavras mais faladas, calculadas aqui mesmo (sem IA, sem internet, de graça).
+const assuntosAteAgora = async (reuniao, config) => {
+  const n = reuniao.segmentos.length;
+  if (cacheAoVivo.id === reuniao.id && cacheAoVivo.trechos === n) return cacheAoVivo.topicos;
+  let topicos = [];
+  if (n >= 3) {
+    try {
+      topicos = (await gerarResumo(textoTranscricao(reuniao.segmentos), { ...config, provedorResumo: 'basico' })).topicos ?? [];
+    } catch {
+      topicos = [];
+    }
+  }
+  cacheAoVivo = { id: reuniao.id, trechos: n, topicos };
+  return topicos;
+};
+
+const NOMES_MOTOR = { local: 'Whisper no seu PC', groq: 'Groq (nuvem)', assemblyai: 'AssemblyAI (nuvem)' };
+
+const painelAoVivo = async (reuniao, config) => {
+  const informacoes = reuniao.info ?? {};
+  const tempo = el('span', { id: 'tempo-vivo', className: 'tempo-vivo', textContent: formatarTempo((Date.now() - reuniao.inicio) / 1000) });
+  const etiquetas = [
+    el('span', { className: 'tag', textContent: `Transcrição: ${NOMES_MOTOR[informacoes.motor] ?? 'ligada'}${informacoes.adiada ? ' (só no fim)' : ' (ao vivo)'}` }),
+    el('span', { className: 'tag', textContent: informacoes.microfone === false ? '🎤 microfone desligado' : informacoes.microfone ? '🎤 microfone ligado' : '🎤 microfone: ?' })
+  ];
+
+  if (reuniao.status === 'processando') {
+    return el('section', { className: 'ao-vivo' },
+      el('div', { className: 'ao-vivo-topo' }, el('strong', { textContent: '⏳ Processando a reunião' })),
+      el('p', { className: 'suave', textContent: 'Transcrevendo, resumindo e preparando o envio. Pode levar alguns minutos; esta tela atualiza sozinha.' }));
+  }
+
+  const topicos = await assuntosAteAgora(reuniao, config);
+  const ultimas = reuniao.segmentos.slice(-6);
+  const corpo = [];
+  if (topicos.length) {
+    corpo.push(el('h3', { textContent: 'Assuntos até agora' }),
+      el('div', { className: 'etiquetas' }, ...topicos.map((t) => el('span', { className: 'tag', textContent: t }))),
+      el('p', { className: 'suave', textContent: 'São as palavras mais faladas (cálculo local). O resumo completo, com decisões e itens de ação, sai quando a reunião terminar.' }));
+  }
+  if (ultimas.length) {
+    corpo.push(el('h3', { textContent: 'Últimas falas' }), el('div', { className: 'falas' }, ...ultimas.map((seg) => linhaDeFala(reuniao, seg))));
+  } else {
+    corpo.push(el('p', { className: 'suave', textContent: informacoes.adiada
+      ? 'Está gravando. O texto, os assuntos e o resumo aparecem quando a reunião terminar (a transcrição foi programada para o fim, para não pesar no computador). Para ver ao vivo, desmarque "Transcrever só depois que a reunião acabar" nas configurações e use o Groq.'
+      : 'Está gravando. O primeiro trecho de texto aparece em alguns segundos...' }));
+  }
+
+  return el('section', { className: 'ao-vivo' },
+    el('div', { className: 'ao-vivo-topo' }, el('span', { className: 'ponto-rec' }), el('strong', { textContent: 'Gravando agora' }), tempo),
+    el('div', { className: 'etiquetas' }, ...etiquetas),
+    ...corpo);
+};
+
+// Relógio do painel: avança a cada segundo sem redesenhar a tela inteira.
+setInterval(() => {
+  const campo = document.getElementById('tempo-vivo');
+  if (campo && reuniaoAberta && reuniaoAberta.status === 'gravando') campo.textContent = formatarTempo((Date.now() - reuniaoAberta.inicio) / 1000);
+}, 1000);
 
 const desenharDetalhe = async (reuniao) => {
   const config = await carregarConfig();
@@ -148,7 +220,12 @@ const desenharDetalhe = async (reuniao) => {
     : [];
 
   const avisos = reuniao.avisos.map((a) => el('div', { className: 'aviso', textContent: a }));
-  const emAndamento = reuniao.status === 'gravando' || reuniao.status === 'processando';
+  const emAndamento = emAndamentoAgora(reuniao);
+  const interrompida = estaInterrompida(reuniao);
+  const aoVivo = emAndamento ? [await painelAoVivo(reuniao, config)] : [];
+  const avisoInterrompida = interrompida
+    ? [el('div', { className: 'aviso', textContent: 'Esta gravação parou de dar sinal: o app foi fechado durante a reunião, então o áudio não foi salvo. O que já tinha sido transcrito está abaixo. Você pode apagar esta reunião.' })]
+    : [];
 
   const blocoResumo = resumo
     ? [
@@ -180,9 +257,9 @@ const desenharDetalhe = async (reuniao) => {
 
   detalheEl.replaceChildren(
     titulo,
-    el('div', { className: 'suave', textContent: `${new Date(reuniao.inicio).toLocaleString('pt-BR')} · ${formatarTempo(reuniao.duracaoSeg)} ${ROTULOS[reuniao.status] ?? ''}` }),
+    el('div', { className: 'suave', textContent: `${new Date(reuniao.inicio).toLocaleString('pt-BR')} · ${formatarTempo(reuniao.status === 'gravando' && !interrompida ? (Date.now() - reuniao.inicio) / 1000 : reuniao.duracaoSeg)} ${ROTULOS[statusDe(reuniao)] ?? ''}` }),
     el('div', {}, 'Tipo: ', seletorTipo),
-    acoes, ...linhaNotion, ...avisos, ...blocoResumo, transcricao, ...blocoAudio
+    ...aoVivo, ...avisoInterrompida, acoes, ...linhaNotion, ...avisos, ...(aoVivo.length ? [] : blocoResumo), transcricao, ...blocoAudio
   );
 };
 
@@ -201,6 +278,7 @@ await abrirDoEndereco();
 // Enquanto uma reunião está sendo gravada/processada, atualiza a tela a cada 3 segundos.
 setInterval(async () => {
   if (!reuniaoAberta || !['gravando', 'processando'].includes(reuniaoAberta.status)) return;
+  if (document.activeElement?.tagName === 'TEXTAREA') return;
   if (document.activeElement?.tagName === 'INPUT') return; // não atrapalha quem está digitando o título
   abrirDoEndereco();
 }, 3000);

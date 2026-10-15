@@ -23,6 +23,13 @@
   .falante:hover { text-decoration: underline; }
   pre { white-space: pre-wrap; background: var(--superficie); border-radius: 8px; padding: 12px; font: 13px/1.6 system-ui, sans-serif; }
   audio { width: 100%; margin-top: 8px; }
+  .ao-vivo { border: 1px solid var(--destaque); border-radius: var(--raio); padding: 14px 16px; margin: 12px 0; background: var(--superficie); }
+  .ao-vivo-topo { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .tempo-vivo { margin-left: auto; font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .ponto-rec { width: 11px; height: 11px; border-radius: 50%; background: var(--perigo); animation: piscar 1.2s infinite; }
+  @keyframes piscar { 50% { opacity: .25; } }
+  .etiquetas { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+  .ao-vivo h3 { margin: 12px 0 4px; font-size: 13px; color: var(--suave); }
   @media (max-width: 720px) { body { grid-template-columns: 1fr; } aside { border-right: 0; border-bottom: 1px solid var(--borda); } }
 </style>
 <body>

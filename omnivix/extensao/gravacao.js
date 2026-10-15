@@ -353,10 +353,21 @@ export const iniciar = async ({ titulo, contexto = '', tituloGenerico = false, c
       modelo: null,
       reuniao: {
         id, titulo: titulo || 'Reunião sem título', inicio, duracaoSeg: 0, contexto,
-        status: 'gravando', segmentos: [], resumo: null, temAudio: false, avisos
+        status: 'gravando', segmentos: [], resumo: null, temAudio: false, avisos,
+        atualizadaEm: Date.now(), // "sinal de vida": se parar de mudar, o gravador foi fechado no meio
+        info: { // o que a tela mostra enquanto grava
+          motor: config.motorTranscricao,
+          adiada: config.motorTranscricao === 'assemblyai' || !!config.transcreverSoNoFim, // texto só no fim
+          microfone: !!fluxoMic
+        }
       }
     };
     await salvarReuniao(sessao.reuniao);
+    // A cada 15 s renova o sinal de vida (a tela de reuniões usa isso para saber se ainda está gravando).
+    sessao.batimento = setInterval(() => {
+      sessao.reuniao.atualizadaEm = Date.now();
+      salvarReuniao(sessao.reuniao).catch(() => {});
+    }, 15000);
 
     // Se você fechar a aba gravada, o áudio acaba: finalizamos sozinhos.
     fluxoAba.getAudioTracks()[0].addEventListener('ended', () => finalizar());
@@ -425,6 +436,7 @@ export const finalizar = async () => {
   const s = sessao;
   if (!s || s.finalizando) return;
   s.finalizando = true;
+  clearInterval(s.batimento);
   publicar({ fase: 'finalizando', etapa: 'Terminando a transcrição...' });
 
   try {
@@ -452,6 +464,7 @@ export const finalizar = async () => {
     const { reuniao, config } = s;
     reuniao.duracaoSeg = Math.round((Date.now() - s.inicio) / 1000);
     reuniao.status = 'processando';
+    reuniao.atualizadaEm = Date.now();
     await salvarReuniao(reuniao);
 
     await separarParticipantes(s);
