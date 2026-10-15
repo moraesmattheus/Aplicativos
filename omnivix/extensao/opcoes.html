@@ -10,8 +10,9 @@
   label small { font-weight: 400; color: var(--suave); display: block; }
   .marcar { display: flex; gap: 8px; align-items: flex-start; font-weight: 600; }
   .marcar input { margin-top: 5px; }
-  fieldset { border: 1px solid var(--borda); border-radius: 8px; margin-top: 16px; padding: 4px 16px 16px; }
-  .destino { display: grid; gap: 10px; padding: 14px; margin-top: 10px; border: 1px solid var(--borda); border-radius: var(--raio); }
+  fieldset { border: 0; box-shadow: var(--anel); background: var(--superficie); border-radius: var(--raio-externo); margin: 16px 0 0; padding: 6px 18px 18px; min-width: 0; }
+  .destino { display: grid; gap: 10px; padding: 14px; margin-top: 10px; background: var(--superficie); box-shadow: var(--anel); border-radius: var(--raio-externo); }
+  .destino input, .destino textarea { background: var(--fundo); }
   .destino .campo { display: grid; gap: 4px; }
   .destino .rotulo { font-size: 12px; font-weight: 600; color: var(--suave); }
   .destino .rodape { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }

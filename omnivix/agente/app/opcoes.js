@@ -16,9 +16,11 @@ const el = (tag, props = {}, ...filhos) => {
 
 // Uma linha da lista de tipos: nome, palavras para reconhecer, link do Notion, testar e remover.
 const criarLinhaDestino = (destino) => {
-  const nome = el('input', { type: 'text', value: destino.nome, placeholder: 'Tipo (ex.: Entrevista)' });
-  const descricao = el('input', { type: 'text', value: destino.descricao ?? '', placeholder: 'Palavras para reconhecer (separe por vírgula)' });
-  const link = el('input', { type: 'text', value: destino.link ?? '', placeholder: 'Link da página ou do banco no Notion', className: 'largo' });
+  const nome = el('input', { type: 'text', value: destino.nome, placeholder: 'Ex.: Entrevista' });
+  // textarea: o texto longo quebra de linha e aparece inteiro (antes ficava cortado)
+  const descricao = el('textarea', { rows: 2, value: destino.descricao ?? '', placeholder: 'Ex.: entrevista, vaga, candidato, recrutador (separe por vírgula)' });
+  const link = el('input', { type: 'text', value: destino.link ?? '', placeholder: 'Cole o link da página ou do banco no Notion' });
+  const campo = (rotulo, entrada) => el('div', { className: 'campo' }, el('span', { className: 'rotulo', textContent: rotulo }), entrada);
   const resultado = el('span', { className: 'suave' });
   const testar = el('button', {
     type: 'button', textContent: 'Testar',
@@ -32,7 +34,7 @@ const criarLinhaDestino = (destino) => {
       }
     }
   });
-  const linha = el('div', { className: 'destino' }, nome, descricao, link,
+  const linha = el('div', { className: 'destino' }, campo('Tipo de reunião', nome), campo('Reconhecer por estas palavras', descricao), campo('Destino no Notion', link),
     el('div', { className: 'rodape' }, testar, el('button', { type: 'button', textContent: 'Remover', onclick: () => linha.remove() }), resultado));
   linha.ler = () => ({ nome: nome.value.trim(), descricao: descricao.value.trim(), link: link.value.trim() });
   return linha;

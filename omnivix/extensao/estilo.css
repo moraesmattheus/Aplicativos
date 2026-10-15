@@ -1,30 +1,88 @@
+/* Estilo compartilhado do Omnivix (extensão e app de bandeja).
+   Regras de movimento: só animamos transform e opacity (rodam na placa de vídeo, sem recalcular layout),
+   nunca "transition: all", e tudo respeita "reduzir movimento" do Windows. */
+
 :root {
   color-scheme: dark;
-  /* Valores padrao (preto total). A pagina foco/tema.js troca estes valores pelas cores dos Ajustes. */
+  /* Valores padrão (preto total). A página foco/tema.js troca estes valores pelas cores dos Ajustes. */
   --fundo: #000; --superficie: #181616; --texto: #d0cdcd; --destaque: #dcdcdc; --sobre-destaque: #000;
   --raio: 14px; --perigo: #ff6b61; --aviso-fundo: #3a2f10; --aviso-texto: #ffd980;
   /* Derivadas: acompanham o texto e o fundo escolhidos. */
   --suave: color-mix(in srgb, var(--texto) 55%, var(--fundo));
   --borda: color-mix(in srgb, var(--texto) 20%, transparent);
   --destaque-texto: var(--sobre-destaque);
+
+  /* Cantos concêntricos: o raio de fora = raio de dentro + o espaço entre os dois (aqui, 6 px). */
+  --raio-interno: var(--raio);
+  --raio-externo: calc(var(--raio) + 6px);
+  /* Em fundo escuro, uma sombra é só um anel fino e claro (profundidade em camadas não aparece no preto). */
+  --anel: 0 0 0 1px rgb(255 255 255 / 0.08);
+  --anel-forte: 0 0 0 1px rgb(255 255 255 / 0.16);
+  --elevacao: 0 10px 28px -14px rgb(0 0 0 / 0.9);
+  /* Movimento: curva suave, sem "quicar". */
+  --curva: cubic-bezier(0.2, 0, 0, 1);
+  --rapido: 150ms;
+  --medio: 240ms;
 }
+
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--fundo); color: var(--texto); font: 14px/1.5 system-ui, sans-serif; }
-h1, h2, h3 { margin: 0 0 8px; line-height: 1.25; }
-h1 { font-size: 20px; } h2 { font-size: 16px; margin-top: 24px; } h3 { font-size: 14px; }
-a { color: var(--destaque); }
-button, input, select, textarea {
-  font: inherit; color: inherit; background: var(--superficie);
-  border: 1px solid var(--borda); border-radius: var(--raio); padding: 8px 12px;
+html { background: var(--fundo); scrollbar-color: color-mix(in srgb, var(--texto) 28%, transparent) transparent; scrollbar-width: thin; }
+body {
+  margin: 0; background: var(--fundo); color: var(--texto);
+  font: 14px/1.5 system-ui, "Segoe UI Variable", "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
 }
-button { cursor: pointer; }
-button:hover { border-color: var(--destaque); }
-button.principal { background: var(--destaque); color: var(--destaque-texto); border-color: var(--destaque); font-weight: 600; }
-button.perigo { background: var(--perigo); color: #fff; border-color: var(--perigo); font-weight: 600; }
-button:disabled { opacity: .5; cursor: not-allowed; }
+h1, h2, h3 { margin: 0 0 8px; line-height: 1.25; text-wrap: balance; }
+h1 { font-size: 20px; } h2 { font-size: 16px; margin-top: 24px; } h3 { font-size: 14px; }
+p { text-wrap: pretty; }
+a { color: var(--destaque); text-underline-offset: 3px; }
+::selection { background: color-mix(in srgb, var(--destaque) 35%, transparent); }
+
+/* ---------- Botões: sem borda, com anel de sombra; encolhem um pouco ao apertar ---------- */
+button {
+  font: inherit; color: inherit; background: var(--superficie);
+  border: 0; border-radius: var(--raio-interno); padding: 8px 14px; min-height: 40px;
+  box-shadow: var(--anel); cursor: pointer;
+  transition-property: transform, box-shadow, background-color, opacity;
+  transition-duration: var(--rapido); transition-timing-function: var(--curva);
+}
+button:hover:not(:disabled) { box-shadow: var(--anel-forte); background: color-mix(in srgb, var(--superficie) 88%, var(--texto)); }
+button:active:not(:disabled) { transform: scale(0.96); }
+button.principal { background: var(--destaque); color: var(--destaque-texto); font-weight: 600; box-shadow: none; }
+button.principal:hover:not(:disabled) { background: color-mix(in srgb, var(--destaque) 88%, white); box-shadow: none; }
+button.perigo { background: var(--perigo); color: #fff; font-weight: 600; box-shadow: none; }
+button.perigo:hover:not(:disabled) { background: color-mix(in srgb, var(--perigo) 88%, white); box-shadow: none; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---------- Campos de formulário: mantêm contorno (acessibilidade) ---------- */
+input, select, textarea {
+  font: inherit; color: inherit; background: var(--superficie);
+  border: 1px solid var(--borda); border-radius: var(--raio-interno); padding: 8px 12px; min-height: 40px;
+  transition-property: border-color, box-shadow; transition-duration: var(--rapido); transition-timing-function: var(--curva);
+}
+input:hover, select:hover, textarea:hover { border-color: color-mix(in srgb, var(--texto) 38%, transparent); }
 input[type=text], input[type=password], select, textarea { width: 100%; }
+input[type=checkbox] { min-height: 0; accent-color: var(--destaque); }
 textarea { resize: vertical; line-height: 1.4; }
+
+/* Foco visível para quem usa o teclado (nunca remover o contorno sem substituir). */
+:focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offset: 0; border-color: var(--destaque); }
+
 .suave { color: var(--suave); }
-.aviso { background: var(--aviso-fundo); color: var(--aviso-texto); padding: 8px 12px; border-radius: var(--raio); margin: 8px 0; }
+.aviso { background: var(--aviso-fundo); color: var(--aviso-texto); padding: 10px 14px; border-radius: var(--raio-interno); margin: 8px 0; }
 .barra { height: 6px; border-radius: 3px; background: var(--borda); overflow: hidden; }
-.barra > div { height: 100%; background: var(--destaque); transition: width .3s; }
+.barra > div { height: 100%; background: var(--destaque); transition: width 300ms var(--curva); }
+
+/* ---------- Entrada suave (só opacidade e posição) ---------- */
+@keyframes entra { from { opacity: 0; transform: translateY(12px); } }
+@keyframes aparece { from { opacity: 0; } }
+@media (prefers-reduced-motion: no-preference) {
+  body { animation: aparece 280ms var(--curva) both; } /* a janela "acende" em vez de surgir de repente */
+  .entra { animation: entra 320ms var(--curva) both; animation-delay: calc(var(--i, 0) * 60ms); }
+}
+
+/* Quem pediu menos movimento não vê nenhuma animação nem transição. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; transition-duration: 1ms !important; }
+}

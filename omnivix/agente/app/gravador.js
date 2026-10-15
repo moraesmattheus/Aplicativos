@@ -22,7 +22,13 @@ const abrirFluxos = async ({ config } = {}) => {
 
   // Opção 2 (padrão): áudio do computador inteiro. O pedido exige vídeo, mas só queremos o som.
   if (!fluxoAba) {
-    fluxoAba = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+    // O pedido exige vídeo, mas só queremos o som: pede o menor vídeo possível (1 quadro por segundo, minúsculo)
+    // para a captura de tela não pesar. Se o sistema recusar essas medidas, tenta do jeito comum.
+    try {
+      fluxoAba = await navigator.mediaDevices.getDisplayMedia({ video: { width: 16, height: 16, frameRate: 1 }, audio: true });
+    } catch {
+      fluxoAba = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+    }
     fluxoAba.getVideoTracks().forEach((faixa) => {
       faixa.stop();
       fluxoAba.removeTrack(faixa);

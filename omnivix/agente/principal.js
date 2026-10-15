@@ -29,6 +29,13 @@ protocol.registerSchemesAsPrivileged([
 
 if (!app.requestSingleInstanceLock()) app.quit(); // só uma cópia do agente por vez
 
+// Desenho mais fluido: rasterização e cópia de imagens pela placa de vídeo. O Chromium já acompanha a taxa de
+// atualização do monitor (60, 120, 144 Hz...), então não existe um "limite de 60" para tirar: o que importa é
+// cada quadro ser barato de desenhar, e por isso as animações usam só transform e opacity.
+app.commandLine.appendSwitch('enable-gpu-rasterization');
+app.commandLine.appendSwitch('ignore-gpu-blocklist');
+app.commandLine.appendSwitch('enable-zero-copy');
+
 let estado = { fase: 'ocioso', origem: null }; // fase: ocioso | iniciando | gravando | finalizando
 let bandeja = null;
 let janelaGravador = null;
@@ -64,8 +71,11 @@ const abrirJanela = (nome, hash = '') => {
   }
   const janela = new BrowserWindow({
     width: nome === 'opcoes' ? 760 : 1100, height: 820, title: 'Omnivix', icon: icone('icone.png'), autoHideMenuBar: true,
+    backgroundColor: '#000000', // sem isso a janela pisca branca antes de a página carregar
+    show: false, // só mostra quando a página já está pronta
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false }
   });
+  janela.once('ready-to-show', () => janela.show());
   janela.loadURL(`app://local/${nome}.html${hash ? `#${hash}` : ''}`);
   janelas[nome] = janela;
 };
@@ -263,7 +273,8 @@ app.whenReady().then(async () => {
   // Captura do áudio do computador: o app escolhe a fonte sozinho (sem janelinha de seleção).
   // "loopback" = tudo o que sai pelas caixas/fones, ou seja, a voz dos outros participantes.
   session.defaultSession.setDisplayMediaRequestHandler(async (_pedido, responder) => {
-    const [tela] = await desktopCapturer.getSources({ types: ['screen'] });
+    // thumbnailSize 0x0: não precisamos de miniatura nenhuma, e gerá-las travava o app na hora de gravar
+    const [tela] = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: 0, height: 0 }, fetchWindowIcons: false });
     responder({ video: tela, audio: 'loopback' });
   });
   // O microfone é liberado automaticamente para as páginas do próprio app.

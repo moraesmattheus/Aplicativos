@@ -12,6 +12,11 @@ const detalheEl = document.getElementById('detalhe');
 let urlAudio = null;
 let reuniaoAberta = null;
 let transcricaoAberta = null; // lembra se você abriu a transcrição (null = ainda não escolheu)
+const reduzido = matchMedia('(prefers-reduced-motion: reduce)').matches; // quem pediu menos movimento não vê animações
+let assinaturaLista = ''; // "impressão digital" do que a lista mostra: se não mudou, não redesenhamos
+let assinaturaDetalhe = ''; // idem para o painel da direita
+let primeiroDesenho = true; // a primeira exibição da página não usa transição (o navegador ainda está carregando)
+const itensJaVistos = new Set(); // só o que é NOVO na lista ganha animação de entrada
 
 const el = (tag, props = {}, ...filhos) => {
   const no = Object.assign(document.createElement(tag), props);
@@ -40,12 +45,19 @@ const statusDe = (r) => (estaInterrompida(r) ? 'interrompida' : r.status);
 
 const desenharLista = async () => {
   const reunioes = await listarReunioes();
-  const itens = reunioes.map((r) =>
-    el('button', {
-      className: `item${r.id === reuniaoAberta?.id ? ' ativo' : ''}`,
+  const assinatura = JSON.stringify([reuniaoAberta?.id, reunioes.map((r) => [r.id, r.titulo, statusDe(r)])]);
+  if (assinatura === assinaturaLista) return; // nada mudou: não mexe na tela (evita piscar e gasto à toa)
+  assinaturaLista = assinatura;
+  const itens = reunioes.map((r, posicao) => {
+    const novo = !itensJaVistos.has(r.id);
+    itensJaVistos.add(r.id);
+    const botao = el('button', {
+      className: `item${r.id === reuniaoAberta?.id ? ' ativo' : ''}${novo ? ' entra' : ''}`,
       onclick: () => (location.hash = r.id)
-    }, r.titulo, el('small', { textContent: `${new Date(r.inicio).toLocaleString('pt-BR')} ${ROTULOS[statusDe(r)] ?? ''}` }))
-  );
+    }, r.titulo, el('small', { textContent: `${new Date(r.inicio).toLocaleString('pt-BR')} ${ROTULOS[statusDe(r)] ?? ''}` }));
+    if (novo) botao.style.setProperty('--i', Math.min(posicao, 8)); // escalonado: cada item entra um pouco depois do anterior
+    return botao;
+  });
   listaEl.replaceChildren(...(itens.length ? itens : [el('p', { className: 'suave', textContent: 'Nenhuma reunião ainda. Grave a primeira pelo ícone da extensão!' })]));
 };
 
@@ -159,10 +171,10 @@ const painelAoVivo = async (reuniao, config) => {
 // Relógio do painel: avança a cada segundo sem redesenhar a tela inteira.
 setInterval(() => {
   const campo = document.getElementById('tempo-vivo');
-  if (campo && reuniaoAberta && reuniaoAberta.status === 'gravando') campo.textContent = formatarTempo((Date.now() - reuniaoAberta.inicio) / 1000);
+  if (!document.hidden && campo && reuniaoAberta && reuniaoAberta.status === 'gravando') campo.textContent = formatarTempo((Date.now() - reuniaoAberta.inicio) / 1000);
 }, 1000);
 
-const desenharDetalhe = async (reuniao) => {
+const desenharDetalhe = async (reuniao, { animar = false } = {}) => {
   const config = await carregarConfig();
   if (urlAudio) URL.revokeObjectURL(urlAudio);
   urlAudio = null;
@@ -255,30 +267,117 @@ const desenharDetalhe = async (reuniao) => {
     }
   }
 
+  const rolagem = detalheEl.scrollTop; // guarda onde você estava lendo
   detalheEl.replaceChildren(
     titulo,
     el('div', { className: 'suave', textContent: `${new Date(reuniao.inicio).toLocaleString('pt-BR')} · ${formatarTempo(reuniao.status === 'gravando' && !interrompida ? (Date.now() - reuniao.inicio) / 1000 : reuniao.duracaoSeg)} ${ROTULOS[statusDe(reuniao)] ?? ''}` }),
     el('div', {}, 'Tipo: ', seletorTipo),
     ...aoVivo, ...avisoInterrompida, acoes, ...linhaNotion, ...avisos, ...(aoVivo.length ? [] : blocoResumo), transcricao, ...blocoAudio
   );
+  if (animar && !reduzido) {
+    // Entrada escalonada: cada bloco aparece ~60 ms depois do anterior (só opacidade e posição).
+    [...detalheEl.children].forEach((bloco, posicao) => {
+      bloco.classList.add('entra');
+      bloco.style.setProperty('--i', Math.min(posicao, 8));
+    });
+  } else {
+    detalheEl.scrollTop = rolagem; // atualização automática: mantém o ponto de leitura
+  }
 };
 
-const abrirDoEndereco = async () => {
+const abrirDoEndereco = async ({ forcar = false } = {}) => {
   const id = location.hash.slice(1);
   if (id !== reuniaoAberta?.id) transcricaoAberta = null;
-  reuniaoAberta = id ? await obterReuniao(id) : null;
-  if (reuniaoAberta) await desenharDetalhe(reuniaoAberta);
-  else detalheEl.replaceChildren(el('p', { className: 'suave', textContent: 'Escolha uma reunião na lista.' }));
+  const proxima = id ? await obterReuniao(id) : null;
+  const mudouDeReuniao = (proxima?.id ?? null) !== (reuniaoAberta?.id ?? null);
+  // "Impressão digital" do que o painel mostra. O sinal de vida (atualizadaEm) fica de fora de propósito:
+  // ele muda a cada 15 s e não deve redesenhar a tela.
+  const assinatura = proxima
+    ? JSON.stringify([proxima.id, proxima.status, proxima.segmentos.length, proxima.titulo, proxima.avisos.length, Boolean(proxima.resumo),
+        proxima.resumo?.origem, proxima.categoria, proxima.notion?.url, proxima.temAudio, estaInterrompida(proxima)])
+    : 'vazio';
+  reuniaoAberta = proxima;
+
+  if (forcar || mudouDeReuniao || assinatura !== assinaturaDetalhe) {
+    assinaturaDetalhe = assinatura;
+    // Troca feita pelo usuário (clicar numa reunião): usa a transição de visualização do navegador (suave, na placa de vídeo).
+    const comTransicao = !primeiroDesenho && (forcar || mudouDeReuniao) && !reduzido && document.visibilityState === 'visible' && Boolean(document.startViewTransition);
+    const desenhar = async () => {
+      if (reuniaoAberta) await desenharDetalhe(reuniaoAberta, { animar: (forcar || mudouDeReuniao) && !comTransicao });
+      else detalheEl.replaceChildren(el('p', { className: 'suave', textContent: 'Escolha uma reunião na lista.' }));
+    };
+    if (comTransicao) {
+      // Se o navegador abortar a transição (janela escondida, outra transição em andamento...), a tela é desenhada do mesmo jeito.
+      let desenhado = false;
+      const desenharUmaVez = async () => {
+        if (desenhado) return;
+        desenhado = true;
+        await desenhar();
+      };
+      const transicao = document.startViewTransition(desenharUmaVez);
+      transicao.ready.catch(() => {});
+      transicao.updateCallbackDone.catch(() => {});
+      // Rede de segurança: se o navegador não conseguir rodar a transição (ex.: janela sem quadros), desenha mesmo assim em 0,5 s.
+      const reserva = setTimeout(desenharUmaVez, 500);
+      await transicao.finished.catch(() => {});
+      clearTimeout(reserva);
+    } else {
+      await desenhar();
+    }
+    primeiroDesenho = false;
+  }
   desenharLista();
 };
 
-window.addEventListener('hashchange', abrirDoEndereco);
+window.addEventListener('hashchange', () => abrirDoEndereco({ forcar: true }));
 await abrirDoEndereco();
 
 // Enquanto uma reunião está sendo gravada/processada, atualiza a tela a cada 3 segundos.
 setInterval(async () => {
-  if (!reuniaoAberta || !['gravando', 'processando'].includes(reuniaoAberta.status)) return;
-  if (document.activeElement?.tagName === 'TEXTAREA') return;
-  if (document.activeElement?.tagName === 'INPUT') return; // não atrapalha quem está digitando o título
-  abrirDoEndereco();
+  if (document.hidden) return; // janela minimizada ou escondida: não gasta processador
+  if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return; // não atrapalha quem está digitando
+  if (!reuniaoAberta || ['gravando', 'processando'].includes(reuniaoAberta.status)) await abrirDoEndereco();
 }, 3000);
+
+// ---------- Botão Gravar / Parar (só no app de bandeja, onde window.agente existe) ----------
+const botaoGravar = document.getElementById('btn-gravar');
+if (window.agente?.alternarGravacao && botaoGravar) {
+  botaoGravar.hidden = false;
+  const textoBotao = botaoGravar.querySelector('.gravar-texto');
+  const RESTO = { ocioso: 'Gravar agora', iniciando: 'Iniciando...', gravando: 'Parar gravação', finalizando: 'Finalizando...' };
+  let faseAtual = 'ocioso';
+  let aguardando = false; // true entre o clique e a resposta do app
+
+  const mostrar = (fase) => {
+    faseAtual = fase;
+    const ocupado = fase === 'iniciando' || fase === 'finalizando';
+    botaoGravar.classList.toggle('gravando', fase === 'gravando');
+    botaoGravar.classList.toggle('ocupado', ocupado);
+    botaoGravar.disabled = ocupado;
+    textoBotao.textContent = RESTO[fase] ?? RESTO.ocioso;
+  };
+
+  const atualizarBotao = async () => {
+    if (document.hidden || aguardando) return;
+    try {
+      mostrar((await window.agente.estado()).fase);
+    } catch {
+      /* o app ainda está iniciando: tenta de novo no próximo ciclo */
+    }
+  };
+
+  botaoGravar.addEventListener('click', async () => {
+    if (aguardando) return; // clique duplo ligaria e desligaria a gravação sem você perceber
+    aguardando = true;
+    mostrar(faseAtual === 'gravando' ? 'finalizando' : 'iniciando'); // resposta imediata, sem esperar o app
+    try {
+      await window.agente.alternarGravacao();
+    } finally {
+      aguardando = false;
+      atualizarBotao();
+    }
+  });
+
+  setInterval(atualizarBotao, 1000);
+  atualizarBotao();
+}
