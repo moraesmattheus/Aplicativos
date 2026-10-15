@@ -75,6 +75,18 @@
   </select>
   <label class="marcar"><input type="checkbox" id="identificarFalantes"><span>Separar cada participante (“Pessoa 1”, “Pessoa 2”...)<small>No fim da reunião, envia o ÁUDIO da aba ao Gemini (precisa da chave do Gemini abaixo, ~80 min no máximo). Seu microfone sempre aparece como “Você”, sem enviar nada.</small></span></label>
   <label class="marcar"><input type="checkbox" id="gravarMicrofone"><span>Gravar também o meu microfone<small>Desligue em aulas em que você fica mudo. Assim o programa não abre o microfone e o áudio do seu fone Bluetooth não muda de qualidade.</small></span></label>
+  <fieldset id="boxDispositivos">
+    <label>Dispositivos de áudio (só para este app)<small>Não muda o padrão do Windows nem o som que você ouve. Clique em "Carregar dispositivos" para listar o que existe no seu computador (isso abre o microfone por um instante).</small></label>
+    <p><button type="button" id="carregarDispositivos">Carregar dispositivos</button> <span id="statusDispositivos" class="suave"></span></p>
+
+    <label for="microfoneId">Microfone para a sua voz</label>
+    <select id="microfoneId"><option value="">Padrão do Windows</option></select>
+    <p><button type="button" id="testarMicrofone">Testar este microfone</button> <span id="nivelMicrofone" class="suave"></span></p>
+
+    <label for="entradaOutrosId">De onde vem o áudio dos outros participantes<small>"Áudio do computador" captura tudo que toca no PC. Se o seu som ficar estranho com isso (ex.: com FxSound), escolha uma entrada, como o Virtual Audio Cable, e mande o Zoom tocar nela.</small></label>
+    <select id="entradaOutrosId"><option value="">Áudio do computador (padrão)</option></select>
+    <p><button type="button" id="testarOutros">Testar esta fonte</button> <span id="nivelOutros" class="suave"></span></p>
+  </fieldset>
   <label class="marcar"><input type="checkbox" id="transcreverSoNoFim"><span>Transcrever só depois que a reunião acabar<small>Evita gastar processador durante a chamada (que pode deixar o áudio ou o vídeo travando). O texto aparece alguns minutos depois de parar.</small></span></label>
   <label class="marcar"><input type="checkbox" id="salvarAudio"><span>Guardar o áudio da reunião<small>Para ouvir/baixar depois. Fica só no seu navegador.</small></span></label>
 

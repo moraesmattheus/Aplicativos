@@ -3,25 +3,45 @@
 
 import { configurar, iniciar, finalizar } from './gravacao.js';
 
+// Sem tratamento nenhum do navegador: o som sai como entrou (eco, ruído e ganho ficam por conta de quem fala).
+const SEM_PROCESSAMENTO = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+
 const abrirFluxos = async ({ config } = {}) => {
-  // Áudio do computador inteiro (a voz dos outros). O pedido exige vídeo, mas só queremos o som.
-  const fluxoAba = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
-  fluxoAba.getVideoTracks().forEach((faixa) => {
-    faixa.stop();
-    fluxoAba.removeTrack(faixa);
-  });
-  if (!fluxoAba.getAudioTracks().length) {
-    throw new Error('não consegui capturar o áudio do computador (no Windows precisa de 10 ou 11; no macOS, de permissão de gravação de tela)');
+  const avisos = [];
+  let fluxoAba = null;
+
+  // Áudio dos outros, opção 1: uma ENTRADA escolhida por você (ex.: Virtual Audio Cable). Não captura a saída
+  // do Windows, então não mexe no som que você ouve.
+  if (config?.entradaOutrosId) {
+    try {
+      fluxoAba = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: { exact: config.entradaOutrosId }, ...SEM_PROCESSAMENTO } });
+    } catch {
+      avisos.push(`Não consegui abrir a entrada "${config.entradaOutrosNome || 'escolhida'}"; usei o áudio do computador.`);
+    }
   }
 
-  // Seu microfone.
-  const avisos = [];
+  // Opção 2 (padrão): áudio do computador inteiro. O pedido exige vídeo, mas só queremos o som.
+  if (!fluxoAba) {
+    fluxoAba = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+    fluxoAba.getVideoTracks().forEach((faixa) => {
+      faixa.stop();
+      fluxoAba.removeTrack(faixa);
+    });
+    if (!fluxoAba.getAudioTracks().length) {
+      throw new Error('não consegui capturar o áudio do computador (no Windows precisa de 10 ou 11; no macOS, de permissão de gravação de tela)');
+    }
+  }
+
+  // Seu microfone: o escolhido nas opções (ou o padrão do Windows, se você não escolheu nenhum).
   let fluxoMic = null;
   try {
     if (config?.gravarMicrofone === false) throw new Error('microfone desligado nas configurações');
-    fluxoMic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+    const escolhido = config?.microfoneId ? { deviceId: { exact: config.microfoneId } } : {};
+    fluxoMic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, ...escolhido } });
   } catch {
-    avisos.push('Não consegui acessar o microfone: gravei só o áudio do computador. No Windows, veja Configurações > Privacidade > Microfone.');
+    avisos.push(config?.gravarMicrofone === false
+      ? 'Microfone desligado nas configurações: gravei só o áudio dos outros.'
+      : 'Não consegui acessar o microfone: gravei só o áudio dos outros. Veja Configurações do Windows > Privacidade > Microfone, ou a escolha do microfone nas opções do app.');
   }
   return { fluxoAba, fluxoMic, avisos };
 };

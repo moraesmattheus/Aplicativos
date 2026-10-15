@@ -47,7 +47,84 @@ const mostrarCaixaDoProvedor = () => {
   $('boxOllama').hidden = $('provedorResumo').value !== 'ollama';
 };
 
+// ---------- Dispositivos de áudio (só para este app) ----------
+
+// Põe uma opção "salva" no seletor (para o nome aparecer mesmo antes de carregar a lista).
+const opcaoSalva = (seletor, id, nome) => {
+  if (id && ![...seletor.options].some((o) => o.value === id)) seletor.append(el('option', { value: id, textContent: `${nome || 'dispositivo salvo'} (salvo)` }));
+  seletor.value = id || '';
+};
+
+// Mede o volume mais alto por 2,5 s: "tem sinal" ou "silêncio".
+const medirNivel = async (abrirFluxo) => {
+  const fluxo = await abrirFluxo();
+  let ctx;
+  try {
+    ctx = new AudioContext({ sinkId: { type: 'none' } }); // sem abrir saída de áudio
+  } catch {
+    ctx = new AudioContext();
+  }
+  const analisador = ctx.createAnalyser();
+  ctx.createMediaStreamSource(fluxo).connect(analisador);
+  const amostras = new Float32Array(analisador.fftSize);
+  let pico = 0;
+  const fim = Date.now() + 2500;
+  while (Date.now() < fim) {
+    analisador.getFloatTimeDomainData(amostras);
+    for (const v of amostras) pico = Math.max(pico, Math.abs(v));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  fluxo.getTracks().forEach((faixa) => faixa.stop());
+  await ctx.close();
+  return pico;
+};
+
+const textoDoNivel = (pico) => (pico < 0.005 ? 'sem som (silêncio). Fale ou toque algo e teste de novo.' : `ok, sinal detectado (${Math.round(Math.min(1, pico) * 100)}%)`);
+
+const testar = async (botao, destino, abrirFluxo) => {
+  botao.disabled = true;
+  destino.textContent = 'testando por 2 segundos...';
+  try {
+    destino.textContent = textoDoNivel(await medirNivel(abrirFluxo));
+  } catch (erro) {
+    destino.textContent = `não abriu: ${erro.message}`;
+  } finally {
+    botao.disabled = false;
+  }
+};
+
+$('carregarDispositivos').addEventListener('click', async () => {
+  const aviso = $('statusDispositivos');
+  aviso.textContent = 'carregando...';
+  try {
+    // Os nomes só aparecem depois de uma permissão de microfone: abre o padrão por um instante e fecha.
+    (await navigator.mediaDevices.getUserMedia({ audio: true })).getTracks().forEach((faixa) => faixa.stop());
+    const entradas = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'audioinput' && d.deviceId !== 'default' && d.deviceId !== 'communications');
+    const preencher = (seletor, primeira, escolhido) => {
+      seletor.replaceChildren(el('option', { value: '', textContent: primeira }), ...entradas.map((d) => el('option', { value: d.deviceId, textContent: d.label || 'Entrada sem nome' })));
+      seletor.value = entradas.some((d) => d.deviceId === escolhido) ? escolhido : '';
+    };
+    preencher($('microfoneId'), 'Padrão do Windows', $('microfoneId').value);
+    preencher($('entradaOutrosId'), 'Áudio do computador (padrão)', $('entradaOutrosId').value);
+    aviso.textContent = `${entradas.length} entradas encontradas`;
+  } catch (erro) {
+    aviso.textContent = `não consegui listar: ${erro.message}`;
+  }
+});
+
+$('testarMicrofone').addEventListener('click', () => testar($('testarMicrofone'), $('nivelMicrofone'), () =>
+  navigator.mediaDevices.getUserMedia({ audio: $('microfoneId').value ? { deviceId: { exact: $('microfoneId').value } } : true })));
+
+$('testarOutros').addEventListener('click', () => testar($('testarOutros'), $('nivelOutros'), async () => {
+  if ($('entradaOutrosId').value) return navigator.mediaDevices.getUserMedia({ audio: { deviceId: { exact: $('entradaOutrosId').value }, echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+  const fluxo = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }); // áudio do computador
+  fluxo.getVideoTracks().forEach((faixa) => { faixa.stop(); fluxo.removeTrack(faixa); });
+  return fluxo;
+}));
+
 const config = await carregarConfig();
+opcaoSalva($('microfoneId'), config.microfoneId, config.microfoneNome);
+opcaoSalva($('entradaOutrosId'), config.entradaOutrosId, config.entradaOutrosNome);
 CAMPOS_TEXTO.forEach((campo) => ($(campo).value = config[campo]));
 CAMPOS_MARCAR.forEach((campo) => ($(campo).checked = config[campo]));
 $('ignorarApps').value = config.ignorarApps.join('\n');
@@ -65,6 +142,11 @@ $('salvar').addEventListener('click', async () => {
   CAMPOS_MARCAR.forEach((campo) => (nova[campo] = $(campo).checked));
   nova.ignorarApps = $('ignorarApps').value.split('\n').map((l) => l.trim().toLowerCase()).filter(Boolean);
   nova.processosDeReuniao = $('processosDeReuniao').value.split('\n').map((l) => l.trim().toLowerCase()).filter(Boolean);
+  const nomeEscolhido = (seletor) => (seletor.value ? seletor.selectedOptions[0].textContent.replace(/ \(salvo\)$/, '') : '');
+  nova.microfoneId = $('microfoneId').value;
+  nova.microfoneNome = nomeEscolhido($('microfoneId'));
+  nova.entradaOutrosId = $('entradaOutrosId').value;
+  nova.entradaOutrosNome = nomeEscolhido($('entradaOutrosId'));
   nova.segundosParaIniciar = config.segundosParaIniciar;
   nova.segundosParaParar = config.segundosParaParar;
   nova.destinos = [...$('listaDestinos').children].map((linha) => linha.ler()).filter((d) => d.nome);

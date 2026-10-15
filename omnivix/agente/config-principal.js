@@ -30,6 +30,9 @@ const CONFIG_PADRAO = {
   groqModelo: 'whisper-large-v3-turbo',
   usarGpu: true,
   gravarMicrofone: true, // false = não abre o microfone (só o áudio do computador)
+  // Dispositivos só para este app (não mudam o padrão do Windows). Vazio = padrão.
+  microfoneId: '', microfoneNome: '', // qual microfone grava a SUA voz
+  entradaOutrosId: '', entradaOutrosNome: '', // vazio = áudio do computador; senão, uma ENTRADA (ex.: Virtual Audio Cable)
   transcreverSoNoFim: true, // não pesa no computador durante a chamada; transcreve quando ela acaba
   identificarFalantes: false,
   salvarAudio: true,
