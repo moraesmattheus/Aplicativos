@@ -40,6 +40,17 @@
   .gravar.ocupado .gravar-ponto { background: transparent; border: 2px solid var(--suave); border-top-color: transparent; border-radius: 50%; animation: gira 700ms linear infinite; }
   @keyframes gira { to { transform: rotate(360deg); } }
 
+  /* Respiração do botão enquanto grava: encolhe um pouco e volta, com um brilho vermelho que acende e apaga por dentro. */
+  .gravar::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; z-index: -1;
+    background: radial-gradient(200px 70px at 18% 50%, rgb(255 255 255 / 0.28), transparent 70%); }
+  @keyframes respira-botao { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.975); } }
+  @keyframes brilha-botao { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+  @media (prefers-reduced-motion: no-preference) {
+    .gravar.gravando { animation: respira-botao 2.8s ease-in-out infinite; }
+    .gravar.gravando:active { animation-play-state: paused; } /* ao apertar, vale o encolher do clique */
+    .gravar.gravando::after { animation: brilha-botao 2.8s ease-in-out infinite; }
+  }
+
   main { padding: 24px 32px 64px 12px; overflow-y: auto; min-height: 0; overscroll-behavior: contain; view-transition-name: detalhe; }
   main > * { max-width: 820px; }
   .titulo { font-size: 22px; font-weight: 700; width: 100%; border: 1px solid transparent; background: transparent; padding: 4px 8px; margin-left: -8px; }

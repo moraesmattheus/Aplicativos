@@ -70,6 +70,19 @@
   .fixa { position: absolute; top: 6px; right: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--azul); opacity: 0; transition: opacity 150ms var(--curva); }
   .pilula.fixada .fixa { opacity: 0.9; }
 
+  /* ---- Respiração: enquanto grava, a pílula compacta encolhe um pouquinho e volta, com um brilho discreto por dentro.
+     Só transform e opacity (rodam na placa de vídeo). Em alerta, o ritmo é mais rápido e o brilho é âmbar. ---- */
+  .pilula::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
+    background: radial-gradient(120px 60px at 22% 50%, rgb(255 69 58 / 0.42), transparent 70%); }
+  .pilula.alerta::after { background: radial-gradient(120px 60px at 22% 50%, rgb(255 176 32 / 0.42), transparent 70%); }
+  @keyframes respira { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.93); } }
+  @keyframes brilha { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+  @media (prefers-reduced-motion: no-preference) {
+    .pilula.compacta.gravando, .pilula.compacta.alerta { transform-origin: 100% 100%; animation: respira 2.8s ease-in-out infinite; }
+    .pilula.compacta.gravando::after, .pilula.compacta.alerta::after { animation: brilha 2.8s ease-in-out infinite; }
+    .pilula.compacta.alerta, .pilula.compacta.alerta::after { animation-duration: 1.3s; }
+  }
+
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; } }
 </style>
 <body>
