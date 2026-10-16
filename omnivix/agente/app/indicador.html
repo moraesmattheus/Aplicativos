@@ -3,23 +3,33 @@
 <meta charset="utf-8">
 <title>Indicador de gravação · Omnivix</title>
 <style>
-  /* Pílula flutuante de gravação. Janela transparente: só a pílula aparece. Só animamos transform e opacity. */
-  :root { --fundo: rgb(12 12 14 / 0.92); --texto: #ececee; --suave: #9a9aa3; --vermelho: #ff453a; --ambar: #ffb020; --azul: #6aa7ff; --cinza: #8e8e96; --curva: cubic-bezier(0.2, 0, 0, 1); }
+  /* Pílula flutuante de gravação, com dois tamanhos: compacta (bolinha + tempo) e expandida (volume, estado e alertas).
+     A janela é transparente: só a pílula aparece. Só animamos transform e opacity (e o tamanho da própria pílula). */
+  :root {
+    --texto: #ececee; --suave: #a3a3ad; --vermelho: #ff453a; --ambar: #ffb020; --azul: #6aa7ff; --cinza: #8e8e96;
+    --curva: cubic-bezier(0.2, 0, 0, 1);
+    --largura-compacta: 128px; --altura-compacta: 40px; --largura-grande: 330px; --altura-grande: 72px;
+  }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; user-select: none; }
   body { font: 13px/1.3 system-ui, "Segoe UI Variable", "Segoe UI", sans-serif; color: var(--texto); -webkit-font-smoothing: antialiased; }
 
+  /* A pílula fica sempre colada no canto de baixo à direita da janela e cresce para cima e para a esquerda. */
   .pilula {
-    -webkit-app-region: drag; /* dá para arrastar para onde atrapalhar menos */
-    display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px;
-    height: 100%; padding: 8px 12px; border-radius: 22px; background: var(--fundo);
-    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.12), 0 10px 28px -10px rgb(0 0 0 / 0.9);
-    transition: box-shadow 200ms var(--curva), transform 200ms var(--curva), opacity 200ms var(--curva);
+    position: absolute; right: 0; bottom: 0; overflow: hidden; cursor: default;
+    width: var(--largura-compacta); height: var(--altura-compacta); border-radius: 20px;
+    /* vidro acetinado: gradiente translúcido, linha fina de luz em volta e no topo */
+    background:
+      linear-gradient(180deg, rgb(255 255 255 / 0.16) 0%, rgb(255 255 255 / 0.04) 55%, rgb(255 255 255 / 0.08) 100%),
+      rgb(14 14 18 / 0.86);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.13), inset 0 1px 0 rgb(255 255 255 / 0.2), 0 10px 26px -10px rgb(0 0 0 / 0.9);
+    transition: width 240ms var(--curva), height 240ms var(--curva), border-radius 240ms var(--curva), box-shadow 200ms var(--curva);
   }
-  .pilula.alerta { box-shadow: 0 0 0 1.5px var(--ambar), 0 10px 28px -10px rgb(0 0 0 / 0.9); }
-  .pilula.falha { box-shadow: 0 0 0 1.5px var(--vermelho), 0 10px 28px -10px rgb(0 0 0 / 0.9); }
+  .pilula.expandida { width: var(--largura-grande); height: var(--altura-grande); border-radius: 24px; }
+  .pilula.alerta { box-shadow: inset 0 0 0 1.5px var(--ambar), inset 0 1px 0 rgb(255 255 255 / 0.2), 0 10px 26px -10px rgb(0 0 0 / 0.9); }
+  .pilula.falha { box-shadow: inset 0 0 0 1.5px var(--vermelho), inset 0 1px 0 rgb(255 255 255 / 0.2), 0 10px 26px -10px rgb(0 0 0 / 0.9); }
 
-  .ponto { width: 14px; height: 14px; border-radius: 50%; background: var(--cinza); transition: background-color 200ms var(--curva); }
+  .ponto { flex: none; width: 12px; height: 12px; border-radius: 50%; background: var(--cinza); transition: background-color 200ms var(--curva); }
   .gravando .ponto { background: var(--vermelho); animation: pulsa 1.4s ease-in-out infinite; }
   .alerta .ponto { background: var(--ambar); animation: pulsa 0.8s ease-in-out infinite; }
   .falha .ponto { background: var(--vermelho); }
@@ -27,41 +37,63 @@
   @keyframes pulsa { 50% { transform: scale(0.72); opacity: 0.55; } }
   @keyframes gira { to { transform: rotate(360deg); } }
 
-  .textos { min-width: 0; }
+  /* ---- Vista compacta: bolinha + tempo (ou uma palavra curta) ---- */
+  .vista { position: absolute; inset: 0; display: flex; align-items: center; transition: opacity 180ms var(--curva); }
+  .compacta-vista { gap: 9px; padding: 0 14px; justify-content: center; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; white-space: nowrap; }
+  .grande-vista { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; padding: 8px 12px 8px 14px; opacity: 0; pointer-events: none; }
+  .pilula.expandida .compacta-vista { opacity: 0; pointer-events: none; }
+  .pilula.expandida .grande-vista { opacity: 1; pointer-events: auto; transition-delay: 70ms; }
+
+  /* ---- Vista expandida ---- */
+  .textos { -webkit-app-region: drag; min-width: 0; } /* arraste por aqui para mover a pílula */
   .linha1 { display: flex; align-items: baseline; gap: 8px; font-weight: 700; letter-spacing: 0.02em; }
-  .tempo { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--texto); }
+  .tempo { font-variant-numeric: tabular-nums; font-weight: 600; }
   .linha2 { color: var(--suave); font-size: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .alerta .linha2 { color: var(--ambar); } .falha .linha2 { color: var(--vermelho); }
 
-  /* Barrinhas de volume (reunião e microfone). scaleY roda na placa de vídeo, sem recalcular layout. */
   .niveis { display: flex; gap: 4px; height: 26px; align-items: flex-end; }
   .nivel { width: 6px; height: 100%; border-radius: 3px; background: rgb(255 255 255 / 0.1); overflow: hidden; position: relative; }
   .nivel > i { position: absolute; inset: 0; background: #5ad17a; transform-origin: bottom; transform: scaleY(0); transition: transform 120ms linear; }
   .nivel.mic > i { background: #6aa7ff; }
   .nivel.desligado { opacity: 0.25; }
+  .vazio .niveis { display: none; }
 
-  .abrir { -webkit-app-region: no-drag; border: 0; background: rgb(255 255 255 / 0.1); color: var(--texto); width: 28px; height: 28px; border-radius: 50%; font-size: 14px; cursor: pointer;
-    transition: transform 150ms var(--curva), background-color 150ms var(--curva); }
-  .abrir:hover { background: rgb(255 255 255 / 0.2); }
+  .lado { display: flex; align-items: center; gap: 8px; }
+  .abrir {
+    border: 0; color: var(--texto); width: 28px; height: 28px; border-radius: 50%; font-size: 14px; cursor: pointer;
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.18), rgb(255 255 255 / 0.06)); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+    transition: transform 150ms var(--curva), box-shadow 150ms var(--curva);
+  }
+  .abrir:hover { box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.28); }
   .abrir:active { transform: scale(0.94); }
   .abrir:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }
-  .vazio .niveis { display: none; }
+  .fixa { position: absolute; top: 6px; right: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--azul); opacity: 0; transition: opacity 150ms var(--curva); }
+  .pilula.fixada .fixa { opacity: 0.9; }
 
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; } }
 </style>
 <body>
-  <div class="pilula" id="pilula" role="status" aria-live="polite">
-    <span class="ponto" id="ponto" aria-hidden="true"></span>
-    <div class="textos">
-      <div class="linha1"><span id="titulo">REC</span><span class="tempo" id="tempo"></span></div>
-      <div class="linha2" id="detalhe"></div>
+  <div class="pilula compacta" id="pilula" role="status" aria-live="polite" title="Passe o mouse para ver detalhes. Clique para fixar aberta.">
+    <span class="fixa" aria-hidden="true"></span>
+
+    <div class="vista compacta-vista" id="vista-compacta">
+      <span class="ponto" aria-hidden="true"></span>
+      <span id="texto-compacto">REC</span>
     </div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <div class="niveis" id="niveis" aria-hidden="true">
-        <span class="nivel aba" title="Áudio da reunião"><i id="barra-aba"></i></span>
-        <span class="nivel mic" title="Seu microfone"><i id="barra-mic"></i></span>
+
+    <div class="vista grande-vista" id="vista-grande">
+      <span class="ponto" aria-hidden="true" style="align-self:center"></span>
+      <div class="textos">
+        <div class="linha1"><span id="titulo">REC</span><span class="tempo" id="tempo"></span></div>
+        <div class="linha2" id="detalhe"></div>
       </div>
-      <button class="abrir" id="abrir" type="button" title="Abrir o painel das reuniões" aria-label="Abrir o painel das reuniões">↗</button>
+      <div class="lado">
+        <div class="niveis" id="niveis" aria-hidden="true">
+          <span class="nivel aba" title="Áudio da reunião"><i id="barra-aba"></i></span>
+          <span class="nivel mic" title="Seu microfone"><i id="barra-mic"></i></span>
+        </div>
+        <button class="abrir" id="abrir" type="button" title="Abrir o painel das reuniões" aria-label="Abrir o painel das reuniões">↗</button>
+      </div>
     </div>
   </div>
   <script src="indicador.js"></script>

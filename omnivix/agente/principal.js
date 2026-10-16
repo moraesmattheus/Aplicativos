@@ -277,14 +277,21 @@ const criarBandeja = () => {
 
 // ---------- Indicador flutuante "REC" ----------
 
-const LARGURA_INDICADOR = 330;
-const ALTURA_INDICADOR = 72;
+// Dois tamanhos: compacta (bolinha + tempo) e expandida (volume, estado e alertas).
+const LARGURA_COMPACTA = 128;
+const ALTURA_COMPACTA = 40;
+const LARGURA_GRANDE = 330;
+const ALTURA_GRANDE = 72;
+let indicadorExpandido = false;
+let indicadorFixado = false; // true = você clicou: fica aberta até clicar de novo
+let indicadorSaiuEm = 0; // quando o mouse saiu de cima (para esperar um pouco antes de encolher)
+let temporizadorEncolher = null;
 
 const criarIndicador = () => {
   const area = screen.getPrimaryDisplay().workArea;
   indicador = new BrowserWindow({
-    width: LARGURA_INDICADOR, height: ALTURA_INDICADOR,
-    x: area.x + area.width - LARGURA_INDICADOR - 16, y: area.y + area.height - ALTURA_INDICADOR - 16,
+    width: LARGURA_COMPACTA, height: ALTURA_COMPACTA,
+    x: area.x + area.width - LARGURA_COMPACTA - 16, y: area.y + area.height - ALTURA_COMPACTA - 16,
     frame: false, transparent: true, resizable: false, hasShadow: false, skipTaskbar: true, show: false,
     focusable: false, // nunca rouba o foco do Zoom/Teams
     alwaysOnTop: true,
@@ -297,7 +304,7 @@ const criarIndicador = () => {
 
 const dadosDoIndicador = () => ({
   fase: estado.fase, origem: estado.origem, inicioMs: estado.inicioMs ?? null, saude: estado.saude ?? null,
-  alerta: alertaAtual(), falha: falhaAtiva(), esperando: esperandoAtivo()
+  alerta: alertaAtual(), falha: falhaAtiva(), esperando: esperandoAtivo(), expandido: indicadorExpandido, fixado: indicadorFixado
 });
 
 // Mostra, esconde e atualiza a pílula conforme o estado real da gravação.
@@ -307,6 +314,12 @@ const atualizarIndicador = () => {
   if (process.env.AGENTE_DEBUG) console.log('indicador:', visivel ? 'visível' : 'oculto', '| fase:', estado.fase, '| alerta:', alertaAtual()?.tipo ?? '-', '| nível reunião:', estado.saude?.nivelAba?.toFixed(2) ?? '-', '| sem som há:', estado.saude?.semSomAbaSeg ?? '-', 's');
   if (!visivel) {
     if (indicador.isVisible()) indicador.hide();
+    if (indicadorExpandido || indicadorFixado) {
+      indicadorFixado = false;
+      indicadorExpandido = false;
+      const b = indicador.getBounds();
+      indicador.setBounds({ x: b.x + b.width - LARGURA_COMPACTA, y: b.y + b.height - ALTURA_COMPACTA, width: LARGURA_COMPACTA, height: ALTURA_COMPACTA });
+    }
     return;
   }
   if (!indicador.isVisible()) indicador.showInactive(); // aparece sem tirar o foco de quem está na reunião
@@ -314,6 +327,49 @@ const atualizarIndicador = () => {
 };
 
 ipcMain.handle('indicador:estado', () => dadosDoIndicador());
+ipcMain.on('indicador:fixar', () => {
+  indicadorFixado = !indicadorFixado;
+  atualizarIndicador();
+});
+
+// Expande ou encolhe a pílula, sempre ancorada no canto de baixo à direita (onde ela estiver). A janela é transparente:
+// ao expandir ela cresce na hora e a pílula anima até preencher; ao encolher a pílula anima e só depois a janela diminui.
+const definirIndicadorExpandido = (expandir) => {
+  if (!indicador || indicador.isDestroyed() || expandir === indicadorExpandido) return;
+  clearTimeout(temporizadorEncolher);
+  const b = indicador.getBounds();
+  const direita = b.x + b.width;
+  const baixo = b.y + b.height;
+  if (expandir) {
+    indicador.setBounds({ x: direita - LARGURA_GRANDE, y: baixo - ALTURA_GRANDE, width: LARGURA_GRANDE, height: ALTURA_GRANDE });
+    indicadorExpandido = true;
+    atualizarIndicador();
+  } else {
+    indicadorExpandido = false;
+    atualizarIndicador();
+    temporizadorEncolher = setTimeout(() => {
+      if (indicador.isDestroyed() || indicadorExpandido) return;
+      const atual = indicador.getBounds();
+      indicador.setBounds({ x: atual.x + atual.width - LARGURA_COMPACTA, y: atual.y + atual.height - ALTURA_COMPACTA, width: LARGURA_COMPACTA, height: ALTURA_COMPACTA });
+    }, 280);
+  }
+};
+
+// Roda a cada 120 ms só enquanto a pílula está visível. Decide pelo local do mouse na TELA (a página não recebe eventos de
+// mouse sobre a área de arraste, então não dá para decidir por ela). Abre se: mouse em cima, clique que fixou, ou problema.
+const decidirTamanhoDoIndicador = () => {
+  if (!indicador || indicador.isDestroyed() || !indicador.isVisible()) return;
+  const cursor = screen.getCursorScreenPoint();
+  const b = indicador.getBounds();
+  const largura = indicadorExpandido ? LARGURA_GRANDE : LARGURA_COMPACTA;
+  const altura = indicadorExpandido ? ALTURA_GRANDE : ALTURA_COMPACTA;
+  const emCima = cursor.x >= b.x + b.width - largura && cursor.x <= b.x + b.width && cursor.y >= b.y + b.height - altura && cursor.y <= b.y + b.height;
+  if (emCima) indicadorSaiuEm = 0;
+  else if (!indicadorSaiuEm) indicadorSaiuEm = Date.now();
+  const urgente = Boolean(falhaAtiva() || alertaAtual() || esperandoAtivo());
+  const esperandoParaEncolher = indicadorExpandido && indicadorSaiuEm && Date.now() - indicadorSaiuEm < 800;
+  definirIndicadorExpandido(Boolean(urgente || indicadorFixado || emCima || esperandoParaEncolher));
+};
 
 // ---------- Gatilhos automáticos ----------
 
@@ -451,6 +507,7 @@ app.whenReady().then(async () => {
   criarJanelaGravador();
   criarBandeja();
   criarIndicador();
+  setInterval(decidirTamanhoDoIndicador, 120);
   await aplicarConfig();
   // Vigia a cada 2 s: atualiza o tempo na bandeja, percebe um gravador travado e mantém o indicador em dia.
   setInterval(() => {
