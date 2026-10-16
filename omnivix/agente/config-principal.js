@@ -29,6 +29,7 @@ const CONFIG_PADRAO = {
   groqKey: '',
   groqModelo: 'whisper-large-v3-turbo',
   usarGpu: true,
+  fecharMinimiza: true, // fechar a janela (X) só minimiza: o botão do app continua na barra de tarefas
   mostrarIndicador: true, // janelinha "REC" sempre visível enquanto grava (escondida de compartilhamento de tela)
   gravarMicrofone: true, // false = não abre o microfone (só o áudio do computador)
   // Dispositivos só para este app (não mudam o padrão do Windows). Vazio = padrão.

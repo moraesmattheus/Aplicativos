@@ -46,6 +46,8 @@ let detector = null;
 let agenda = null;
 let indicador = null; // janelinha flutuante "REC": o jeito mais seguro de saber, de relance, que está gravando
 let mostrarIndicador = true;
+let fecharMinimiza = true; // fechar a janela só minimiza (mantém o botão na barra de tarefas)
+let saindo = false; // true quando o usuário escolheu Sair: aí fecha de verdade
 let ultimoSinalGravador = 0; // quando o gravador falou pela última vez (se ficar mudo, ele travou)
 let ultimoAlertaAvisado = null; // para avisar de cada problema uma vez só
 
@@ -68,9 +70,10 @@ const icone = (nome) => nativeImage.createFromPath(path.join(__dirname, 'assets'
 
 // ---------- Janelas ----------
 
-const abrirJanela = (nome, hash = '') => {
+const abrirJanela = (nome, hash = '', { minimizada = false } = {}) => {
   if (janelas[nome] && !janelas[nome].isDestroyed()) {
     janelas[nome].loadURL(`app://local/${nome}.html${hash ? `#${hash}` : ''}`);
+    if (janelas[nome].isMinimized()) janelas[nome].restore();
     janelas[nome].show();
     janelas[nome].focus();
     return;
@@ -81,7 +84,23 @@ const abrirJanela = (nome, hash = '') => {
     show: false, // só mostra quando a página já está pronta
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false }
   });
-  janela.once('ready-to-show', () => janela.show());
+  janela.once('ready-to-show', () => {
+    if (minimizada) {
+      janela.showInactive(); // aparece só como botão na barra de tarefas, sem roubar o foco
+      janela.minimize();
+    } else {
+      janela.show();
+    }
+    atualizarBarraDeTarefas();
+  });
+  // No X: se "manter na barra de tarefas" estiver ligado, só minimiza (o botão continua lá). "Sair" no menu da bandeja fecha de vez.
+  if (nome === 'reunioes') {
+    janela.on('close', (evento) => {
+      if (saindo || !fecharMinimiza) return;
+      evento.preventDefault();
+      janela.minimize();
+    });
+  }
   janela.loadURL(`app://local/${nome}.html${hash ? `#${hash}` : ''}`);
   janelas[nome] = janela;
 };
@@ -209,6 +228,24 @@ const verificarAlerta = () => {
 
 // ---------- Bandeja ----------
 
+// ---------- Botão na barra de tarefas ----------
+
+// Bolinha no botão do app (vermelha = gravando, âmbar = problema) e barra "pulsando" enquanto finaliza.
+const atualizarBarraDeTarefas = () => {
+  const janela = janelas.reunioes;
+  if (!janela || janela.isDestroyed()) return;
+  const problema = Boolean(falhaAtiva() || alertaAtual());
+  try {
+    if (problema) janela.setOverlayIcon(icone('bandeja-alerta.png'), 'Atenção: problema na gravação');
+    else if (estado.fase === 'gravando') janela.setOverlayIcon(icone('bandeja-gravando.png'), 'Gravando');
+    else janela.setOverlayIcon(null, '');
+    janela.setProgressBar(estado.fase === 'finalizando' ? 2 : -1); // 2 = indeterminada (pulsa); -1 = apagada
+    if (problema && !janela.isFocused()) janela.flashFrame(true); // pisca o botão para chamar atenção
+  } catch (erro) {
+    console.error('Barra de tarefas:', erro.message);
+  }
+};
+
 const atualizarBandeja = () => {
   if (!bandeja) return;
   const gravando = estado.fase === 'gravando' || estado.fase === 'finalizando';
@@ -216,6 +253,7 @@ const atualizarBandeja = () => {
   bandeja.setImage(icone(problema ? 'bandeja-alerta.png' : gravando ? 'bandeja-gravando.png' : 'bandeja.png'));
   const texto = textoDoEstado();
   bandeja.setToolTip(texto.slice(0, 120)); // o Windows corta dicas muito longas
+  atualizarBarraDeTarefas();
   bandeja.setContextMenu(Menu.buildFromTemplate([
     { label: texto, enabled: false },
     { type: 'separator' },
@@ -302,9 +340,10 @@ const aplicarConfig = async () => {
   const config = await carregarConfig();
   app.setLoginItemSettings({
     openAtLogin: config.iniciarComWindows, openAsHidden: true, path: process.execPath,
-    args: app.isPackaged ? [] : [app.getAppPath()]
+    args: [...(app.isPackaged ? [] : [app.getAppPath()]), '--iniciado-com-windows'] // para abrir só minimizado no login
   });
   mostrarIndicador = config.mostrarIndicador !== false;
+  fecharMinimiza = config.fecharMinimiza !== false;
   atualizarIndicador();
   globalShortcut.unregisterAll();
   if (config.atalho && !globalShortcut.register(config.atalho, alternarGravacao)) {
@@ -423,6 +462,10 @@ app.whenReady().then(async () => {
   vigiarConfig();
   iniciarGatilhos();
 
+  // A janela Reuniões abre sempre ao iniciar: é ela que dá ao app um botão na barra de tarefas. Se foi o Windows que abriu o
+  // app no login, ela fica só minimizada, sem atrapalhar.
+  abrirJanela('reunioes', '', { minimizada: process.argv.includes('--iniciado-com-windows') });
+
   if (primeiraVez) {
     abrirJanela('opcoes');
     avisar('Omnivix ativo', 'Fica na bandeja do Windows e grava sozinho quando você entra numa chamada.');
@@ -431,5 +474,6 @@ app.whenReady().then(async () => {
 
 // App de bandeja: continua rodando mesmo sem nenhuma janela aberta.
 app.on('window-all-closed', () => {});
+app.on('before-quit', () => { saindo = true; }); // a partir daqui, fechar a janela fecha de verdade
 app.on('will-quit', () => globalShortcut.unregisterAll());
 app.on('second-instance', () => abrirJanela('reunioes'));

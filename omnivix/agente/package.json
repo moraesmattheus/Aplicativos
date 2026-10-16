@@ -21,8 +21,32 @@
   },
   "build": {
     "appId": "br.mattheus.omnivix",
-    "files": ["principal.js", "preload.js", "detector.js", "agenda.js", "config-principal.js", "app/**/*", "assets/**/*"],
-    "win": { "target": "nsis", "icon": "assets/icone.png" },
-    "nsis": { "oneClick": true, "perMachine": false }
-  }
+    "files": [
+      "principal.js",
+      "preload.js",
+      "detector.js",
+      "agenda.js",
+      "config-principal.js",
+      "app/**/*",
+      "assets/**/*",
+      "!node_modules/onnxruntime-node/**/*",
+      "!node_modules/sharp/**/*",
+      "!node_modules/@img/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icone.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "shortcutName": "Omnivix",
+      "deleteAppDataOnUninstall": false
+    },
+    "electronLanguages": [
+      "pt-BR",
+      "en-US"
+    ]
+  },
+  "author": "Mattheus Moraes"
 }

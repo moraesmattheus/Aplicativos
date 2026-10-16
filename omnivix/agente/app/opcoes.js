@@ -6,7 +6,7 @@ import { chamarGemini, listarModelosGemini } from './gemini.js';
 
 const $ = (id) => document.getElementById(id);
 const CAMPOS_TEXTO = ['motorTranscricao', 'groqKey', 'groqModelo', 'modeloWhisper', 'idioma', 'provedorResumo', 'geminiKey', 'geminiModelo', 'ollamaUrl', 'ollamaModelo', 'notionToken', 'destinoPadrao', 'atalho', 'agendaUrl', 'agendaPalavras'];
-const CAMPOS_MARCAR = ['mostrarIndicador', 'gravarMicrofone', 'transcreverSoNoFim', 'usarGpu', 'identificarFalantes', 'salvarAudio', 'notionAuto', 'autoDetectarChamadas', 'avisarAoIniciar', 'iniciarComWindows', 'agendaTodos'];
+const CAMPOS_MARCAR = ['fecharMinimiza', 'mostrarIndicador', 'gravarMicrofone', 'transcreverSoNoFim', 'usarGpu', 'identificarFalantes', 'salvarAudio', 'notionAuto', 'autoDetectarChamadas', 'avisarAoIniciar', 'iniciarComWindows', 'agendaTodos'];
 
 const el = (tag, props = {}, ...filhos) => {
   const no = Object.assign(document.createElement(tag), props);
