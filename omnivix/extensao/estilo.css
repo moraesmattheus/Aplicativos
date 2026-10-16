@@ -66,7 +66,7 @@ button {
 /* Brilho acetinado: uma faixa diagonal de luz que "acende" no hover (opacidade, na placa de vídeo). */
 button::before {
   content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; opacity: 0;
-  background: linear-gradient(115deg, transparent 18%, rgb(255 255 255 / 0.15) 42%, rgb(255 255 255 / 0.04) 62%, transparent 82%);
+  background: linear-gradient(115deg, transparent 18%, rgb(255 255 255 / 0.09) 42%, rgb(255 255 255 / 0.025) 62%, transparent 82%);
   transition: opacity var(--medio) var(--curva);
 }
 button:hover:not(:disabled)::before { opacity: 1; }
@@ -76,30 +76,36 @@ button:hover:not(:disabled) {
 button:active:not(:disabled) { transform: scale(0.96); }
 button:disabled { opacity: 0.45; cursor: not-allowed; }
 
-/* Botão principal: o mesmo vidro, tingido com a cor de destaque do seu tema. */
+/* Botão principal: vidro em cinza escuro, com a cor de destaque só no contorno e num leve tom. Texto claro (legível). */
 button.principal {
-  color: var(--destaque-texto); font-weight: 600;
+  color: var(--texto); font-weight: 600;
   background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.28) 0%, rgb(255 255 255 / 0) 55%),
-    linear-gradient(180deg, color-mix(in srgb, var(--destaque) 94%, transparent), color-mix(in srgb, var(--destaque) 72%, transparent));
+    linear-gradient(180deg, rgb(255 255 255 / 0.1) 0%, rgb(255 255 255 / 0) 60%),
+    linear-gradient(180deg, color-mix(in srgb, var(--destaque) 26%, transparent), color-mix(in srgb, var(--destaque) 14%, transparent));
   box-shadow:
-    inset 0 0 0 1px rgb(255 255 255 / 0.22), inset 0 1px 0 rgb(255 255 255 / 0.5),
-    0 10px 26px -12px color-mix(in srgb, var(--destaque) 60%, transparent);
+    inset 0 0 0 1px color-mix(in srgb, var(--destaque) 32%, transparent), inset 0 1px 0 rgb(255 255 255 / 0.16),
+    0 8px 20px -14px color-mix(in srgb, var(--destaque) 30%, transparent);
 }
 button.principal:hover:not(:disabled) {
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.34), inset 0 1px 0 rgb(255 255 255 / 0.62), 0 12px 30px -12px color-mix(in srgb, var(--destaque) 75%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--destaque) 50%, transparent), inset 0 1px 0 rgb(255 255 255 / 0.24), 0 10px 24px -14px color-mix(in srgb, var(--destaque) 40%, transparent);
 }
 button.perigo {
   color: #fff; font-weight: 600;
   background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.24) 0%, rgb(255 255 255 / 0) 55%),
-    linear-gradient(180deg, color-mix(in srgb, var(--perigo) 92%, transparent), color-mix(in srgb, var(--perigo) 68%, transparent));
+    linear-gradient(180deg, rgb(255 255 255 / 0.1) 0%, rgb(255 255 255 / 0) 60%),
+    linear-gradient(180deg, color-mix(in srgb, var(--perigo) 62%, transparent), color-mix(in srgb, var(--perigo) 42%, transparent));
   box-shadow:
-    inset 0 0 0 1px rgb(255 255 255 / 0.2), inset 0 1px 0 rgb(255 255 255 / 0.42),
-    0 10px 26px -12px color-mix(in srgb, var(--perigo) 65%, transparent);
+    inset 0 0 0 1px rgb(255 255 255 / 0.12), inset 0 1px 0 rgb(255 255 255 / 0.2),
+    0 8px 20px -14px color-mix(in srgb, var(--perigo) 45%, transparent);
 }
 button.perigo:hover:not(:disabled) {
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.32), inset 0 1px 0 rgb(255 255 255 / 0.55), 0 12px 30px -12px color-mix(in srgb, var(--perigo) 80%, transparent);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.2), inset 0 1px 0 rgb(255 255 255 / 0.28), 0 10px 24px -14px color-mix(in srgb, var(--perigo) 55%, transparent);
+}
+
+/* Respiração: só enquanto o mouse está em cima, e bem leve (o botão encolhe ~2% e volta, devagar). Só transform. */
+@keyframes respira-hover { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.98); } }
+@media (prefers-reduced-motion: no-preference) {
+  button:hover:not(:disabled):not(:active) { animation: respira-hover 2.2s ease-in-out infinite; }
 }
 
 /* Se o navegador não souber desfocar o fundo, o botão continua bonito: o gradiente translúcido já funciona sozinho. */
