@@ -34,6 +34,7 @@ export const montarEditorDeBotoes = (raiz, inicial) => {
   const mexeNosCartoes = () => escopo === 'todos' || escopo === 'cartao'; // a cor de fundo vale também para o card inteiro
 
   const avisarMudanca = () => {
+    globalThis.__botoesEditando = true; // há edição em andamento: configuração vinda de fora não pode apagar o que você está mexendo
     aplicarBotoes(valor); // visualização ao vivo: a própria página de Configurações já muda na hora
     raiz.dispatchEvent(new Event('change', { bubbles: true })); // a página marca "há alterações não salvas"
   };
@@ -212,7 +213,7 @@ export const montarEditorDeBotoes = (raiz, inicial) => {
     for (const [id, botao] of Object.entries(botoesDeAba)) botao.setAttribute('aria-selected', String(id === escopo));
     for (const [tipo, botao] of Object.entries(amostras)) botao.setAttribute('aria-pressed', String(alvos().includes(tipo)));
     faixa.style.background = `linear-gradient(120deg, ${valor.amostra[0]} 0%, ${valor.amostra[1]} 50%, ${valor.amostra[2]} 100%)`;
-    coresFaixa.forEach((entrada, i) => { entrada.value = valor.amostra[i]; });
+    coresFaixa.forEach((entrada, i) => { if (document.activeElement !== entrada) entrada.value = valor.amostra[i]; });
     botaoFaixaPadrao.disabled = valor.amostra.every((c, i) => c === PADRAO_AMOSTRA[i]);
     const soCartao = escopo === 'cartao';
     for (const no of [...linhas, partes, seletorEstilo.parentElement]) no.hidden = soCartao; // Cartões só têm cor
@@ -229,15 +230,15 @@ export const montarEditorDeBotoes = (raiz, inicial) => {
       caixa.indeterminate = !caixa.checked && ligadas.some(Boolean); // alguns têm, outros não
     }
     if (soCartao) {
-      entradaCor.value = valor.cartao.cor || SUGESTAO_CARTAO;
+      if (document.activeElement !== entradaCor) entradaCor.value = valor.cartao.cor || SUGESTAO_CARTAO; // não mexe no seletor enquanto ele está aberto
       botaoCorPadrao.disabled = !valor.cartao.cor;
       caixaCartao.checked = valor.cartao.ligado;
       caixaAcetinado.checked = valor.cartao.acetinado;
-      entradaCor2.value = valor.cartao.cor2 || valor.cartao.cor || SUGESTAO_CARTAO;
+      if (document.activeElement !== entradaCor2) entradaCor2.value = valor.cartao.cor2 || valor.cartao.cor || SUGESTAO_CARTAO;
       botaoSemDegrade.disabled = !valor.cartao.cor2;
     } else {
       const primeiro = alvos()[0];
-      entradaCor.value = valor[primeiro].cor || corPadraoEmHex(primeiro);
+      if (document.activeElement !== entradaCor) entradaCor.value = valor[primeiro].cor || corPadraoEmHex(primeiro); // idem
       botaoCorPadrao.disabled = alvos().every((t) => !valor[t].cor);
     }
   }
@@ -248,6 +249,7 @@ export const montarEditorDeBotoes = (raiz, inicial) => {
     ler: () => normalizarBotoes(valor),
     definir: (novo) => {
       valor = normalizarBotoes(novo);
+      globalThis.__botoesEditando = false; // tela recarregada com o que está salvo
       desenhar();
       aplicarBotoes(valor);
     }

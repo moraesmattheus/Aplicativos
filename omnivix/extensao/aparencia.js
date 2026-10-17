@@ -19,6 +19,7 @@ export const aplicarBotoes = (botoes) => {
 };
 
 const aplicarDaConfiguracao = async () => {
+  if (globalThis.__botoesEditando) return; // você está editando nas Configurações: o que está na tela vale mais que o salvo
   try {
     aplicarBotoes((await carregarConfig()).botoes);
   } catch {
@@ -31,7 +32,7 @@ if (typeof document !== 'undefined') {
   // Extensão: a configuração mora no armazenamento do navegador.
   if (globalThis.chrome?.storage?.onChanged) {
     chrome.storage.onChanged.addListener((mudancas, area) => {
-      if (area === 'local' && mudancas.config) aplicarBotoes(mudancas.config.newValue?.botoes);
+      if (area === 'local' && mudancas.config && !globalThis.__botoesEditando) aplicarBotoes(mudancas.config.newValue?.botoes);
     });
   }
   // App de bandeja: o processo principal avisa quando o arquivo de configuração muda.
