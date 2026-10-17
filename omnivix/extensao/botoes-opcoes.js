@@ -3,7 +3,7 @@
 // tem uma caixa para ligar ou desligar: você escolhe o que tirar de cada botão.
 // Usado nas Configurações do app e da extensão. Devolve { ler, definir }: a página guarda o que ler() devolve.
 
-import { TIPOS, NOMES_DOS_TIPOS, PARTES, PADRAO_BOTOES, PADRAO_CARTAO, PADRAO_AMOSTRA, ESTILOS_PRONTOS, normalizarBotoes } from './botoes-estilo.js';
+import { TIPOS, NOMES_DOS_TIPOS, PARTES, PADRAO_BOTOES, PADRAO_CARTAO, SUGESTAO_CARTAO, PADRAO_AMOSTRA, ESTILOS_PRONTOS, normalizarBotoes } from './botoes-estilo.js';
 import { aplicarBotoes } from './aparencia.js';
 
 const el = (tag, props = {}, ...filhos) => {
@@ -228,11 +228,11 @@ export const montarEditorDeBotoes = (raiz, inicial) => {
       caixa.indeterminate = !caixa.checked && ligadas.some(Boolean); // alguns têm, outros não
     }
     if (soCartao) {
-      entradaCor.value = valor.cartao.cor || PADRAO_CARTAO.cor;
+      entradaCor.value = valor.cartao.cor || SUGESTAO_CARTAO;
       botaoCorPadrao.disabled = !valor.cartao.cor;
       caixaCartao.checked = valor.cartao.ligado;
       caixaAcetinado.checked = valor.cartao.acetinado;
-      entradaCor2.value = valor.cartao.cor2 || valor.cartao.cor || PADRAO_CARTAO.cor;
+      entradaCor2.value = valor.cartao.cor2 || valor.cartao.cor || SUGESTAO_CARTAO;
       botaoSemDegrade.disabled = !valor.cartao.cor2;
     } else {
       const primeiro = alvos()[0];

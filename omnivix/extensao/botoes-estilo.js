@@ -34,7 +34,9 @@ const base = {
 };
 
 // Cartões: os painéis/caixas das telas. Usam a cor de fundo escolhida quando ligado.
-export const PADRAO_CARTAO = { cor: '#0c0c0d', cor2: '', ligado: true, acetinado: true }; // preto acetinado por padrão
+// Por padrão os cartões usam o tema (desligado). A cor, o degradê e o acetinado só valem quando você liga e escolhe.
+export const PADRAO_CARTAO = { cor: '', cor2: '', ligado: false, acetinado: true };
+export const SUGESTAO_CARTAO = '#0c0c0d'; // cor mostrada no seletor enquanto você não escolheu nenhuma (preto acetinado)
 
 // Faixa colorida atrás dos botões de amostra (só na tela de Configurações): o vidro só aparece com cor atrás para desfocar.
 export const PADRAO_AMOSTRA = ['#1b2a4a', '#4a2150', '#0f3d3a'];
@@ -151,10 +153,10 @@ export const variaveisDosBotoes = (botoes) => {
 // A letra vira escura se o fundo escolhido for claro, para não sumir.
 export const variaveisDosCartoes = (botoes) => {
   const { cartao } = normalizarBotoes(botoes);
+  if (!cartao.ligado || !cartao.cor) return {}; // desligado ou sem cor: o tema manda (nada de acetinado)
   const brilho = cartao.acetinado
     ? 'linear-gradient(160deg, rgb(255 255 255 / 0.07) 0%, rgb(255 255 255 / 0.015) 45%, rgb(0 0 0 / 0.28) 100%)'
     : 'none';
-  if (!cartao.ligado || !cartao.cor) return { '--cartao-brilho': brilho };
   // Degradê: da cor de fundo para a segunda cor, com o acetinado (se ligado) por cima.
   const camadas = cartao.cor2 ? [brilho, `linear-gradient(160deg, ${cartao.cor}, ${cartao.cor2})`].filter((c) => c !== 'none').join(', ') : brilho;
   const claro = luminancia(cartao.cor) > 0.55 && (!cartao.cor2 || luminancia(cartao.cor2) > 0.55);

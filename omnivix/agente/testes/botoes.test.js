@@ -137,25 +137,25 @@ test('estilos prontos existem e cada um é válido', async () => {
   }
 });
 
-test('cartões: padrão preto acetinado; a cor escolhida vira a superfície e a letra acompanha o contraste', async () => {
+test('cartões: por padrão seguem o tema; ligados, a cor escolhida vira a superfície e a letra acompanha o contraste', async () => {
   const { variaveisDosCartoes, normalizarBotoes } = await carregar();
-  const padrao = variaveisDosCartoes({});
-  assert.equal(padrao['--superficie'], '#0c0c0d');
-  assert.match(padrao['--cartao-brilho'], /linear-gradient/);
-  assert.equal(variaveisDosCartoes({ cartao: { acetinado: false } })['--cartao-brilho'], 'none');
-  const desligado = variaveisDosCartoes({ cartao: { ligado: false } });
-  assert.equal('--superficie' in desligado, false); // desligado: o tema manda
-  assert.equal(variaveisDosCartoes({ cartao: { cor: '#224466' } })['--superficie'], '#224466');
-  assert.equal(variaveisDosCartoes({ cartao: { cor: '#224466' } })['--texto'], '#d0cdcd');
-  assert.equal(variaveisDosCartoes({ cartao: { cor: '#f5f5dc' } })['--texto'], '#111111'); // fundo claro: letra escura
-  assert.equal(normalizarBotoes({ cartao: { cor: 'red; x', ligado: 'sim' } }).cartao.cor, '#0c0c0d'); // lixo vira o padrão
+  assert.deepEqual(variaveisDosCartoes({}), {}); // padrão: nada muda, o tema manda
+  assert.deepEqual(variaveisDosCartoes({ cartao: { cor: '#224466', ligado: false } }), {}); // cor guardada, mas desligada
+  assert.deepEqual(variaveisDosCartoes({ cartao: { ligado: true } }), {}); // ligado sem cor: nada
+  const ligado = variaveisDosCartoes({ cartao: { cor: '#0c0c0d', ligado: true } });
+  assert.equal(ligado['--superficie'], '#0c0c0d');
+  assert.match(ligado['--cartao-brilho'], /linear-gradient/); // acetinado ligado por padrão quando a cor está ligada
+  assert.equal(variaveisDosCartoes({ cartao: { cor: '#0c0c0d', ligado: true, acetinado: false } })['--cartao-brilho'], 'none');
+  assert.equal(variaveisDosCartoes({ cartao: { cor: '#224466', ligado: true } })['--texto'], '#d0cdcd');
+  assert.equal(variaveisDosCartoes({ cartao: { cor: '#f5f5dc', ligado: true } })['--texto'], '#111111'); // fundo claro: letra escura
+  assert.equal(normalizarBotoes({ cartao: { cor: 'red; x', ligado: 'sim' } }).cartao.cor, ''); // lixo vira o padrão
 });
 
 test('cartões: segunda cor cria um degradê (e sem ela não há degradê)', async () => {
   const { variaveisDosCartoes, normalizarBotoes } = await carregar();
-  const com = variaveisDosCartoes({ cartao: { cor: '#1b2a4a', cor2: '#4a2150' } })['--cartao-brilho'];
+  const com = variaveisDosCartoes({ cartao: { cor: '#1b2a4a', cor2: '#4a2150', ligado: true } })['--cartao-brilho'];
   assert.match(com, /linear-gradient\(160deg, #1b2a4a, #4a2150\)/);
-  assert.doesNotMatch(variaveisDosCartoes({})['--cartao-brilho'], /#/);
+  assert.doesNotMatch(variaveisDosCartoes({ cartao: { cor: '#1b2a4a', ligado: true } })['--cartao-brilho'], /#/);
   assert.equal(normalizarBotoes({ cartao: { cor2: 'url(x)' } }).cartao.cor2, '');
 });
 
