@@ -1,48 +1,93 @@
-// Aparência dos botões: valores padrão, estilos prontos, validação e a tradução para variáveis de CSS.
+// Aparência dos botões: cada um dos TRÊS botões (comum, principal e perigo/Apagar) tem o seu conjunto completo de opções,
+// e cada parte do botão (vidro, reflexo, contorno, sombras, respiração, cor...) pode ser ligada ou desligada.
 // Sem nenhuma API do navegador: serve à extensão, ao app e aos testes. O CSS (estilo.css) só lê as variáveis geradas aqui.
 
-export const PADRAO_BOTOES = {
-  estilo: 'sutil', // nome do estilo pronto escolhido por último (só informativo)
-  desfoque: 16, // px de desfoque do que está atrás do vidro (0 a 30)
-  vidro: 100, // % de translucidez do vidro (0 = botão sólido, 200 = vidro bem marcado)
-  brilho: 100, // % do reflexo: fio de luz e gradiente claro (0 = sem nenhum reflexo)
-  raio: 14, // px de arredondamento (0 a 28)
-  altura: 38, // px de altura mínima (30 a 48)
-  respiracao: 2, // % que o botão encolhe ao passar o mouse (0 = não pulsa)
-  sombraLetras: 50, // % da sombra atrás das letras do botão vermelho (0 = sem sombra)
-  forcaPrincipal: 30, // % de cor do botão principal (10 a 100)
-  forcaPerigo: 80, // % de cor do botão vermelho (30 a 100)
-  corPrincipal: '', // vazio = usa a cor de destaque do tema
-  corPerigo: '#ff6b61'
+export const TIPOS = ['comum', 'principal', 'perigo'];
+export const NOMES_DOS_TIPOS = { comum: 'Botão comum', principal: 'Botão principal', perigo: 'Botão Apagar (vermelho)' };
+
+// As "partes" que o usuário pode tirar de cada botão (checkbox ligado = a parte existe).
+export const PARTES = {
+  cor: 'Cor de fundo',
+  vidro: 'Vidro (translucidez)',
+  desfoque: 'Desfoque do fundo',
+  reflexo: 'Reflexo / brilho',
+  contorno: 'Contorno fino',
+  sombraExterna: 'Sombra de baixo',
+  sombraInterna: 'Sombra por dentro',
+  sombraLetras: 'Sombra nas letras',
+  respiracao: 'Respiração ao passar o mouse'
 };
 
-// Estilos prontos: preenchem os controles de uma vez. As cores, o arredondamento e a altura ficam como você deixou.
-export const ESTILOS_PRONTOS = {
-  sutil: { nome: 'Vidro sutil (padrão)', desfoque: 16, vidro: 100, brilho: 100, respiracao: 2, sombraLetras: 50, forcaPrincipal: 30, forcaPerigo: 80 },
-  intenso: { nome: 'Vidro intenso', desfoque: 24, vidro: 170, brilho: 240, respiracao: 3, sombraLetras: 60, forcaPrincipal: 45, forcaPerigo: 90 },
-  plano: { nome: 'Plano (sem vidro)', desfoque: 0, vidro: 0, brilho: 0, respiracao: 0, sombraLetras: 30, forcaPrincipal: 30, forcaPerigo: 85 }
+// Valores padrão de cada botão (o visual que aprovamos: comum = vidro neutro; principal = cinza escuro; perigo = vermelho vivo).
+const base = {
+  cor: '', // vazio = a cor padrão daquele botão (comum: nenhuma; principal: destaque do tema; perigo: vermelho)
+  forca: 30, // % de cor do fundo (10 a 100). Só vale se "Cor de fundo" estiver ligada.
+  vidro: 100, // % de translucidez (0 a 200)
+  solido: 0, // % de fundo sólido por baixo (0 a 100)
+  desfoque: 16, // px (0 a 30)
+  brilho: 100, // % do reflexo (0 a 300)
+  raio: 14, // px (0 a 28)
+  altura: 38, // px (30 a 48)
+  respiracao: 2, // % que encolhe ao passar o mouse (0 a 6)
+  sombraLetras: 0, // % (0 a 100)
+  ligados: { cor: false, vidro: true, desfoque: true, reflexo: true, contorno: true, sombraExterna: true, sombraInterna: false, sombraLetras: false, respiracao: true }
 };
+
+export const PADRAO_BOTOES = {
+  comum: { ...base, ligados: { ...base.ligados } },
+  principal: { ...base, vidro: 0, forca: 30, ligados: { ...base.ligados, cor: true, vidro: false } },
+  perigo: { ...base, vidro: 0, forca: 80, sombraLetras: 50, cor: '#ff6b61', ligados: { ...base.ligados, cor: true, vidro: false, sombraInterna: true, sombraLetras: true } },
+  cartao: { cor: '', ligado: false }
+};
+
+// Estilos prontos: preenchem os números de uma vez (o escopo escolhido recebe). Cores e partes ligadas não mudam.
+export const ESTILOS_PRONTOS = {
+  sutil: { nome: 'Vidro sutil (padrão)', desfoque: 16, brilho: 100, respiracao: 2 },
+  intenso: { nome: 'Vidro intenso', desfoque: 24, brilho: 240, respiracao: 3 },
+  plano: { nome: 'Plano (sem vidro)', desfoque: 0, brilho: 0, respiracao: 0 }
+};
+
+// Cartões: os painéis/caixas das telas. Usam a cor de fundo escolhida quando ligado.
+export const PADRAO_CARTAO = { cor: '', ligado: false };
 
 const LIMITES = {
-  desfoque: [0, 30], vidro: [0, 200], brilho: [0, 300], raio: [0, 28], altura: [30, 48],
-  respiracao: [0, 6], sombraLetras: [0, 100], forcaPrincipal: [10, 100], forcaPerigo: [30, 100]
+  forca: [10, 100], vidro: [0, 200], solido: [0, 100], desfoque: [0, 30], brilho: [0, 300], raio: [0, 28], altura: [30, 48],
+  respiracao: [0, 6], sombraLetras: [0, 100]
 };
 const COR_HEX = /^#[0-9a-f]{6}$/i;
 
-// Aceita qualquer coisa (inclusive nada) e devolve um objeto completo e seguro: números dentro dos limites,
-// cores só no formato #rrggbb, e nada de campos desconhecidos (o que vem do disco nunca vira CSS sem passar por aqui).
-export const normalizarBotoes = (entrada) => {
+const normalizarUm = (entrada, padrao) => {
   const origem = entrada && typeof entrada === 'object' ? entrada : {};
-  const saida = { ...PADRAO_BOTOES };
+  const saida = { ...padrao, ligados: { ...padrao.ligados } };
   for (const [campo, [minimo, maximo]] of Object.entries(LIMITES)) {
     const valor = Number(origem[campo]);
     // null, vazio e true/false não contam como número (senão virariam o mínimo do campo)
-    if (origem[campo] != null && origem[campo] !== '' && typeof origem[campo] !== 'boolean' && Number.isFinite(valor)) saida[campo] = Math.min(maximo, Math.max(minimo, Math.round(valor)));
+    if (origem[campo] != null && origem[campo] !== '' && typeof origem[campo] !== 'boolean' && Number.isFinite(valor)) {
+      saida[campo] = Math.min(maximo, Math.max(minimo, Math.round(valor)));
+    }
   }
-  if (typeof origem.corPrincipal === 'string' && (origem.corPrincipal === '' || COR_HEX.test(origem.corPrincipal))) saida.corPrincipal = origem.corPrincipal.toLowerCase();
-  if (typeof origem.corPerigo === 'string' && COR_HEX.test(origem.corPerigo)) saida.corPerigo = origem.corPerigo.toLowerCase();
-  if (typeof origem.estilo === 'string' && (origem.estilo in ESTILOS_PRONTOS || origem.estilo === 'personalizado')) saida.estilo = origem.estilo;
+  if (typeof origem.cor === 'string' && (origem.cor === '' || COR_HEX.test(origem.cor))) saida.cor = origem.cor.toLowerCase();
+  const ligados = origem.ligados && typeof origem.ligados === 'object' ? origem.ligados : {};
+  for (const parte of Object.keys(PARTES)) if (typeof ligados[parte] === 'boolean') saida.ligados[parte] = ligados[parte];
   return saida;
+};
+
+const normalizarCartao = (entrada) => {
+  const o = entrada && typeof entrada === 'object' ? entrada : {};
+  return {
+    cor: typeof o.cor === 'string' && (o.cor === '' || COR_HEX.test(o.cor)) ? o.cor.toLowerCase() : PADRAO_CARTAO.cor,
+    ligado: typeof o.ligado === 'boolean' ? o.ligado : PADRAO_CARTAO.ligado
+  };
+};
+
+// Aceita qualquer coisa (inclusive nada) e devolve os três botões completos e seguros: números dentro dos limites,
+// cores só no formato #rrggbb e nada de campos desconhecidos (o que vem do disco nunca vira CSS sem passar por aqui).
+export const normalizarBotoes = (entrada) => {
+  const origem = entrada && typeof entrada === 'object' ? entrada : {};
+  return {
+    ...Object.fromEntries(TIPOS.map((tipo) => [tipo, normalizarUm(origem[tipo], PADRAO_BOTOES[tipo])])),
+    cartao: normalizarCartao(origem.cartao)
+  };
 };
 
 // Luminância relativa (0 = preto, 1 = branco), como na regra de contraste da WCAG. Serve para escolher letra clara ou escura.
@@ -54,25 +99,51 @@ export const luminancia = (hex) => {
   return 0.2126 * canal(0) + 0.7152 * canal(1) + 0.0722 * canal(2);
 };
 
-// Tradução final: objeto de aparência -> variáveis de CSS (nome -> valor). É isto que a página aplica no <html>.
+// Cor de fundo de cada botão quando você não escolheu nenhuma.
+const COR_PADRAO = { comum: null, principal: 'var(--destaque)', perigo: '#ff6b61' };
+// Quanto a parte de baixo do degradê é mais fraca que a de cima (como no visual aprovado).
+const RAZAO_BAIXO = { comum: 0.6, principal: 0.6, perigo: 0.775 };
+
+// Tradução final: três botões -> variáveis de CSS (nome -> valor), prefixadas por --btn-<tipo>-.
 export const variaveisDosBotoes = (botoes) => {
-  const b = normalizarBotoes(botoes);
-  return {
-    '--botao-blur': `${b.desfoque}px`,
-    '--botao-vidro': String(b.vidro / 100),
-    '--botao-solido': String(Math.max(0, 1 - b.vidro / 100)), // quanto de "fundo sólido" entra quando o vidro é menos que 100%
-    '--botao-brilho': String(b.brilho / 100),
-    '--botao-raio': `${b.raio}px`,
-    '--botao-altura': `${b.altura}px`,
-    '--botao-respira': String(1 - b.respiracao / 100),
-    '--botao-sombra-letra': String(b.sombraLetras / 100),
-    '--botao-cor-principal': b.corPrincipal || 'var(--destaque)',
-    '--botao-forca-principal': `${b.forcaPrincipal}%`,
-    '--botao-forca-principal-baixo': `${Math.round(b.forcaPrincipal * 0.6)}%`,
-    '--botao-cor-perigo': b.corPerigo,
-    '--botao-forca-perigo': `${b.forcaPerigo}%`,
-    '--botao-forca-perigo-baixo': `${Math.round(b.forcaPerigo * 0.775)}%`,
-    // Letra do botão vermelho: branca, a não ser que a cor escolhida seja clara (aí fica escura, para não sumir).
-    '--botao-texto-perigo': luminancia(b.corPerigo) > 0.55 ? '#111111' : '#ffffff'
-  };
+  const todos = normalizarBotoes(botoes);
+  const variaveis = {};
+  for (const tipo of TIPOS) {
+    const b = todos[tipo];
+    const l = b.ligados;
+    const cor = b.cor || COR_PADRAO[tipo];
+    const forca = l.cor && cor ? b.forca : 0; // sem cor (ou com a parte desligada): o fundo fica neutro
+    const prefixo = `--btn-${tipo}-`;
+    Object.assign(variaveis, {
+      [`${prefixo}blur`]: `${l.desfoque ? b.desfoque : 0}px`,
+      [`${prefixo}vidro`]: String(l.vidro ? b.vidro / 100 : 0),
+      [`${prefixo}solido`]: String(b.solido / 100),
+      [`${prefixo}brilho`]: String(l.reflexo ? b.brilho / 100 : 0),
+      [`${prefixo}raio`]: `${b.raio}px`,
+      [`${prefixo}altura`]: `${b.altura}px`,
+      [`${prefixo}respira`]: String(l.respiracao ? 1 - b.respiracao / 100 : 1),
+      [`${prefixo}letra`]: String(l.sombraLetras ? b.sombraLetras / 100 : 0),
+      [`${prefixo}contorno`]: l.contorno ? '1' : '0',
+      [`${prefixo}ext`]: l.sombraExterna ? '1' : '0',
+      [`${prefixo}int`]: l.sombraInterna ? '1' : '0',
+      [`${prefixo}cor`]: cor || 'transparent',
+      [`${prefixo}forca`]: `${forca}%`,
+      [`${prefixo}forca-baixo`]: `${Math.round(forca * RAZAO_BAIXO[tipo])}%`
+    });
+    // Letra do botão: clara, a não ser que a cor de fundo escolhida seja bem clara E forte (aí fica escura, para não sumir).
+    if (tipo !== 'comum') {
+      const hex = b.cor || (tipo === 'perigo' ? COR_PADRAO.perigo : '');
+      const clara = hex && COR_HEX.test(hex) && luminancia(hex) > 0.55 && forca >= 60;
+      variaveis[`${prefixo}texto`] = clara ? '#111111' : tipo === 'perigo' ? '#ffffff' : 'var(--texto)';
+    }
+  }
+  return variaveis;
+};
+
+// Cores dos cartões: { '--superficie', '--texto' } quando ligado e com cor escolhida; senão {} (volta ao tema).
+// A letra vira escura se o fundo escolhido for claro, para não sumir.
+export const variaveisDosCartoes = (botoes) => {
+  const { cartao } = normalizarBotoes(botoes);
+  if (!cartao.ligado || !cartao.cor) return {};
+  return { '--superficie': cartao.cor, '--texto': luminancia(cartao.cor) > 0.55 ? '#111111' : '#d0cdcd' };
 };

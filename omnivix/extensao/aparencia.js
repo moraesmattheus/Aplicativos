@@ -3,13 +3,18 @@
 // (na extensão, pelo armazenamento do navegador; no app, pelo aviso de "configuração mudou").
 
 import { carregarConfig } from './config.js';
-import { normalizarBotoes, variaveisDosBotoes } from './botoes-estilo.js';
+import { normalizarBotoes, variaveisDosBotoes, variaveisDosCartoes } from './botoes-estilo.js';
 
 // Aplica uma aparência (objeto salvo, possivelmente incompleto ou inválido: é normalizado antes de virar CSS).
 export const aplicarBotoes = (botoes) => {
   if (typeof document === 'undefined') return; // fora do navegador (testes): nada a fazer
   for (const [nome, valor] of Object.entries(variaveisDosBotoes(normalizarBotoes(botoes)))) {
     document.documentElement.style.setProperty(nome, valor);
+  }
+  const cartoes = variaveisDosCartoes(botoes);
+  for (const nome of ['--superficie', '--texto']) {
+    if (nome in cartoes) document.documentElement.style.setProperty(nome, cartoes[nome]);
+    else document.documentElement.style.removeProperty(nome); // sem cor escolhida: volta ao tema
   }
 };
 

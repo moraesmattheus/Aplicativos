@@ -24,11 +24,6 @@
   --rapido: 150ms;
   --medio: 240ms;
 
-  /* Aparência dos botões (editável em Configurações). Estes são os valores padrão; botoes-estilo.js gera os personalizados. */
-  --botao-blur: 16px; --botao-vidro: 1; --botao-solido: 0; --botao-brilho: 1;
-  --botao-raio: var(--raio-interno); --botao-altura: 38px; --botao-respira: 0.98; --botao-sombra-letra: 0.5;
-  --botao-cor-principal: var(--destaque); --botao-forca-principal: 30%; --botao-forca-principal-baixo: 18%;
-  --botao-cor-perigo: var(--perigo); --botao-forca-perigo: 80%; --botao-forca-perigo-baixo: 62%; --botao-texto-perigo: #fff;
 }
 
 * { box-sizing: border-box; }
@@ -50,69 +45,98 @@ p { text-wrap: pretty; }
 a { color: var(--destaque); text-underline-offset: 3px; }
 ::selection { background: color-mix(in srgb, var(--destaque) 35%, transparent); }
 
-/* ---------- Botões: vidro acetinado, com brilho sutil ----------
-   Tudo aqui lê variáveis --botao-* (padrões no :root; personalizáveis em Configurações, seção "Aparência dos botões").
-   O vidro vem do desfoque e da translucidez; o reflexo (luz no topo, gradiente claro) é proporcional a --botao-brilho. */
+/* ---------- Botões: vidro acetinado ----------
+   Cada um dos TRÊS botões (comum, .principal e .perigo) tem as suas variáveis --btn-<tipo>-* (padrões abaixo; as personalizadas
+   vêm de Configurações > Aparência dos botões, via aparencia.js). Aqui elas viram --b-*, e UMA regra só desenha qualquer botão. */
+button {
+  --b-blur: var(--btn-comum-blur, 16px);
+  --b-vidro: var(--btn-comum-vidro, 1);
+  --b-solido: var(--btn-comum-solido, 0);
+  --b-brilho: var(--btn-comum-brilho, 1);
+  --b-raio: var(--btn-comum-raio, var(--raio-interno));
+  --b-altura: var(--btn-comum-altura, 38px);
+  --b-respira: var(--btn-comum-respira, 0.98);
+  --b-letra: var(--btn-comum-letra, 0);
+  --b-contorno: var(--btn-comum-contorno, 1);
+  --b-ext: var(--btn-comum-ext, 1);
+  --b-int: var(--btn-comum-int, 0);
+  --b-cor: var(--btn-comum-cor, transparent);
+  --b-forca: var(--btn-comum-forca, 0%);
+  --b-forca-baixo: var(--btn-comum-forca-baixo, 0%);
+  --b-topo: 0; --b-anel: 0.11;
+}
+button.principal {
+  --b-blur: var(--btn-principal-blur, 16px);
+  --b-vidro: var(--btn-principal-vidro, 0);
+  --b-solido: var(--btn-principal-solido, 0);
+  --b-brilho: var(--btn-principal-brilho, 1);
+  --b-raio: var(--btn-principal-raio, var(--raio-interno));
+  --b-altura: var(--btn-principal-altura, 38px);
+  --b-respira: var(--btn-principal-respira, 0.98);
+  --b-letra: var(--btn-principal-letra, 0);
+  --b-contorno: var(--btn-principal-contorno, 1);
+  --b-ext: var(--btn-principal-ext, 1);
+  --b-int: var(--btn-principal-int, 0);
+  --b-cor: var(--btn-principal-cor, var(--destaque));
+  --b-forca: var(--btn-principal-forca, 30%);
+  --b-forca-baixo: var(--btn-principal-forca-baixo, 18%);
+  --b-topo: 0.04; --b-anel: 0.14;
+}
+button.perigo {
+  --b-blur: var(--btn-perigo-blur, 16px);
+  --b-vidro: var(--btn-perigo-vidro, 0);
+  --b-solido: var(--btn-perigo-solido, 0);
+  --b-brilho: var(--btn-perigo-brilho, 1);
+  --b-raio: var(--btn-perigo-raio, var(--raio-interno));
+  --b-altura: var(--btn-perigo-altura, 38px);
+  --b-respira: var(--btn-perigo-respira, 0.98);
+  --b-letra: var(--btn-perigo-letra, 0.5);
+  --b-contorno: var(--btn-perigo-contorno, 1);
+  --b-ext: var(--btn-perigo-ext, 1);
+  --b-int: var(--btn-perigo-int, 1);
+  --b-cor: var(--btn-perigo-cor, #ff6b61);
+  --b-forca: var(--btn-perigo-forca, 80%);
+  --b-forca-baixo: var(--btn-perigo-forca-baixo, 62%);
+  --b-topo: 0.03; --b-anel: 0.07;
+}
+
 button {
   position: relative; isolation: isolate; overflow: hidden;
   font: inherit; font-size: 13px; font-weight: 500; letter-spacing: 0.01em; color: inherit;
-  border: 0; border-radius: var(--botao-raio); padding: 6px 16px; min-height: var(--botao-altura); cursor: pointer;
+  border: 0; border-radius: var(--b-raio); padding: 6px 16px; min-height: var(--b-altura); cursor: pointer;
+  text-shadow: 0 1px 2px rgb(0 0 0 / var(--b-letra)), 0 0 10px rgb(0 0 0 / calc(var(--b-letra) * 0.5));
+  /* camadas, de cima para baixo: (1) luz do topo, (2) cor de fundo, (3) vidro claro, (4) base sólida opcional */
   background:
-    linear-gradient(180deg, rgb(255 255 255 / calc(0.09 * var(--botao-vidro))) 0%, rgb(255 255 255 / calc(0.03 * var(--botao-vidro))) 55%, rgb(255 255 255 / calc(0.05 * var(--botao-vidro))) 100%),
-    /* base: com vidro 100% é quase transparente; quanto menor o vidro, mais sólido o fundo */
-    color-mix(in srgb, var(--superficie) calc(var(--botao-solido) * 100%), rgb(255 255 255 / calc(0.03 * var(--botao-vidro))));
-  -webkit-backdrop-filter: blur(var(--botao-blur)) saturate(150%);
-  backdrop-filter: blur(var(--botao-blur)) saturate(150%);
+    linear-gradient(180deg, rgb(255 255 255 / calc(var(--b-topo) * var(--b-brilho))) 0%, rgb(255 255 255 / 0) 60%),
+    linear-gradient(180deg, color-mix(in srgb, var(--b-cor) var(--b-forca), transparent), color-mix(in srgb, var(--b-cor) var(--b-forca-baixo), transparent)),
+    linear-gradient(180deg, rgb(255 255 255 / calc(0.09 * var(--b-vidro))) 0%, rgb(255 255 255 / calc(0.03 * var(--b-vidro))) 55%, rgb(255 255 255 / calc(0.05 * var(--b-vidro))) 100%),
+    color-mix(in srgb, var(--superficie) calc(var(--b-solido) * 100%), rgb(255 255 255 / calc(0.03 * var(--b-vidro))));
+  -webkit-backdrop-filter: blur(var(--b-blur)) saturate(150%);
+  backdrop-filter: blur(var(--b-blur)) saturate(150%);
   box-shadow:
-    inset 0 0 0 1px rgb(255 255 255 / 0.11),                              /* contorno de 1 px, bem fino */
-    inset 0 1px 0 rgb(255 255 255 / calc(0.07 * var(--botao-brilho))),    /* fio de luz no topo */
-    0 8px 20px -12px rgb(0 0 0 / 0.9);
+    inset 0 0 0 1px rgb(255 255 255 / calc(var(--b-anel) * var(--b-contorno))),   /* contorno fino */
+    inset 0 1px 0 rgb(255 255 255 / calc(0.07 * var(--b-brilho))),                /* fio de luz no topo */
+    inset 0 -12px 16px -10px rgb(0 0 0 / calc(0.32 * var(--b-int))),              /* sombra por dentro, no fundo do botão */
+    0 8px 20px -12px rgb(0 0 0 / calc(0.9 * var(--b-ext)));                       /* sombra de baixo */
   transition-property: transform, box-shadow, opacity;
   transition-duration: var(--rapido); transition-timing-function: var(--curva);
 }
-/* Sem faixa de luz diagonal: o hover só clareia o contorno um pouco. */
+button.principal { color: var(--btn-principal-texto, var(--texto)); font-weight: 600; }
+button.perigo { color: var(--btn-perigo-texto, #fff); font-weight: 600; }
+
 button::before { display: none; }
 button:hover:not(:disabled) {
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18), inset 0 1px 0 rgb(255 255 255 / calc(0.09 * var(--botao-brilho))), 0 10px 24px -12px rgb(0 0 0 / 0.95);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / calc(0.18 * var(--b-contorno))),
+    inset 0 1px 0 rgb(255 255 255 / calc(0.09 * var(--b-brilho))),
+    inset 0 -14px 18px -10px rgb(0 0 0 / calc(0.4 * var(--b-int))),
+    0 10px 24px -12px rgb(0 0 0 / calc(0.95 * var(--b-ext)));
 }
 button:active:not(:disabled) { transform: scale(0.96); }
 button:disabled { opacity: 0.45; cursor: not-allowed; }
 
-/* Botão principal: texto claro, contorno e tom na cor escolhida (padrão: a cor de destaque do tema). */
-button.principal {
-  color: var(--texto); font-weight: 600;
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / calc(0.04 * var(--botao-brilho))) 0%, rgb(255 255 255 / 0) 60%),
-    linear-gradient(180deg, color-mix(in srgb, var(--botao-cor-principal) var(--botao-forca-principal), transparent), color-mix(in srgb, var(--botao-cor-principal) var(--botao-forca-principal-baixo), transparent));
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--botao-cor-principal) 30%, transparent), inset 0 1px 0 rgb(255 255 255 / calc(0.07 * var(--botao-brilho))),
-    0 8px 20px -14px rgb(0 0 0 / 0.9);
-}
-button.principal:hover:not(:disabled) {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--botao-cor-principal) 46%, transparent), inset 0 1px 0 rgb(255 255 255 / calc(0.09 * var(--botao-brilho))), 0 10px 24px -14px rgb(0 0 0 / 0.95);
-}
-
-/* Botão perigo (Apagar): cor viva, sem reflexo. As letras têm sombra suave e o fundo do botão escurece por dentro. */
-button.perigo {
-  color: var(--botao-texto-perigo); font-weight: 600;
-  text-shadow: 0 1px 2px rgb(0 0 0 / var(--botao-sombra-letra)), 0 0 10px rgb(0 0 0 / calc(var(--botao-sombra-letra) * 0.5));
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / calc(0.03 * var(--botao-brilho))) 0%, rgb(255 255 255 / 0) 55%),
-    linear-gradient(180deg, color-mix(in srgb, var(--botao-cor-perigo) var(--botao-forca-perigo), transparent), color-mix(in srgb, var(--botao-cor-perigo) var(--botao-forca-perigo-baixo), transparent));
-  box-shadow:
-    inset 0 0 0 1px rgb(255 255 255 / 0.07), inset 0 1px 0 rgb(255 255 255 / calc(0.06 * var(--botao-brilho))),
-    inset 0 -12px 16px -10px rgb(0 0 0 / 0.32),            /* sombra por dentro, no fundo do botão */
-    0 8px 20px -14px rgb(0 0 0 / 0.9);
-}
-button.perigo:hover:not(:disabled) {
-  box-shadow:
-    inset 0 0 0 1px rgb(255 255 255 / 0.11), inset 0 1px 0 rgb(255 255 255 / calc(0.07 * var(--botao-brilho))),
-    inset 0 -14px 18px -10px rgb(0 0 0 / 0.4),
-    0 10px 24px -14px rgb(0 0 0 / 0.95);
-}
-
-/* Respiração: só enquanto o mouse está em cima. O quanto encolhe vem de --botao-respira (1 = não pulsa). Só transform. */
-@keyframes respira-hover { 0%, 100% { transform: scale(1); } 50% { transform: scale(var(--botao-respira)); } }
+/* Respiração: só enquanto o mouse está em cima. O quanto encolhe vem de --b-respira (1 = não pulsa). Só transform. */
+@keyframes respira-hover { 0%, 100% { transform: scale(1); } 50% { transform: scale(var(--b-respira, 0.98)); } }
 @media (prefers-reduced-motion: no-preference) {
   button:hover:not(:disabled):not(:active) { animation: respira-hover 2.2s ease-in-out infinite; }
 }
@@ -156,14 +180,23 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
 }
 
 /* ---------- Editor da aparência dos botões (telas de Configurações) ---------- */
-.amostra-botoes { display: flex; flex-wrap: wrap; gap: 12px; padding: 20px; margin: 8px 0 14px; border-radius: var(--raio-externo);
+.amostra-botoes { display: flex; flex-wrap: wrap; gap: 12px; padding: 20px; margin: 8px 0 12px; border-radius: var(--raio-externo);
   background: linear-gradient(120deg, #1b2a4a 0%, #4a2150 50%, #0f3d3a 100%); /* fundo colorido: o vidro só aparece com algo atrás para desfocar */ }
-.linha-botao { display: grid; grid-template-columns: 1fr 220px; gap: 14px; align-items: center; margin-top: 12px; font-weight: 500; }
+.amostra-botoes button[aria-pressed="true"] { outline: 2px dashed rgb(255 255 255 / 0.55); outline-offset: 3px; }
+.abas-botao { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
+.abas-botao button { min-height: 34px; padding: 4px 14px; }
+.abas-botao button[aria-selected="true"] { box-shadow: inset 0 0 0 1px var(--destaque), 0 8px 20px -12px rgb(0 0 0 / 0.9); }
+.painel-botao { display: grid; gap: 4px; }
+.linha-botao { display: grid; grid-template-columns: 1fr 220px; gap: 14px; align-items: center; margin-top: 10px; font-weight: 500; }
 .linha-botao small { display: block; color: var(--suave); font-weight: 400; }
 .controle-botao { display: flex; align-items: center; gap: 10px; }
 .controle-botao input[type=range] { flex: 1; min-height: 0; padding: 0; border: 0; background: transparent; accent-color: var(--destaque); }
-.controle-botao output { width: 60px; text-align: right; font-variant-numeric: tabular-nums; }
-.cores-botao { display: grid; gap: 12px; margin-top: 14px; }
-.cores-botao label { display: flex; align-items: center; gap: 12px; font-weight: 500; }
+.controle-botao output { width: 62px; text-align: right; font-variant-numeric: tabular-nums; }
+.cor-botao { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 12px; font-weight: 500; }
+.partes-botao { margin-top: 14px; padding: 10px 14px 14px; border-radius: var(--raio-interno); background: color-mix(in srgb, var(--texto) 5%, transparent); }
+.partes-botao legend { padding: 0 6px; font-weight: 600; }
+.partes-botao p { margin: 2px 0 8px; }
+.partes-botao .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 6px 14px; }
+.partes-botao label { display: flex; align-items: center; gap: 8px; font-weight: 400; margin: 0; }
 input[type=color] { width: 46px; height: 32px; min-height: 0; padding: 2px; cursor: pointer; }
 @media (max-width: 560px) { .linha-botao { grid-template-columns: 1fr; } }

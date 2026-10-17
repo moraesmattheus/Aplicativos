@@ -353,6 +353,7 @@ if (window.agente?.alternarGravacao && botaoGravar) {
     faseAtual = fase;
     const ocupado = fase === 'iniciando' || fase === 'finalizando';
     botaoGravar.classList.toggle('gravando', fase === 'gravando');
+    botaoGravar.classList.toggle('perigo', fase === 'gravando'); // vermelho = mesma aparência (personalizável) do botão Apagar
     botaoGravar.classList.toggle('ocupado', ocupado);
     botaoGravar.disabled = ocupado;
     textoBotao.textContent = RESTO[fase] ?? RESTO.ocioso;
