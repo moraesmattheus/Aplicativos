@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tarefas</title>
+    <link rel="icon" href="icons/tarefas.png" />
+    <script src="tema.js"></script>
+    <link rel="stylesheet" href="base.css" />
+  </head>
+  <body>
+    <main>
+      <div id="vista-foco">
+        <!-- Listas: uma por area de trabalho do Vivaldi (e outras que voce criar) -->
+        <div class="linha">
+          <select id="seletor-lista" aria-label="Lista de tarefas"></select>
+          <button id="btn-nova-lista" class="secundario" title="Criar nova lista">+ Lista</button>
+        </div>
+        <form id="form-lista" class="linha" hidden>
+          <input id="nome-lista" type="text" maxlength="40" placeholder="Nome da lista" autocomplete="off" />
+          <button type="submit">Criar</button>
+        </form>
+
+        <!-- Foco: so UMA tarefa grande na tela, a primeira pendente da lista -->
+        <section id="agora" aria-live="polite">
+          <p class="rotulo">Agora</p>
+          <h1 id="tarefa-atual">Nada em foco</h1>
+          <p id="cronometro" class="cronometro"></p>
+          <div class="linha botoes-agora">
+            <button id="btn-relogio">Começar</button>
+            <button id="btn-concluir" hidden>Concluí</button>
+          </div>
+          <select id="mover-atual" class="mover" aria-label="Mover esta tarefa para outra lista" hidden></select>
+          <p id="dica" class="dica" hidden></p>
+        </section>
+
+        <!-- "Onde parei?": nota curta ligada a tarefa atual -->
+        <label id="bloco-nota" hidden>
+          <span class="rotulo">Onde parei?</span>
+          <textarea id="nota" rows="3" maxlength="500" placeholder="Escreva em 1 frase onde você parou"></textarea>
+        </label>
+
+        <!-- Nova tarefa: titulo e, se quiser, uma data. A lista e escolhida sozinha pelo assunto. -->
+        <form id="form-nova">
+          <input id="nova" type="text" maxlength="200" placeholder="Adicionar uma tarefa" autocomplete="off" />
+          <input id="nova-data" type="date" aria-label="Data (opcional)" />
+          <button type="submit">Adicionar</button>
+        </form>
+        <p id="aviso" class="suave" aria-live="polite"></p>
+
+        <details id="depois" open>
+          <summary>Depois (<span id="contagem">0</span>)</summary>
+          <ul id="lista" class="tarefas"></ul>
+        </details>
+
+        <details id="concluidas">
+          <summary>Concluídas (<span id="contagem-feitas">0</span>)</summary>
+          <ul id="lista-feitas" class="tarefas"></ul>
+        </details>
+
+        <button id="btn-excluir-lista" class="secundario" hidden>Excluir esta lista</button>
+      </div>
+    </main>
+    <script type="module" src="tarefas.js"></script>
+  </body>
+</html>

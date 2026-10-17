@@ -22,6 +22,24 @@ organiza tudo num **Kanban** e agenda entrevistas no **Google Calendar**.
 - 🧠 Backend de IA: [`radar-vagas-backend`](./radar-vagas-backend/) — Cloudflare Workers + Google Gemini, lê currículo em **PDF/DOCX** (inclusive escaneado) e faz análise ATS. O app também roda **sem** o backend, com análise local.
 - 🛠️ React Native · Expo · TypeScript · Cloudflare Workers · Gemini
 
+## 🎙️ Omnivix - extensão grátis para Vivaldi/Chrome
+
+Grava o áudio da aba + microfone, **transcreve localmente com Whisper**, gera
+resumo e itens de ação e envia ao Notion. No mesmo painel ficam tarefas por área de trabalho,
+relógio automático, Pomodoro, árvore de abas, estatísticas e briefing do dia.
+
+- 📂 Pasta: [`omnivix/extensao`](./omnivix/extensao/) (instruções de instalação no README da pasta)
+- 🛠️ JavaScript · Manifest V3 · Web Audio · Transformers.js (Whisper) · IndexedDB
+
+## 🤖 Agente de Reuniões - grava sozinho (Windows)
+
+Programa de bandeja que **detecta chamadas** (pelo uso do microfone) e **aulas/entrevistas** (pela agenda),
+grava o áudio do PC + microfone **sem bot na reunião**, transcreve, separa quem falou, resume e envia ao
+**Notion** no lugar certo. Compartilha o "cérebro" com a extensão.
+
+- 📂 Pasta: [`omnivix/agente`](./omnivix/agente/) (instalação passo a passo no README da pasta)
+- 🛠️ Electron · Whisper (Transformers.js) · Notion API · iCalendar
+
 ## 🧭 Rota de Vida — plano de vida do casal (PWA)
 
 App do casal para acompanhar o plano de vida: **rota financeira** (Rota A × Rota B),

@@ -1,0 +1,21 @@
+node_modules/
+dist/
+# Copiados de ../extensao por scripts/sincronizar.js (fonte única do "cérebro")
+app/armazenamento.js
+app/formatar.js
+app/resumo.js
+app/gemini.js
+app/notion.js
+app/falantes.js
+app/transcricao-nuvem.js
+app/transcricao-assemblyai.js
+app/saude-audio.js
+app/aparencia.js
+app/botoes-estilo.js
+app/botoes-opcoes.js
+app/pcm-worklet.js
+app/gravacao.js
+app/estilo.css
+app/reunioes.html
+app/reunioes.js
+dist-novo/

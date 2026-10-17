@@ -1,0 +1,13 @@
+# Segredos: nunca vao para o repositorio (o modelo .env.example pode)
+.env
+.env.*
+!.env.example
+*.key
+tokens*.json
+
+# Dependencias e arquivos gerados
+node_modules/
+.venv/
+__pycache__/
+dist/
+.DS_Store

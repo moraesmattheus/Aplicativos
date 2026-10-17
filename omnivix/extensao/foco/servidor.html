@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Servidor</title>
+    <link rel="icon" href="icons/servidor.png" />
+    <script src="tema.js"></script>
+    <link rel="stylesheet" href="base.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Servidor</h1>
+        <p class="rotulo">Backend local (a IA e as integrações vão depender dele)</p>
+      </header>
+
+      <section class="bloco" aria-live="polite">
+        <h2>Estado</h2>
+        <p id="estado">Verificando...</p>
+        <p id="detalhe" class="suave"></p>
+        <button id="btn-verificar">Verificar de novo</button>
+      </section>
+
+      <section class="bloco">
+        <h2>Como ligar</h2>
+        <p class="suave">Em um terminal, dentro da pasta do projeto (veja o ROADMAP.md para a primeira vez):</p>
+        <pre id="comando">cd backend
+.venv\Scripts\activate
+uvicorn main:app --host 127.0.0.1 --port 8787</pre>
+      </section>
+    </main>
+    <script src="servidor.js"></script>
+  </body>
+</html>

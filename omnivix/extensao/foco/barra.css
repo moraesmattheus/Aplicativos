@@ -1,0 +1,178 @@
+/* barra.css
+   So para o painel lateral (sidepanel.html). Visual inspirado na barra lateral do Vivaldi:
+   ícones só com o desenho, sem círculo, e um fundo arredondado suave no ícone ativo.
+   Tudo vem dos Ajustes, por atributos no <html>:
+   data-posicao (top, bottom, left, right), data-rotulos (on/off), data-recolher (on/off)
+   e as variaveis --icone (tamanho), --forma (arredondamento do destaque), --faixa e --desfoque. */
+
+html, body { height: 100%; margin: 0; }
+
+#barra { grid-area: barra; }
+#conteudo { grid-area: conteudo; width: 100%; height: 100%; border: 0; display: block; background: var(--fundo); }
+
+body.com-barra { display: grid; overflow: hidden; position: relative; }
+
+/* ---- Posicao: em cima (tambem vale antes de os ajustes carregarem) ---- */
+body.com-barra,
+html[data-posicao="top"] body.com-barra {
+  grid-template-areas: "barra" "conteudo";
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+}
+html[data-posicao="bottom"] body.com-barra {
+  grid-template-areas: "conteudo" "barra";
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+html[data-posicao="left"] body.com-barra {
+  grid-template-areas: "barra conteudo";
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+}
+html[data-posicao="right"] body.com-barra {
+  grid-template-areas: "conteudo barra";
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr);
+}
+
+/* ---- Barra na horizontal (em cima ou embaixo): grade que se ajusta a largura ---- */
+#barra {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  overflow: clip; /* o brilho e o conteudo nunca passam das bordas da barra */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(62px, calc(var(--icone) + 14px)), 1fr));
+  gap: 6px 2px;
+  padding: 10px 10px;
+  border-bottom: 1px solid var(--borda);
+}
+html[data-rotulos="off"] #barra {
+  grid-template-columns: repeat(auto-fit, minmax(calc(var(--icone) + 10px), 1fr));
+}
+html[data-posicao="bottom"] #barra { border-bottom: 0; border-top: 1px solid var(--borda); }
+
+/* ---- Barra na vertical (esquerda ou direita): coluna com rolagem se precisar ---- */
+html[data-posicao="left"] #barra,
+html[data-posicao="right"] #barra {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 10px 11px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none; /* sem barra de rolagem visivel, como a do Vivaldi */
+  border-bottom: 0;
+  width: max(62px, calc(var(--icone) + 30px));
+}
+html[data-posicao="left"] #barra { border-right: 1px solid var(--borda); }
+html[data-posicao="right"] #barra { border-left: 1px solid var(--borda); }
+html[data-posicao="left"][data-rotulos="off"] #barra,
+html[data-posicao="right"][data-rotulos="off"] #barra { width: calc(var(--icone) + 28px); }
+
+/* ---- Divisoria entre grupos de icones (so na barra vertical) ---- */
+#barra .separador { display: none; }
+html[data-posicao="left"] #barra .separador,
+html[data-posicao="right"] #barra .separador {
+  display: block;
+  flex: 0 0 auto;
+  height: 1px;
+  margin: 4px 8px;
+  background: var(--borda);
+}
+
+/* ---- Cada botao da barra: icone (+ nome, se ligado) ---- */
+#barra button {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 2px 0;
+  background: transparent;
+  color: var(--suave);
+  border: 0;
+  border-radius: var(--raio);
+  font-weight: 400;
+  font-size: 10px;
+  line-height: 1.1;
+}
+#barra button .nome {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-rotulos="off"] #barra button .nome { display: none; }
+#barra button:hover { filter: none; color: var(--texto); }
+
+/* Estados do icone neon: repouso (suave), passar o mouse (medio) e ATIVO (brilha forte,
+   para voce ver na hora onde esta). A intensidade vem de --brilho nos Ajustes. */
+#barra button:hover .icone { border-color: color-mix(in srgb, var(--neon) 65%, transparent); }
+#barra button:hover .icone .glifo { opacity: 0.9; }
+#barra button[aria-pressed="true"] { color: var(--texto); }
+#barra button[aria-pressed="true"] .icone {
+  --n: var(--selecao); /* o ativo brilha na cor da SELECAO, os demais na cor do neon */
+  border-color: var(--n);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 22%, transparent),
+    inset 0 0 calc(var(--brilho) * 14px) color-mix(in srgb, var(--n) 32%, transparent),
+    0 0 calc(var(--brilho) * 10px) color-mix(in srgb, var(--n) 75%, transparent),
+    0 0 calc(var(--brilho) * 20px) color-mix(in srgb, var(--n) 38%, transparent);
+}
+#barra button[aria-pressed="true"] .icone .glifo {
+  opacity: 1;
+  filter: drop-shadow(0 0 calc(var(--brilho) * 4px) var(--n))
+    drop-shadow(0 0 calc(var(--brilho) * 9px) color-mix(in srgb, var(--n) 60%, transparent));
+}
+#barra button:focus-visible .icone { outline: 2px solid var(--selecao); outline-offset: 2px; }
+
+/* ---- Modo "esconder e mostrar ao passar o mouse" ----
+   A barra sai do fluxo (a pagina ocupa tudo). Fechada, ela fica INVISIVEL: sobra so uma zona
+   fina na borda (--faixa, ajustavel) que reage ao mouse, sem nenhuma linha ou cor.
+   Passar o mouse nessa zona (ou focar com o teclado) abre a barra com fundo translucido e
+   DESFOQUE do que esta atras (--desfoque, ajustavel). O atraso ao fechar evita que ela
+   "pisque" se o mouse sair sem querer. */
+html[data-recolher="on"] body.com-barra {
+  grid-template-areas: "conteudo";
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+}
+html[data-recolher="on"] #barra {
+  grid-area: auto;
+  position: absolute;
+  z-index: 10;
+  background: transparent;
+  border-color: transparent;
+  /* Desliza devagar: --anim (duracao, nos Ajustes) com uma curva que acelera e desacelera
+     suavemente no fim. A espera ao fechar evita que ela "pisque" se o mouse sair sem querer. */
+  --curva: cubic-bezier(0.22, 1, 0.36, 1);
+  --espera: 350ms;
+  will-change: transform;
+  transition:
+    transform var(--anim, 500ms) var(--curva) var(--espera),
+    background-color var(--anim, 500ms) ease var(--espera),
+    border-color var(--anim, 500ms) ease var(--espera),
+    backdrop-filter var(--anim, 500ms) ease var(--espera),
+    -webkit-backdrop-filter var(--anim, 500ms) ease var(--espera);
+}
+html[data-recolher="on"] #barra > * {
+  opacity: 0;
+  transition: opacity calc(var(--anim, 500ms) * 0.6) ease var(--espera);
+}
+
+html[data-recolher="on"]:is([data-posicao="top"], :not([data-posicao])) #barra { top: 0; left: 0; right: 0; transform: translateY(calc(-100% + var(--faixa, 6px))); }
+html[data-recolher="on"][data-posicao="bottom"] #barra { bottom: 0; left: 0; right: 0; transform: translateY(calc(100% - var(--faixa, 6px))); }
+html[data-recolher="on"][data-posicao="left"] #barra { top: 0; bottom: 0; left: 0; transform: translateX(calc(-100% + var(--faixa, 6px))); }
+html[data-recolher="on"][data-posicao="right"] #barra { top: 0; bottom: 0; right: 0; transform: translateX(calc(100% - var(--faixa, 6px))); }
+
+html[data-recolher="on"] #barra:hover,
+html[data-recolher="on"] #barra:focus-within {
+  transform: none;
+  background: color-mix(in srgb, var(--fundo) 62%, transparent);
+  -webkit-backdrop-filter: blur(var(--desfoque, 14px)) saturate(1.2);
+  backdrop-filter: blur(var(--desfoque, 14px)) saturate(1.2);
+  border-color: var(--borda);
+  transition-delay: 0s;
+}
+html[data-recolher="on"] #barra:hover > *,
+html[data-recolher="on"] #barra:focus-within > * { opacity: 1; transition-delay: calc(var(--anim, 500ms) * 0.25); }
