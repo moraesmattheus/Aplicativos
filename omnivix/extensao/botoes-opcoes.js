@@ -3,7 +3,7 @@
 // tem uma caixa para ligar ou desligar: você escolhe o que tirar de cada botão.
 // Usado nas Configurações do app e da extensão. Devolve { ler, definir }: a página guarda o que ler() devolve.
 
-import { TIPOS, NOMES_DOS_TIPOS, PARTES, PADRAO_BOTOES, PADRAO_CARTAO, ESTILOS_PRONTOS, normalizarBotoes } from './botoes-estilo.js';
+import { TIPOS, NOMES_DOS_TIPOS, PARTES, PADRAO_BOTOES, PADRAO_CARTAO, PADRAO_AMOSTRA, ESTILOS_PRONTOS, normalizarBotoes } from './botoes-estilo.js';
 import { aplicarBotoes } from './aparencia.js';
 
 const el = (tag, props = {}, ...filhos) => {
@@ -54,6 +54,25 @@ export const montarEditorDeBotoes = (raiz, inicial) => {
     perigo: el('button', { type: 'button', className: 'perigo', textContent: 'Apagar' })
   };
   for (const [tipo, botao] of Object.entries(amostras)) botao.addEventListener('click', () => escolherEscopo(tipo));
+
+  // ---------- cores da faixa atrás dos botões (só da amostra) ----------
+  const faixa = el('div', { className: 'amostra-botoes' }, amostras.comum, amostras.principal, amostras.perigo);
+  const coresFaixa = PADRAO_AMOSTRA.map((_, i) => {
+    const entrada = el('input', { type: 'color', id: `botao-faixa-${i + 1}`, ariaLabel: `Cor ${i + 1} da faixa` });
+    entrada.addEventListener('input', () => {
+      valor = normalizarBotoes({ ...valor, amostra: valor.amostra.map((c, j) => (j === i ? entrada.value : c)) });
+      desenhar();
+      avisarMudanca();
+    });
+    return entrada;
+  });
+  const botaoFaixaPadrao = el('button', { type: 'button', textContent: 'Cores padrão da faixa' });
+  botaoFaixaPadrao.addEventListener('click', () => {
+    valor = normalizarBotoes({ ...valor, amostra: PADRAO_AMOSTRA });
+    desenhar();
+    avisarMudanca();
+  });
+  const linhaFaixa = el('div', { className: 'cor-botao' }, el('span', {}, 'Cores da faixa atrás dos botões'), ...coresFaixa, botaoFaixaPadrao);
 
   // ---------- abas ----------
   const botoesDeAba = Object.fromEntries(ABAS.map(([id, rotulo]) => [id, el('button', { type: 'button', textContent: rotulo, role: 'tab' })]));
@@ -177,7 +196,7 @@ export const montarEditorDeBotoes = (raiz, inicial) => {
 
   raiz.replaceChildren(
     el('p', { className: 'suave', textContent: 'Escolha "Todos juntos" para mudar os três de uma vez, ou um botão para mexer só nele. Mexa à vontade: muda na hora aqui e vale para as outras telas depois de Salvar. Passe o mouse nos botões para ver a respiração.' }),
-    el('div', { className: 'amostra-botoes' }, amostras.comum, amostras.principal, amostras.perigo),
+    faixa, linhaFaixa,
     el('div', { className: 'abas-botao', role: 'tablist' }, ...Object.values(botoesDeAba)),
     painel);
 
@@ -191,6 +210,9 @@ export const montarEditorDeBotoes = (raiz, inicial) => {
   function desenhar() {
     for (const [id, botao] of Object.entries(botoesDeAba)) botao.setAttribute('aria-selected', String(id === escopo));
     for (const [tipo, botao] of Object.entries(amostras)) botao.setAttribute('aria-pressed', String(alvos().includes(tipo)));
+    faixa.style.background = `linear-gradient(120deg, ${valor.amostra[0]} 0%, ${valor.amostra[1]} 50%, ${valor.amostra[2]} 100%)`;
+    coresFaixa.forEach((entrada, i) => { entrada.value = valor.amostra[i]; });
+    botaoFaixaPadrao.disabled = valor.amostra.every((c, i) => c === PADRAO_AMOSTRA[i]);
     const soCartao = escopo === 'cartao';
     for (const no of [...linhas, partes, seletorEstilo.parentElement]) no.hidden = soCartao; // Cartões só têm cor
     rotuloCartao.hidden = !soCartao;

@@ -36,11 +36,15 @@ const base = {
 // Cartões: os painéis/caixas das telas. Usam a cor de fundo escolhida quando ligado.
 export const PADRAO_CARTAO = { cor: '#0c0c0d', cor2: '', ligado: true, acetinado: true }; // preto acetinado por padrão
 
+// Faixa colorida atrás dos botões de amostra (só na tela de Configurações): o vidro só aparece com cor atrás para desfocar.
+export const PADRAO_AMOSTRA = ['#1b2a4a', '#4a2150', '#0f3d3a'];
+
 export const PADRAO_BOTOES = {
   comum: { ...base, ligados: { ...base.ligados } },
   principal: { ...base, vidro: 0, forca: 30, ligados: { ...base.ligados, cor: true, vidro: false } },
   perigo: { ...base, vidro: 0, forca: 80, sombraLetras: 50, cor: '#ff6b61', ligados: { ...base.ligados, cor: true, vidro: false, sombraInterna: true, sombraLetras: true } },
-  cartao: { ...PADRAO_CARTAO }
+  cartao: { ...PADRAO_CARTAO },
+  amostra: [...PADRAO_AMOSTRA]
 };
 
 // Estilos prontos: preenchem os números de uma vez (o escopo escolhido recebe). Cores e partes ligadas não mudam.
@@ -88,7 +92,8 @@ export const normalizarBotoes = (entrada) => {
   const origem = entrada && typeof entrada === 'object' ? entrada : {};
   return {
     ...Object.fromEntries(TIPOS.map((tipo) => [tipo, normalizarUm(origem[tipo], PADRAO_BOTOES[tipo])])),
-    cartao: normalizarCartao(origem.cartao)
+    cartao: normalizarCartao(origem.cartao),
+    amostra: PADRAO_AMOSTRA.map((padrao, i) => (Array.isArray(origem.amostra) && typeof origem.amostra[i] === 'string' && COR_HEX.test(origem.amostra[i]) ? origem.amostra[i].toLowerCase() : padrao))
   };
 };
 

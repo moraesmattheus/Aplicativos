@@ -10,12 +10,12 @@ test('sem nada salvo, devolve os três botões completos com o visual padrão', 
   assert.deepEqual(normalizarBotoes(undefined), PADRAO_BOTOES);
   assert.deepEqual(normalizarBotoes(null), PADRAO_BOTOES);
   assert.deepEqual(normalizarBotoes('lixo'), PADRAO_BOTOES);
-  assert.deepEqual(Object.keys(PADRAO_BOTOES), ['comum', 'principal', 'perigo', 'cartao']);
+  assert.deepEqual(Object.keys(PADRAO_BOTOES), ['comum', 'principal', 'perigo', 'cartao', 'amostra']);
 });
 
 test('cada botão tem o conjunto completo de opções e todas as partes', async () => {
   const { PADRAO_BOTOES, PARTES } = await carregar();
-  for (const [tipo, b] of Object.entries(PADRAO_BOTOES).filter(([n]) => n !== 'cartao')) {
+  for (const [tipo, b] of Object.entries(PADRAO_BOTOES).filter(([n]) => !['cartao', 'amostra'].includes(n))) {
     for (const campo of ['cor', 'forca', 'vidro', 'desfoque', 'brilho', 'raio', 'altura', 'respiracao', 'sombraLetras']) assert.ok(campo in b, `${tipo} sem ${campo}`);
     assert.deepEqual(Object.keys(b.ligados).sort(), Object.keys(PARTES).sort(), `${tipo}: partes ligáveis`);
   }
@@ -157,4 +157,11 @@ test('cartões: segunda cor cria um degradê (e sem ela não há degradê)', asy
   assert.match(com, /linear-gradient\(160deg, #1b2a4a, #4a2150\)/);
   assert.doesNotMatch(variaveisDosCartoes({})['--cartao-brilho'], /#/);
   assert.equal(normalizarBotoes({ cartao: { cor2: 'url(x)' } }).cartao.cor2, '');
+});
+
+test('faixa colorida da amostra: três cores válidas, o resto volta ao padrão', async () => {
+  const { normalizarBotoes, PADRAO_AMOSTRA } = await carregar();
+  assert.deepEqual(normalizarBotoes({}).amostra, PADRAO_AMOSTRA);
+  assert.deepEqual(normalizarBotoes({ amostra: ['#FF0000', 'red', '#00ff00'] }).amostra, ['#ff0000', PADRAO_AMOSTRA[1], '#00ff00']);
+  assert.deepEqual(normalizarBotoes({ amostra: 'lixo' }).amostra, PADRAO_AMOSTRA);
 });
