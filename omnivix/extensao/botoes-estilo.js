@@ -33,11 +33,14 @@ const base = {
   ligados: { cor: false, vidro: true, desfoque: true, reflexo: true, contorno: true, sombraExterna: true, sombraInterna: false, sombraLetras: false, respiracao: true }
 };
 
+// Cartões: os painéis/caixas das telas. Usam a cor de fundo escolhida quando ligado.
+export const PADRAO_CARTAO = { cor: '#0c0c0d', cor2: '', ligado: true, acetinado: true }; // preto acetinado por padrão
+
 export const PADRAO_BOTOES = {
   comum: { ...base, ligados: { ...base.ligados } },
   principal: { ...base, vidro: 0, forca: 30, ligados: { ...base.ligados, cor: true, vidro: false } },
   perigo: { ...base, vidro: 0, forca: 80, sombraLetras: 50, cor: '#ff6b61', ligados: { ...base.ligados, cor: true, vidro: false, sombraInterna: true, sombraLetras: true } },
-  cartao: { cor: '', ligado: false }
+  cartao: { ...PADRAO_CARTAO }
 };
 
 // Estilos prontos: preenchem os números de uma vez (o escopo escolhido recebe). Cores e partes ligadas não mudam.
@@ -46,9 +49,6 @@ export const ESTILOS_PRONTOS = {
   intenso: { nome: 'Vidro intenso', desfoque: 24, brilho: 240, respiracao: 3 },
   plano: { nome: 'Plano (sem vidro)', desfoque: 0, brilho: 0, respiracao: 0 }
 };
-
-// Cartões: os painéis/caixas das telas. Usam a cor de fundo escolhida quando ligado.
-export const PADRAO_CARTAO = { cor: '', ligado: false };
 
 const LIMITES = {
   forca: [10, 100], vidro: [0, 200], solido: [0, 100], desfoque: [0, 30], brilho: [0, 300], raio: [0, 28], altura: [30, 48],
@@ -76,7 +76,9 @@ const normalizarCartao = (entrada) => {
   const o = entrada && typeof entrada === 'object' ? entrada : {};
   return {
     cor: typeof o.cor === 'string' && (o.cor === '' || COR_HEX.test(o.cor)) ? o.cor.toLowerCase() : PADRAO_CARTAO.cor,
-    ligado: typeof o.ligado === 'boolean' ? o.ligado : PADRAO_CARTAO.ligado
+    cor2: typeof o.cor2 === 'string' && (o.cor2 === '' || COR_HEX.test(o.cor2)) ? o.cor2.toLowerCase() : PADRAO_CARTAO.cor2, // segunda cor do degradê ('' = sem degradê)
+    ligado: typeof o.ligado === 'boolean' ? o.ligado : PADRAO_CARTAO.ligado,
+    acetinado: typeof o.acetinado === 'boolean' ? o.acetinado : PADRAO_CARTAO.acetinado
   };
 };
 
@@ -144,6 +146,12 @@ export const variaveisDosBotoes = (botoes) => {
 // A letra vira escura se o fundo escolhido for claro, para não sumir.
 export const variaveisDosCartoes = (botoes) => {
   const { cartao } = normalizarBotoes(botoes);
-  if (!cartao.ligado || !cartao.cor) return {};
-  return { '--superficie': cartao.cor, '--texto': luminancia(cartao.cor) > 0.55 ? '#111111' : '#d0cdcd' };
+  const brilho = cartao.acetinado
+    ? 'linear-gradient(160deg, rgb(255 255 255 / 0.07) 0%, rgb(255 255 255 / 0.015) 45%, rgb(0 0 0 / 0.28) 100%)'
+    : 'none';
+  if (!cartao.ligado || !cartao.cor) return { '--cartao-brilho': brilho };
+  // Degradê: da cor de fundo para a segunda cor, com o acetinado (se ligado) por cima.
+  const camadas = cartao.cor2 ? [brilho, `linear-gradient(160deg, ${cartao.cor}, ${cartao.cor2})`].filter((c) => c !== 'none').join(', ') : brilho;
+  const claro = luminancia(cartao.cor) > 0.55 && (!cartao.cor2 || luminancia(cartao.cor2) > 0.55);
+  return { '--superficie': cartao.cor, '--texto': claro ? '#111111' : '#d0cdcd', '--cartao-brilho': camadas };
 };

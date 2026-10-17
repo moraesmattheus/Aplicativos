@@ -179,6 +179,9 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
   *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; transition-duration: 1ms !important; }
 }
 
+/* Cartões (painéis e caixas): brilho acetinado opcional por cima da cor de fundo. */
+fieldset, .destino, .painel, details, .ao-vivo, .tag, pre { background-image: var(--cartao-brilho, none) !important; }
+
 /* ---------- Editor da aparência dos botões (telas de Configurações) ---------- */
 .amostra-botoes { display: flex; flex-wrap: wrap; gap: 12px; padding: 20px; margin: 8px 0 12px; border-radius: var(--raio-externo);
   background: linear-gradient(120deg, #1b2a4a 0%, #4a2150 50%, #0f3d3a 100%); /* fundo colorido: o vidro só aparece com algo atrás para desfocar */ }
@@ -200,3 +203,5 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
 .partes-botao label { display: flex; align-items: center; gap: 8px; font-weight: 400; margin: 0; }
 input[type=color] { width: 46px; height: 32px; min-height: 0; padding: 2px; cursor: pointer; }
 @media (max-width: 560px) { .linha-botao { grid-template-columns: 1fr; } }
+
+.painel-botao [hidden], .painel-botao[hidden] { display: none !important; }

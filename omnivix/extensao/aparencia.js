@@ -12,7 +12,7 @@ export const aplicarBotoes = (botoes) => {
     document.documentElement.style.setProperty(nome, valor);
   }
   const cartoes = variaveisDosCartoes(botoes);
-  for (const nome of ['--superficie', '--texto']) {
+  for (const nome of ['--superficie', '--texto', '--cartao-brilho']) {
     if (nome in cartoes) document.documentElement.style.setProperty(nome, cartoes[nome]);
     else document.documentElement.style.removeProperty(nome); // sem cor escolhida: volta ao tema
   }

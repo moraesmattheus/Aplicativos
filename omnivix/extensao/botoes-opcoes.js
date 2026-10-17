@@ -81,7 +81,7 @@ export const montarEditorDeBotoes = (raiz, inicial) => {
   const entradaCor = el('input', { type: 'color', id: 'botao-cor', ariaLabel: 'Cor de fundo' });
   const botaoCorPadrao = el('button', { type: 'button', textContent: 'Cor padrão', title: 'Volta à cor que este botão tinha de fábrica' });
   entradaCor.addEventListener('input', () => {
-    if (escopo === 'cartao') valor = normalizarBotoes({ ...valor, cartao: { cor: entradaCor.value, ligado: true } });
+    if (escopo === 'cartao') valor = normalizarBotoes({ ...valor, cartao: { ...valor.cartao, cor: entradaCor.value, ligado: true } });
     else {
       definirCampo('cor', entradaCor.value);
       definirParte('cor', true); // escolheu uma cor: a parte "cor de fundo" liga sozinha
@@ -146,7 +146,28 @@ export const montarEditorDeBotoes = (raiz, inicial) => {
     desenhar();
     avisarMudanca();
   });
-  const rotuloCartao = el('label', { className: 'suave' }, caixaCartao, ' Usar esta cor nos cartões (painéis e caixas das telas)');
+  const caixaAcetinado = el('input', { type: 'checkbox', id: 'botao-cartao-acetinado' });
+  caixaAcetinado.addEventListener('change', () => {
+    valor = normalizarBotoes({ ...valor, cartao: { ...valor.cartao, acetinado: caixaAcetinado.checked } });
+    desenhar();
+    avisarMudanca();
+  });
+  const entradaCor2 = el('input', { type: 'color', id: 'botao-cartao-cor2', ariaLabel: 'Segunda cor do degradê' });
+  const botaoSemDegrade = el('button', { type: 'button', textContent: 'Sem degradê' });
+  entradaCor2.addEventListener('input', () => {
+    valor = normalizarBotoes({ ...valor, cartao: { ...valor.cartao, cor2: entradaCor2.value, ligado: true } });
+    desenhar();
+    avisarMudanca();
+  });
+  botaoSemDegrade.addEventListener('click', () => {
+    valor = normalizarBotoes({ ...valor, cartao: { ...valor.cartao, cor2: '' } });
+    desenhar();
+    avisarMudanca();
+  });
+  const rotuloCartao = el('div', { className: 'suave' },
+    el('div', { className: 'cor-botao' }, el('span', {}, 'Degradê: segunda cor'), entradaCor2, botaoSemDegrade),
+    el('label', {}, caixaCartao, ' Usar esta cor nos cartões (painéis e caixas das telas)'),
+    el('label', {}, caixaAcetinado, ' Brilho acetinado (reflexo suave, como cetim)'));
 
   const painel = el('div', { className: 'painel-botao', role: 'tabpanel' },
     el('label', {}, 'Estilo pronto', seletorEstilo),
@@ -185,9 +206,12 @@ export const montarEditorDeBotoes = (raiz, inicial) => {
       caixa.indeterminate = !caixa.checked && ligadas.some(Boolean); // alguns têm, outros não
     }
     if (soCartao) {
-      entradaCor.value = valor.cartao.cor || '#181616';
+      entradaCor.value = valor.cartao.cor || PADRAO_CARTAO.cor;
       botaoCorPadrao.disabled = !valor.cartao.cor;
       caixaCartao.checked = valor.cartao.ligado;
+      caixaAcetinado.checked = valor.cartao.acetinado;
+      entradaCor2.value = valor.cartao.cor2 || valor.cartao.cor || PADRAO_CARTAO.cor;
+      botaoSemDegrade.disabled = !valor.cartao.cor2;
     } else {
       const primeiro = alvos()[0];
       entradaCor.value = valor[primeiro].cor || corPadraoEmHex(primeiro);
