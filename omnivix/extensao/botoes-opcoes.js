@@ -122,6 +122,7 @@ export const montarEditorDeBotoes = (raiz, inicial) => {
     const saida = el('output', { className: 'suave', htmlFor: entrada.id });
     entrada.addEventListener('input', () => {
       definirCampo(campo, Number(entrada.value));
+      if (parte) { definirParte(parte, true); desenhar(); } // mexeu no controle: a parte liga sozinha
       saida.textContent = `${entrada.value}${unidade}`;
       avisarMudanca();
     });
@@ -220,7 +221,7 @@ export const montarEditorDeBotoes = (raiz, inicial) => {
       const r = resumo(campo);
       entrada.value = String(r.valor);
       saida.textContent = r.misto ? 'misto' : `${r.valor}${unidade}`;
-      entrada.disabled = parte ? alvos().every((t) => !valor[t].ligados[parte]) : false; // parte desligada = controle apagado
+      entrada.disabled = false; // sempre disponível: mexer no controle liga a parte dele
     }
     for (const [parte, caixa] of Object.entries(soCartao ? {} : caixas)) {
       const ligadas = alvos().map((t) => valor[t].ligados[parte]);
