@@ -8,7 +8,7 @@ const ORIGEM = path.join(__dirname, '..', '..', 'extensao');
 const DESTINO = path.join(__dirname, '..', 'app');
 const ARQUIVOS = [
   'armazenamento.js', 'formatar.js', 'resumo.js', 'gemini.js', 'notion.js', 'falantes.js',
-  'transcricao-nuvem.js', 'transcricao-assemblyai.js', 'saude-audio.js', 'pcm-worklet.js', 'gravacao.js', 'estilo.css', 'reunioes.html', 'reunioes.js'
+  'transcricao-nuvem.js', 'transcricao-assemblyai.js', 'saude-audio.js', 'aparencia.js', 'botoes-estilo.js', 'botoes-opcoes.js', 'pcm-worklet.js', 'gravacao.js', 'estilo.css', 'reunioes.html', 'reunioes.js'
 ];
 
 if (!fs.existsSync(ORIGEM)) {

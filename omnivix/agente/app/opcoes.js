@@ -3,6 +3,7 @@
 import { carregarConfig, salvarConfig } from './config.js';
 import { descobrirDestino } from './notion.js';
 import { chamarGemini, listarModelosGemini } from './gemini.js';
+import { montarEditorDeBotoes } from './botoes-opcoes.js';
 
 const $ = (id) => document.getElementById(id);
 const CAMPOS_TEXTO = ['motorTranscricao', 'groqKey', 'groqModelo', 'modeloWhisper', 'idioma', 'provedorResumo', 'geminiKey', 'geminiModelo', 'ollamaUrl', 'ollamaModelo', 'notionToken', 'destinoPadrao', 'atalho', 'agendaUrl', 'agendaPalavras'];
@@ -190,10 +191,12 @@ $('testarTodosModelos').addEventListener('click', async () => {
 
 let config = await carregarConfig();
 let editado = false; // true = há campos mexidos que ainda não foram salvos
+const editorBotoes = montarEditorDeBotoes($('editorBotoes'), config.botoes);
 
 // Põe a configuração nos campos da tela. Usada ao abrir e sempre que a configuração mudar por fora.
 const preencherTela = (c) => {
   config = c;
+  editorBotoes.definir(c.botoes);
   preencherModelos(MODELOS_RESERVA, c.geminiModelo);
   opcaoSalva($('microfoneId'), c.microfoneId, c.microfoneNome);
   opcaoSalva($('entradaOutrosId'), c.entradaOutrosId, c.entradaOutrosNome);
@@ -235,6 +238,7 @@ $('salvar').addEventListener('click', async () => {
   nova.ignorarApps = $('ignorarApps').value.split('\n').map((l) => l.trim().toLowerCase()).filter(Boolean);
   nova.processosDeReuniao = $('processosDeReuniao').value.split('\n').map((l) => l.trim().toLowerCase()).filter(Boolean);
   const nomeEscolhido = (seletor) => (seletor.value ? seletor.selectedOptions[0].textContent.replace(/ \(salvo\)$/, '') : '');
+  nova.botoes = editorBotoes.ler();
   nova.microfoneId = $('microfoneId').value;
   nova.microfoneNome = nomeEscolhido($('microfoneId'));
   nova.entradaOutrosId = $('entradaOutrosId').value;

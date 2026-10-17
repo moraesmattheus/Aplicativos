@@ -2,6 +2,7 @@
 // Ele fecha sozinho quando você clica fora, então NÃO guarda estado: sempre desenha a tela
 // a partir de chrome.storage.session (onde o background salva o estado da gravação).
 
+import './aparencia.js'; // aplica a aparência dos botões escolhida em Configurações
 import { formatarTempo } from './formatar.js';
 import { detectarReuniao, tituloDaReuniao } from './deteccao.js';
 

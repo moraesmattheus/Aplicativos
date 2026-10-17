@@ -2,6 +2,7 @@
 
 import { carregarConfig, salvarConfig } from './config.js';
 import { descobrirDestino } from './notion.js';
+import { montarEditorDeBotoes } from './botoes-opcoes.js';
 import { chamarGemini, listarModelosGemini } from './gemini.js';
 
 const $ = (id) => document.getElementById(id);
@@ -73,6 +74,7 @@ preencherModelos(MODELOS_RESERVA, config.geminiModelo);
 CAMPOS_TEXTO.forEach((campo) => ($(campo).value = config[campo]));
 CAMPOS_MARCAR.forEach((campo) => ($(campo).checked = config[campo]));
 config.destinos.forEach((d) => $('listaDestinos').append(criarLinhaDestino(d)));
+const editorBotoes = montarEditorDeBotoes($('editorBotoes'), config.botoes);
 $('novoDestino').addEventListener('click', () => $('listaDestinos').append(criarLinhaDestino({ nome: '' })));
 mostrarCaixaDoProvedor();
 mostrarCaixaDoMotor();
@@ -131,6 +133,7 @@ $('salvar').addEventListener('click', async () => {
   const nova = {};
   CAMPOS_TEXTO.forEach((campo) => (nova[campo] = $(campo).value.trim()));
   CAMPOS_MARCAR.forEach((campo) => (nova[campo] = $(campo).checked));
+  nova.botoes = editorBotoes.ler();
   nova.destinos = [...$('listaDestinos').children].map((linha) => linha.ler()).filter((d) => d.nome);
   await salvarConfig(nova);
   $('salvo').textContent = '✔ Salvo!';

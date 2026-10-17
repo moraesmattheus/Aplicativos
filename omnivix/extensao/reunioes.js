@@ -1,6 +1,7 @@
 // Página que lista as reuniões gravadas e mostra resumo, itens de ação e transcrição.
 // A reunião aberta é guardada no endereço (#id), então o botão "voltar" e o recarregar funcionam.
 
+import './aparencia.js'; // aplica a aparência dos botões escolhida em Configurações
 import { listarReunioes, obterReuniao, salvarReuniao, apagarReuniao, obterAudio } from './armazenamento.js';
 import { carregarConfig } from './config.js';
 import { gerarResumo } from './resumo.js';
