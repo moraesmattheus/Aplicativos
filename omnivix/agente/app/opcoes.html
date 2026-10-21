@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<title>Configurações · Omnivix</title>
+<link rel="stylesheet" href="estilo.css">
+<style>
+  main { max-width: 640px; margin: 0 auto; padding: 24px 16px 64px; }
+  label { display: block; margin-top: 14px; font-weight: 600; }
+  label small { font-weight: 400; color: var(--suave); display: block; }
+  .marcar { display: flex; gap: 8px; align-items: flex-start; font-weight: 600; }
+  .marcar input { margin-top: 5px; }
+  fieldset { border: 0; box-shadow: var(--anel); background: var(--superficie); border-radius: var(--raio-externo); margin: 16px 0 0; padding: 6px 18px 18px; min-width: 0; }
+  .destino { display: grid; gap: 10px; padding: 14px; margin-top: 10px; background: var(--superficie); box-shadow: var(--anel); border-radius: var(--raio-externo); }
+  .destino input, .destino textarea { background: var(--fundo); }
+  .destino .campo { display: grid; gap: 4px; }
+  .destino .rotulo { font-size: 12px; font-weight: 600; color: var(--suave); }
+  .destino .rodape { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  #salvo, #resultadoMic { margin-left: 12px; }
+</style>
+<body>
+<main>
+  <div id="avisoChaves" class="aviso" hidden><b>Não consegui ler as chaves salvas</b> (<span id="chavesIlegiveis"></span>). O Windows negou a leitura, o que acontece quando o app é aberto de outro jeito. As chaves guardadas <b>não foram apagadas</b>. Cole-as de novo e clique em Salvar, ou abra o app pelo atalho normal.</div>
+  <div id="avisoMudou" class="aviso" hidden>A configuração mudou fora desta janela. <button type="button" id="recarregarConfig">Atualizar agora</button> <span class="suave">(o que você digitou e ainda não salvou será perdido)</span></div>
+  <h1>⚙️ Configurações</h1>
+
+  <h2>1. Gravação automática</h2>
+  <p class="suave">O agente fica na bandeja do Windows (perto do relógio) e grava sozinho. <b>Avise os participantes de que a reunião está sendo gravada.</b></p>
+  <label class="marcar"><input type="checkbox" id="autoDetectarChamadas"><span>Gravar sozinho quando eu entrar numa chamada<small>Detecta quando um programa (navegador, Zoom, Teams...) passa a usar o microfone e para quando ele é liberado.</small></span></label>
+  <label class="marcar"><input type="checkbox" id="avisarAoIniciar"><span>Mostrar notificação ao começar a gravar</span></label>
+  <label class="marcar"><input type="checkbox" id="iniciarComWindows"><span>Abrir junto com o Windows</span></label>
+  <label for="atalho">Atalho para ligar/desligar a gravação<small>Ex.: Control+Alt+R</small></label>
+  <input type="text" id="atalho">
+  <label for="ignorarApps">Programas que NÃO são chamadas<small>Um por linha (nome do .exe). Use para ditado por voz, gravadores etc.</small></label>
+  <textarea id="ignorarApps" rows="3" style="width:100%"></textarea>
+
+  <label for="processosDeReuniao">Programas que indicam uma reunião aberta<small>Um por linha (nome do .exe). Gravam mesmo com o seu microfone mudo. Padrão: cpthost.exe, que o Zoom mantém aberto durante a reunião.</small></label>
+  <textarea id="processosDeReuniao" rows="2" style="width:100%"></textarea>
+
+  <h2>2. Agenda (aulas e entrevistas presenciais)</h2>
+  <p class="suave">Sem chamada não há sinal de que a conversa começou, então o agente usa o seu calendário. Cole o <b>endereço secreto no formato iCal</b> do Google Agenda (Configurações do calendário › Integrar agenda). Aulas que se repetem funcionam.</p>
+  <label for="agendaUrl">Endereço iCal (.ics)</label>
+  <input type="password" id="agendaUrl" autocomplete="off" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics">
+  <label for="agendaPalavras">Gravar eventos cujo título contenha<small>Separe por vírgula. Acentos e maiúsculas não importam.</small></label>
+  <input type="text" id="agendaPalavras">
+  <label class="marcar"><input type="checkbox" id="agendaTodos"><span>Gravar todos os eventos do calendário</span></label>
+
+  <h2>3. Transcrição</h2>
+  <label for="motorTranscricao">Quem transcreve?
+    <small>A nuvem do Groq é a opção mais RÁPIDA: o áudio de cada trecho é enviado a eles. O modo local é mais lento, mas nada sai do seu PC.</small></label>
+  <select id="motorTranscricao">
+    <option value="local">Local - Whisper no seu PC (privado)</option>
+    <option value="groq">Groq (nuvem) - rápido, chave grátis</option>
+  </select>
+
+  <fieldset id="boxGroq">
+    <label for="groqKey">Chave da API do Groq<small>Crie grátis em <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a> (sem cartão). O plano grátis tem limite diário de uso.</small></label>
+    <input type="password" id="groqKey" autocomplete="off">
+    <label for="groqModelo">Modelo</label>
+    <input type="text" id="groqModelo">
+  </fieldset>
+
+  <fieldset id="boxLocal">
+  <label for="modeloWhisper">Modelo local (Whisper)
+    <small>Maior = mais preciso, porém mais lento e com download maior (feito uma vez só).</small></label>
+  <select id="modeloWhisper">
+    <option value="Xenova/whisper-tiny">Tiny (~40 MB) - rápido, erra mais</option>
+    <option value="Xenova/whisper-base">Base (~80 MB) - equilibrado</option>
+    <option value="Xenova/whisper-small">Small (~250 MB) - melhor para português, exige PC bom</option>
+  </select>
+  <label class="marcar"><input type="checkbox" id="usarGpu"><span>Usar a placa de vídeo (WebGPU) - bem mais rápido<small>Se falhar, volta sozinho para o processador.</small></span></label>
+  </fieldset>
+
+  <label for="idioma">Idioma da reunião</label>
+  <select id="idioma">
+    <option value="portuguese">Português</option>
+    <option value="english">Inglês</option>
+    <option value="spanish">Espanhol</option>
+    <option value="auto">Detectar automaticamente</option>
+  </select>
+  <label class="marcar"><input type="checkbox" id="identificarFalantes"><span>Separar cada participante (“Pessoa 1”, “Pessoa 2”...)<small>No fim da reunião, envia o ÁUDIO da aba ao Gemini (precisa da chave do Gemini abaixo, ~80 min no máximo). Seu microfone sempre aparece como “Você”, sem enviar nada.</small></span></label>
+  <label class="marcar"><input type="checkbox" id="fecharMinimiza"><span>Manter o app na barra de tarefas ao fechar a janela<small>O botão do Omnivix fica sempre na barra de tarefas (com uma bolinha vermelha enquanto grava). Para sair de vez, use "Sair" no menu da bandeja. Desmarcado, fechar a janela a esconde e só o ícone da bandeja permanece.</small></span></label>
+  <label class="marcar"><input type="checkbox" id="mostrarIndicador"><span>Mostrar o indicador "REC" na tela enquanto grava<small>Uma pílula pequena, sempre por cima, com o tempo, o volume e alertas se a gravação ficar sem som. Você pode arrastá-la. Ela não aparece quando você compartilha a tela.</small></span></label>
+  <label class="marcar"><input type="checkbox" id="gravarMicrofone"><span>Gravar também o meu microfone<small>Desligue em aulas em que você fica mudo. Assim o programa não abre o microfone e o áudio do seu fone Bluetooth não muda de qualidade.</small></span></label>
+  <fieldset id="boxDispositivos">
+    <label>Dispositivos de áudio (só para este app)<small>Não muda o padrão do Windows nem o som que você ouve. Clique em "Carregar dispositivos" para listar o que existe no seu computador (isso abre o microfone por um instante).</small></label>
+    <p><button type="button" id="carregarDispositivos">Carregar dispositivos</button> <span id="statusDispositivos" class="suave"></span></p>
+
+    <label for="microfoneId">Microfone para a sua voz</label>
+    <select id="microfoneId"><option value="">Padrão do Windows</option></select>
+    <p><button type="button" id="testarMicrofone">Testar este microfone</button> <span id="nivelMicrofone" class="suave"></span></p>
+
+    <label for="entradaOutrosId">De onde vem o áudio dos outros participantes<small>"Áudio do computador" captura a saída padrão do Windows. Se você usa o FxSound como saída padrão, é ele que está sendo capturado (antes dos efeitos), mesmo sem aparecer nesta lista, que mostra só entradas. Se o seu som ficar estranho, escolha uma entrada, como o Virtual Audio Cable, e mande o Zoom tocar nela.</small></label>
+    <p id="saidaCapturada" class="suave"></p>
+    <select id="entradaOutrosId"><option value="">Áudio do computador (padrão)</option></select>
+    <p><button type="button" id="testarOutros">Testar esta fonte</button> <span id="nivelOutros" class="suave"></span></p>
+  </fieldset>
+  <label class="marcar"><input type="checkbox" id="transcreverSoNoFim"><span>Transcrever só depois que a reunião acabar<small>Evita gastar processador durante a chamada (que pode deixar o áudio ou o vídeo travando). O texto aparece alguns minutos depois de parar.</small></span></label>
+  <label class="marcar"><input type="checkbox" id="salvarAudio"><span>Guardar o áudio da reunião<small>Para ouvir/baixar depois. Fica só no seu navegador.</small></span></label>
+
+  <h2>4. Resumo</h2>
+  <label for="provedorResumo">Quem escreve o resumo?</label>
+  <select id="provedorResumo">
+    <option value="basico">Básico - sem IA, 100% offline (resumo simples)</option>
+    <option value="gemini">Google Gemini - chave grátis (resumo muito melhor)</option>
+    <option value="ollama">Ollama - IA rodando no seu PC (grátis e privado)</option>
+  </select>
+
+  <fieldset id="boxGemini">
+    <label for="geminiKey">Chave da API do Gemini<small>Crie grátis em <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. No plano grátis o Google pode usar o conteúdo enviado para melhorar produtos deles.</small></label>
+    <input type="password" id="geminiKey" autocomplete="off">
+    <label for="geminiModelo">Modelo<small>Os modelos mudam e alguns deixam de valer para contas novas. "Buscar" lista os da sua conta e "Testar todos" mostra quais respondem de verdade.</small></label>
+    <select id="geminiModelo"></select>
+    <p><button type="button" id="buscarModelos">Buscar modelos da minha chave</button>
+       <button type="button" id="testarModelo">Testar este modelo</button>
+       <button type="button" id="testarTodosModelos">Testar todos</button>
+       <span id="resultadoGemini" class="suave"></span></p>
+  </fieldset>
+
+  <fieldset id="boxOllama">
+    <label for="ollamaUrl">Endereço do Ollama<small>Instale em ollama.com e inicie com a variável <code>OLLAMA_ORIGINS=chrome-extension://*</code>.</small></label>
+    <input type="text" id="ollamaUrl">
+    <label for="ollamaModelo">Modelo (ex.: llama3.2, qwen2.5)</label>
+    <input type="text" id="ollamaModelo">
+  </fieldset>
+
+  <h2>5. Notion (enviar cada reunião para o lugar certo)</h2>
+  <p class="suave">Crie uma integração grátis em <a href="https://www.notion.so/profile/integrations" target="_blank" rel="noopener">notion.so/profile/integrations</a> (tipo <b>Interna</b>) e copie o token. Depois, em cada página ou banco de destino, clique em <b>••• › Conexões</b> e adicione a integração.</p>
+  <label for="notionToken">Token da integração<small>Fica guardado só neste navegador.</small></label>
+  <input type="password" id="notionToken" autocomplete="off" placeholder="ntn_...">
+  <label class="marcar"><input type="checkbox" id="notionAuto"><span>Enviar automaticamente ao terminar cada reunião<small>Senão, você envia com o botão “Enviar ao Notion” na página da reunião.</small></span></label>
+
+  <label>Tipos de reunião e seus destinos
+    <small>A IA escolhe o tipo pelo conteúdo. Escreva em “reconhecer” palavras que ajudem a identificar (ex.: nome da matéria, da empresa). O link pode ser de um <b>banco de dados</b> (cria uma linha) ou de uma <b>página</b> (cria uma subpágina).</small></label>
+  <div id="listaDestinos"></div>
+  <button id="novoDestino" type="button">＋ Adicionar tipo</button>
+
+  <label for="destinoPadrao">Destino padrão<small>Para onde vai quando nenhum tipo combina (opcional).</small></label>
+  <input type="text" id="destinoPadrao" placeholder="Link do Notion">
+
+  <h2>Aparência dos botões</h2>
+  <div id="editorBotoes"></div>
+
+  <p><button class="principal" id="salvar">Salvar</button><span id="salvo" class="suave"></span></p>
+</main>
+<script type="module" src="opcoes.js"></script>
+</body>
+</html>

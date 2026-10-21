@@ -1,0 +1,207 @@
+/* Estilo compartilhado do Omnivix (extensão e app de bandeja).
+   Regras de movimento: só animamos transform e opacity (rodam na placa de vídeo, sem recalcular layout),
+   nunca "transition: all", e tudo respeita "reduzir movimento" do Windows. */
+
+:root {
+  color-scheme: dark;
+  /* Valores padrão (preto total). A página foco/tema.js troca estes valores pelas cores dos Ajustes. */
+  --fundo: #000; --superficie: #181616; --texto: #d0cdcd; --destaque: #dcdcdc; --sobre-destaque: #000;
+  --raio: 14px; --perigo: #ff6b61; --aviso-fundo: #3a2f10; --aviso-texto: #ffd980;
+  /* Derivadas: acompanham o texto e o fundo escolhidos. */
+  --suave: color-mix(in srgb, var(--texto) 55%, var(--fundo));
+  --borda: color-mix(in srgb, var(--texto) 20%, transparent);
+  --destaque-texto: var(--sobre-destaque);
+
+  /* Cantos concêntricos: o raio de fora = raio de dentro + o espaço entre os dois (aqui, 6 px). */
+  --raio-interno: var(--raio);
+  --raio-externo: calc(var(--raio) + 6px);
+  /* Em fundo escuro, uma sombra é só um anel fino e claro (profundidade em camadas não aparece no preto). */
+  --anel: 0 0 0 1px rgb(255 255 255 / 0.08);
+  --anel-forte: 0 0 0 1px rgb(255 255 255 / 0.16);
+  --elevacao: 0 10px 28px -14px rgb(0 0 0 / 0.9);
+  /* Movimento: curva suave, sem "quicar". */
+  --curva: cubic-bezier(0.2, 0, 0, 1);
+  --rapido: 150ms;
+  --medio: 240ms;
+
+}
+
+* { box-sizing: border-box; }
+html { background: var(--fundo); scrollbar-color: color-mix(in srgb, var(--texto) 28%, transparent) transparent; scrollbar-width: thin; }
+body {
+  margin: 0; color: var(--texto);
+  /* Dois brilhos de cor muito suaves (quase imperceptíveis): dão ao vidro dos botões algo para desfocar. */
+  background:
+    radial-gradient(900px 520px at 12% -12%, color-mix(in srgb, var(--destaque) 9%, transparent), transparent 62%),
+    radial-gradient(760px 520px at 104% 108%, color-mix(in srgb, var(--destaque) 6%, transparent), transparent 62%),
+    var(--fundo);
+  background-attachment: fixed;
+  font: 14px/1.5 system-ui, "Segoe UI Variable", "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+}
+h1, h2, h3 { margin: 0 0 8px; line-height: 1.25; text-wrap: balance; }
+h1 { font-size: 20px; } h2 { font-size: 16px; margin-top: 24px; } h3 { font-size: 14px; }
+p { text-wrap: pretty; }
+a { color: var(--destaque); text-underline-offset: 3px; }
+::selection { background: color-mix(in srgb, var(--destaque) 35%, transparent); }
+
+/* ---------- Botões: vidro acetinado ----------
+   Cada um dos TRÊS botões (comum, .principal e .perigo) tem as suas variáveis --btn-<tipo>-* (padrões abaixo; as personalizadas
+   vêm de Configurações > Aparência dos botões, via aparencia.js). Aqui elas viram --b-*, e UMA regra só desenha qualquer botão. */
+button {
+  --b-blur: var(--btn-comum-blur, 16px);
+  --b-vidro: var(--btn-comum-vidro, 1);
+  --b-solido: var(--btn-comum-solido, 0);
+  --b-brilho: var(--btn-comum-brilho, 1);
+  --b-raio: var(--btn-comum-raio, var(--raio-interno));
+  --b-altura: var(--btn-comum-altura, 38px);
+  --b-respira: var(--btn-comum-respira, 0.98);
+  --b-letra: var(--btn-comum-letra, 0);
+  --b-contorno: var(--btn-comum-contorno, 1);
+  --b-ext: var(--btn-comum-ext, 1);
+  --b-int: var(--btn-comum-int, 0);
+  --b-cor: var(--btn-comum-cor, transparent);
+  --b-forca: var(--btn-comum-forca, 0%);
+  --b-forca-baixo: var(--btn-comum-forca-baixo, 0%);
+  --b-topo: 0; --b-anel: 0.11;
+}
+button.principal {
+  --b-blur: var(--btn-principal-blur, 16px);
+  --b-vidro: var(--btn-principal-vidro, 0);
+  --b-solido: var(--btn-principal-solido, 0);
+  --b-brilho: var(--btn-principal-brilho, 1);
+  --b-raio: var(--btn-principal-raio, var(--raio-interno));
+  --b-altura: var(--btn-principal-altura, 38px);
+  --b-respira: var(--btn-principal-respira, 0.98);
+  --b-letra: var(--btn-principal-letra, 0);
+  --b-contorno: var(--btn-principal-contorno, 1);
+  --b-ext: var(--btn-principal-ext, 1);
+  --b-int: var(--btn-principal-int, 0);
+  --b-cor: var(--btn-principal-cor, var(--destaque));
+  --b-forca: var(--btn-principal-forca, 30%);
+  --b-forca-baixo: var(--btn-principal-forca-baixo, 18%);
+  --b-topo: 0.04; --b-anel: 0.14;
+}
+button.perigo {
+  --b-blur: var(--btn-perigo-blur, 16px);
+  --b-vidro: var(--btn-perigo-vidro, 0);
+  --b-solido: var(--btn-perigo-solido, 0);
+  --b-brilho: var(--btn-perigo-brilho, 1);
+  --b-raio: var(--btn-perigo-raio, var(--raio-interno));
+  --b-altura: var(--btn-perigo-altura, 38px);
+  --b-respira: var(--btn-perigo-respira, 0.98);
+  --b-letra: var(--btn-perigo-letra, 0.5);
+  --b-contorno: var(--btn-perigo-contorno, 1);
+  --b-ext: var(--btn-perigo-ext, 1);
+  --b-int: var(--btn-perigo-int, 1);
+  --b-cor: var(--btn-perigo-cor, #ff6b61);
+  --b-forca: var(--btn-perigo-forca, 80%);
+  --b-forca-baixo: var(--btn-perigo-forca-baixo, 62%);
+  --b-topo: 0.03; --b-anel: 0.07;
+}
+
+button {
+  position: relative; isolation: isolate; overflow: hidden;
+  font: inherit; font-size: 13px; font-weight: 500; letter-spacing: 0.01em; color: inherit;
+  border: 0; border-radius: var(--b-raio); padding: 6px 16px; min-height: var(--b-altura); cursor: pointer;
+  text-shadow: 0 1px 2px rgb(0 0 0 / var(--b-letra)), 0 0 10px rgb(0 0 0 / calc(var(--b-letra) * 0.5));
+  /* camadas, de cima para baixo: (1) luz do topo, (2) cor de fundo, (3) vidro claro, (4) base sólida opcional */
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / calc(var(--b-topo) * var(--b-brilho))) 0%, rgb(255 255 255 / 0) 60%),
+    linear-gradient(180deg, color-mix(in srgb, var(--b-cor) var(--b-forca), transparent), color-mix(in srgb, var(--b-cor) var(--b-forca-baixo), transparent)),
+    linear-gradient(180deg, rgb(255 255 255 / calc(0.09 * var(--b-vidro))) 0%, rgb(255 255 255 / calc(0.03 * var(--b-vidro))) 55%, rgb(255 255 255 / calc(0.05 * var(--b-vidro))) 100%),
+    color-mix(in srgb, var(--superficie) calc(var(--b-solido) * 100%), rgb(255 255 255 / calc(0.03 * var(--b-vidro))));
+  -webkit-backdrop-filter: blur(var(--b-blur)) saturate(150%);
+  backdrop-filter: blur(var(--b-blur)) saturate(150%);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / calc(var(--b-anel) * var(--b-contorno))),   /* contorno fino */
+    inset 0 1px 0 rgb(255 255 255 / calc(0.07 * var(--b-brilho))),                /* fio de luz no topo */
+    inset 0 -12px 16px -10px rgb(0 0 0 / calc(0.32 * var(--b-int))),              /* sombra por dentro, no fundo do botão */
+    0 8px 20px -12px rgb(0 0 0 / calc(0.9 * var(--b-ext)));                       /* sombra de baixo */
+  transition-property: transform, box-shadow, opacity;
+  transition-duration: var(--rapido); transition-timing-function: var(--curva);
+}
+button.principal { color: var(--btn-principal-texto, var(--texto)); font-weight: 600; }
+button.perigo { color: var(--btn-perigo-texto, #fff); font-weight: 600; }
+
+button::before { display: none; }
+button:hover:not(:disabled) {
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / calc(0.18 * var(--b-contorno))),
+    inset 0 1px 0 rgb(255 255 255 / calc(0.09 * var(--b-brilho))),
+    inset 0 -14px 18px -10px rgb(0 0 0 / calc(0.4 * var(--b-int))),
+    0 10px 24px -12px rgb(0 0 0 / calc(0.95 * var(--b-ext)));
+}
+button:active:not(:disabled) { transform: scale(0.96); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Respiração: só enquanto o mouse está em cima. O quanto encolhe vem de --b-respira (1 = não pulsa). Só transform. */
+@keyframes respira-hover { 0%, 100% { transform: scale(1); } 50% { transform: scale(var(--b-respira, 0.98)); } }
+@media (prefers-reduced-motion: no-preference) {
+  button:hover:not(:disabled):not(:active) { animation: respira-hover 2.2s ease-in-out infinite; }
+}
+
+/* Se o navegador não souber desfocar o fundo, o botão continua bonito: o gradiente translúcido já funciona sozinho. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  button { background: linear-gradient(180deg, rgb(255 255 255 / 0.16), rgb(255 255 255 / 0.07)), var(--superficie); }
+}
+
+/* ---------- Campos de formulário: mantêm contorno (acessibilidade) ---------- */
+input, select, textarea {
+  font: inherit; color: inherit; background: var(--superficie);
+  border: 1px solid var(--borda); border-radius: var(--raio-interno); padding: 8px 12px; min-height: 40px;
+  transition-property: border-color, box-shadow; transition-duration: var(--rapido); transition-timing-function: var(--curva);
+}
+input:hover, select:hover, textarea:hover { border-color: color-mix(in srgb, var(--texto) 38%, transparent); }
+input[type=text], input[type=password], select, textarea { width: 100%; }
+input[type=checkbox] { min-height: 0; accent-color: var(--destaque); }
+textarea { resize: vertical; line-height: 1.4; }
+
+/* Foco visível para quem usa o teclado (nunca remover o contorno sem substituir). */
+:focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offset: 0; border-color: var(--destaque); }
+
+.suave { color: var(--suave); }
+.aviso { background: var(--aviso-fundo); color: var(--aviso-texto); padding: 10px 14px; border-radius: var(--raio-interno); margin: 8px 0; }
+.barra { height: 6px; border-radius: 3px; background: var(--borda); overflow: hidden; }
+.barra > div { height: 100%; background: var(--destaque); transition: width 300ms var(--curva); }
+
+/* ---------- Entrada suave (só opacidade e posição) ---------- */
+@keyframes entra { from { opacity: 0; transform: translateY(12px); } }
+@keyframes aparece { from { opacity: 0; } }
+@media (prefers-reduced-motion: no-preference) {
+  body { animation: aparece 280ms var(--curva) both; } /* a janela "acende" em vez de surgir de repente */
+  .entra { animation: entra 320ms var(--curva) both; animation-delay: calc(var(--i, 0) * 60ms); }
+}
+
+/* Quem pediu menos movimento não vê nenhuma animação nem transição. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; transition-duration: 1ms !important; }
+}
+
+/* Cartões (painéis e caixas): brilho acetinado opcional por cima da cor de fundo. */
+fieldset, .destino, .painel, details, .ao-vivo, .tag, pre { background-image: var(--cartao-brilho, none) !important; }
+
+/* ---------- Editor da aparência dos botões (telas de Configurações) ---------- */
+.amostra-botoes { display: flex; flex-wrap: wrap; gap: 12px; padding: 20px; margin: 8px 0 12px; border-radius: var(--raio-externo);
+  background: linear-gradient(120deg, #1b2a4a 0%, #4a2150 50%, #0f3d3a 100%); /* fundo colorido: o vidro só aparece com algo atrás para desfocar */ }
+.amostra-botoes button[aria-pressed="true"] { outline: 2px dashed rgb(255 255 255 / 0.55); outline-offset: 3px; }
+.abas-botao { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
+.abas-botao button { min-height: 34px; padding: 4px 14px; }
+.abas-botao button[aria-selected="true"] { box-shadow: inset 0 0 0 1px var(--destaque), 0 8px 20px -12px rgb(0 0 0 / 0.9); }
+.painel-botao { display: grid; gap: 4px; }
+.linha-botao { display: grid; grid-template-columns: 1fr 220px; gap: 14px; align-items: center; margin-top: 10px; font-weight: 500; }
+.linha-botao small { display: block; color: var(--suave); font-weight: 400; }
+.controle-botao { display: flex; align-items: center; gap: 10px; }
+.controle-botao input[type=range] { flex: 1; min-height: 0; padding: 0; border: 0; background: transparent; accent-color: var(--destaque); }
+.controle-botao output { width: 62px; text-align: right; font-variant-numeric: tabular-nums; }
+.cor-botao { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 12px; font-weight: 500; }
+.partes-botao { margin-top: 14px; padding: 10px 14px 14px; border-radius: var(--raio-interno); background: color-mix(in srgb, var(--texto) 5%, transparent); }
+.partes-botao legend { padding: 0 6px; font-weight: 600; }
+.partes-botao p { margin: 2px 0 8px; }
+.partes-botao .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 6px 14px; }
+.partes-botao label { display: flex; align-items: center; gap: 8px; font-weight: 400; margin: 0; }
+input[type=color] { width: 46px; height: 32px; min-height: 0; padding: 2px; cursor: pointer; }
+@media (max-width: 560px) { .linha-botao { grid-template-columns: 1fr; } }
+
+.painel-botao [hidden], .painel-botao[hidden] { display: none !important; }

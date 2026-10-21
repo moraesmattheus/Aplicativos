@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Estatísticas</title>
+    <link rel="icon" href="icons/estatisticas.png" />
+    <script src="tema.js"></script>
+    <link rel="stylesheet" href="base.css" />
+  </head>
+  <body>
+    <main>
+      <!-- Periodo: hoje, 7 dias ou 30 dias -->
+      <div class="periodos" role="group" aria-label="Período">
+        <button data-dias="1" aria-pressed="false">Hoje</button>
+        <button data-dias="7" aria-pressed="true">7 dias</button>
+        <button data-dias="30" aria-pressed="false">30 dias</button>
+      </div>
+
+      <div id="cartoes" class="cartoes"></div>
+      <section class="bloco" id="bloco-dias"><h2>Foco por dia</h2><div id="grafico-dias"></div></section>
+      <section class="bloco" id="bloco-tarefas"><h2>Tempo por tarefa</h2><div id="tempo-tarefas"></div></section>
+      <section class="bloco" id="bloco-ativo"><h2>Tempo ativo por tarefa (automático)</h2><div id="tempo-ativo"></div></section>
+      <section class="bloco" id="bloco-categorias"><h2>Tempo por categoria</h2><div id="tempo-categorias"></div></section>
+      <section class="bloco" id="bloco-feitas"><h2>O que foi concluído</h2><ul id="lista-concluidas" class="lista-simples"></ul></section>
+      <section class="bloco" id="bloco-abas"><h2>Abas</h2><div id="resumo-abas"></div></section>
+    </main>
+    <script src="util.js"></script>
+    <script src="estatisticas.js"></script>
+  </body>
+</html>

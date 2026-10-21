@@ -1,0 +1,52 @@
+{
+  "name": "omnivix-agente",
+  "productName": "Omnivix",
+  "version": "1.0.0",
+  "description": "Grava, transcreve e organiza reuniões e aulas sozinho, sem bot e sem precisar de cliques.",
+  "main": "principal.js",
+  "private": true,
+  "scripts": {
+    "prestart": "node scripts/sincronizar.js",
+    "start": "electron .",
+    "test": "node --test",
+    "empacotar": "node scripts/sincronizar.js && electron-builder --win"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "3.7.6",
+    "node-ical": "^0.27.3"
+  },
+  "devDependencies": {
+    "electron": "^44.7.2",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "br.mattheus.omnivix",
+    "files": [
+      "principal.js",
+      "preload.js",
+      "detector.js",
+      "agenda.js",
+      "config-principal.js",
+      "app/**/*",
+      "assets/**/*",
+      "!node_modules/onnxruntime-node/**/*",
+      "!node_modules/sharp/**/*",
+      "!node_modules/@img/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icone.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "shortcutName": "Omnivix",
+      "deleteAppDataOnUninstall": false
+    },
+    "electronLanguages": [
+      "pt-BR",
+      "en-US"
+    ]
+  },
+  "author": "Mattheus Moraes"
+}

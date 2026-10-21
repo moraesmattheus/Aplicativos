@@ -1,0 +1,10 @@
+node_modules/
+.env
+.env.*
+!.env.example
+*.key
+tokens*.json
+.venv/
+.output/
+.wxt/
+.DS_Store
